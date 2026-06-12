@@ -23,6 +23,13 @@ npm start
 
 Then open [http://localhost:3000](http://localhost:3000).
 
+## Project Structure
+
+```text
+backend/   Node/Express server, routes, API helpers, and backend scripts
+frontend/  Static HTML, CSS, browser JavaScript, and demo data
+```
+
 Seeded accounts:
 
 ```text

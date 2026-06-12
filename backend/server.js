@@ -10,7 +10,7 @@ const { ourFileRouter } = require("./uploadthing");
 const { console } = require("inspector");
 const { timeStamp } = require("console");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 app.use(cors());
@@ -25,7 +25,7 @@ const uploadthingHandler = createUploadthingExpressHandler({
 app.use("/api/uploadthing", uploadthingHandler);
 
 const PORT = Number(process.env.PORT || 3000);
-const PUBLIC_DIR = path.join(__dirname, "public");
+const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
 const DB_FILE = path.join(PUBLIC_DIR, "data", "db.json");
 
 const MIME_TYPES = {

@@ -1,5 +1,6 @@
 const assert = require("assert");
 const { spawn } = require("child_process");
+const path = require("path");
 
 const BASE_URL = "http://localhost:3000";
 
@@ -36,8 +37,8 @@ async function waitForServer() {
 }
 
 async function main() {
-  const server = spawn(process.execPath, ["server.js"], {
-    cwd: process.cwd(),
+  const server = spawn(process.execPath, [path.join("backend", "server.js")], {
+    cwd: path.join(__dirname, "..", ".."),
     env: {
       ...process.env,
       PORT: "3000",
