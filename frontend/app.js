@@ -366,7 +366,11 @@ function removeFromCart(productId) {
 
 function renderCart() {
   const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-  if ($("#cartCount")) $("#cartCount").textContent = count;
+  if ($("#cartCount")) {
+    $("#cartCount").textContent = count;
+    $("#cartCount").classList.toggle("hidden", !state.user || count === 0);
+  }
+
   if ($("#cartTotal")) $("#cartTotal").textContent = money(currentCartTotal());
   if ($("#cartPageTotal")) $("#cartPageTotal").textContent = money(currentCartTotal());
   if ($("#metricCart")) $("#metricCart").textContent = money(currentCartTotal());
@@ -555,11 +559,12 @@ async function loadSearchSuggestions(value) {
 }
 
 function setAdminPanel(panel) {
-  const selected = panel === "product" ? "product" : "inventory";
+  const selected = ["inventory", "add-product", "edit-product", "orders"].includes(panel) ? panel : "inventory";
+  const visibleSection = ["add-product", "edit-product"].includes(selected) ? "product-form" : selected;
   const adminView = $("#adminView");
   if (adminView) adminView.dataset.activeSection = selected;
   $$("[data-admin-panel]").forEach((button) => button.classList.toggle("active", button.dataset.adminPanel === selected));
-  $(`[data-admin-section="${selected}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $(`[data-admin-section="${visibleSection}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function editProduct(productId) {
@@ -576,7 +581,7 @@ function editProduct(productId) {
   $("#productRating").value = product.rating;
   $("#productTags").value = productTags(product).join(", ");
   $("#productImage").value = product.image;
-  setAdminPanel("product");
+  setAdminPanel("edit-product");
 }
 
 function resetProductForm() {
@@ -585,6 +590,7 @@ function resetProductForm() {
   $("#productForm").reset();
   $("#productId").value = "";
   $("#productRating").value = "4.5";
+  setAdminPanel("add-product");
 }
 
 async function saveProduct(event) {
@@ -730,6 +736,7 @@ async function submitAuth(event) {
     const data = await api("/api/auth/request-signup-code", { method: "POST", body });
     state.signupStep = "code";
     state.signupVerificationId = data.verificationId;
+    $("#authTitle").textContent = "Enter WhatsApp code";    
     $$(".signup-code-field").forEach((node) => node.classList.remove("hidden"));
     $("#authSignupCode")?.toggleAttribute("required", true);
     $("#authSubmit").textContent = "Verify and create account";
@@ -1068,6 +1075,7 @@ function bindEvents() {
   $("#refreshOrdersButton")?.addEventListener("click", () => loadOrders().catch((error) => toast(error.message)));
   $("#closeAuthButton")?.addEventListener("click", () => $("#authModal").classList.add("hidden"));
   $("#forgotPasswordButton")?.addEventListener("click", openResetPassword);
+  $("#backToLoginButton")?.addEventListener("click", () => { closeResetPassword(); openAuth("login");});
   $("#closeResetButton")?.addEventListener("click", closeResetPassword);
   $("#resetForm")?.addEventListener("submit", (event) => submitResetPassword(event).catch((error) => toast(error.message)));
   $("#closeProductDetailButton")?.addEventListener("click", closeProductDetail);

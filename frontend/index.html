@@ -41,7 +41,7 @@
 
                 <button class="icon-button" id="cartButton" aria-label="Open Cart." title="Cart">
                     <span class="icon">Cart</span>
-                    <span class="cart-count" id="cartCount">0</span>
+                    <span class="cart-count hidden" id="cartCount">0</span>
                 </button>
 
                 <div class="account-menu" id="signedOutMenu">
@@ -288,10 +288,13 @@
                         </section>
                         
                         <section class="view" id="adminView">
-                        <div class="admin-panel-switch" role="group" aria-label="Admin panel">
-                            <button class="small-button active" type="button" data-admin-panel="inventory">Inventory</button>
-                            <button class="small-button" type="button" data-admin-panel="product">Add or Edit Product</button>
-                        </div>
+                            <div class="admin-panel-switch" role="group" aria-label="Admin panel">
+                                <button class="small-button active" type="button" data-admin-panel="inventory">Inventory</button>
+                                <button class="small-button" type="button" data-admin-panel="add-product">Add Product</button>
+                                <button class="small-button" type="button" data-admin-panel="edit-product">Edit Product</button>
+                                <button class="small-button" type="button" data-admin-panel="orders">Order Operations</button>
+                            </div>                            
+
                         <div class="admin-layout">
                             <div class="wide-panel admin-inventory-panel" data-admin-section="inventory">
                                 <div class="section-heading">
@@ -301,7 +304,7 @@
                                 </div>
                                 <div class="admin-product" id="adminProducts"></div>
                             </div>
-                            <form class="admin-form" id="productForm" data-admin-section="product">
+                            <form class="admin-form" id="productForm" data-admin-section="product-form">
                                 <div class="section-heading">
                                     <span id="formTitle">Add New Product</span>
                                     <button class="secondary-button" type="button" id="resetProductForm">Reset</button>
@@ -325,7 +328,7 @@
                                 </label>
                                 <button class="primary-button" type="submit" id="saveProductButton">Save Product</button>
                             </form>
-                            <div class="wide-panel admin-orders-panel">
+                            <div class="wide-panel admin-orders-panel" data-admin-section="orders">                           
                                 <div class="section-heading">
                                     <span>Order Operations</span>
                                     <strong id="adminOrderCount">0 orders</strong>
@@ -489,6 +492,7 @@
                 <button class="primary-button" type="submit" id="authSubmit">Login</button>
                 <button class="link-button" type="button" id="toggleAuthMode">Don't have an account? Register</button>
                 <button class="link-button" type="button" id="forgotPasswordButton">Forgot Password?</button>
+                <button class="link-button" type="button" id="backToLoginButton">Back to login</button>
             </form>
         </div>
 

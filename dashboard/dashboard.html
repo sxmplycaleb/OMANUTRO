@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Account | L&C Enterprise</title>
-    <link rel="stylesheet" href="css/styles.css" />
-    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="./dashboard.css"/>
+    <script src="./dashboard.js"></script>
 </head>
 
 <body>
@@ -27,6 +27,15 @@
         </aside>
         
         <main class="dash-main">
+            <div class="dash-stat-card">
+                <span class="dash-stat-num" id="delivered-orders">0</span>
+                <span class="dash-stat-label">Delivered</span>
+            </div>
+            
+            <div class="dash-stat-card">
+                <span class="dash-stat-num" id="cart-value">$0</span>
+                <span class="dash-stat-label">Cart Value</span>
+            </div>
             
             <section class="dash-tab active" id="tab-overview">
                 <h2 class="dash-heading">Account Overview</h2>

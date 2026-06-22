@@ -185,17 +185,6 @@ button {
   min-width: min(420px, 100%);
 }
 
-.search-control {
-  position: relative;
-  display: block;
-  align-items: center;
-  width: 100%;
-}
-
-.search-control input {
-  padding-right: 96px;
-}
-
 .topbar-search input {
   height: 40px;
   padding: 0 14px;
@@ -205,12 +194,21 @@ button {
   border-color: var(--chrome-button-border);
 }
 
+.search-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  width: 100%;
+}
+
+.search-control input {
+  padding-right: 12px;
+}
+
 .search-control .search-button {
-  position: absolute;
-  top: 50%;
-  right: 5px;
-  height: calc(100% - 10px);
-  transform: translateY(-50%);
+  position: static;
+  height: 40px;
+  transform: none;
 }
 
 .nav-tab,
@@ -1312,8 +1310,10 @@ input[type="range"] {
     grid-template-columns: 1fr;
   }
 
-  #adminView[data-active-section="inventory"] [data-admin-section="product"],
-  #adminView[data-active-section="product"] [data-admin-section="inventory"] {
+  #adminView[data-active-section="inventory"] [data-admin-section]:not([data-admin-section="inventory"]),
+  #adminView[data-active-section="add-product"] [data-admin-section]:not([data-admin-section="product-form"]),
+  #adminView[data-active-section="edit-product"] [data-admin-section]:not([data-admin-section="product-form"]),
+  #adminView[data-active-section="orders"] [data-admin-section]:not([data-admin-section="orders"]) {
     display: none;
   }
 
