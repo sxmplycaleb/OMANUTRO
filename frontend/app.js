@@ -836,6 +836,52 @@ function handleAccountAction(action) {
   }
 }
 
+function renderProfileForm() {
+  if (!state.user) return;
+
+  const names = String(state.user.name || "").split(" ");
+  $("#profileFirstName").value = names[0] || "";
+  $("#profileLastName").value = names.slice(1).join(" ");
+  $("#profileEmail").value = state.user.email || "";
+  $("#profilePhone").value = state.user.phone || "";
+  $("#profileDisplayName").textContent = state.user.name || "My Profile";
+  $("#profileEmailText").textContent = state.user.email || "";
+}
+
+function previewProfileAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    $("#profileAvatarPreview").src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+
+  const body = {
+    name: `${$("#profileFirstName").value} ${$("#profileLastName").value}`.trim(),
+    phone: $("#profilePhone").value,
+    dob: $("#profileDob").value,
+    gender: $("#profileGender").value,
+    username: $("#profileUsername").value,
+    bio: $("#profileBio").value
+  };
+
+  const data = await api("/api/auth/profile", {
+    method: "PUT",
+    body
+  });
+
+  state.user = data.user;
+  updateAuthUI();
+  renderProfileForm();
+  toast("Profile saved.");
+}
+
 function handleProfileAction(action) {
   closeMenus();
   if (action === "signout") {
@@ -844,9 +890,20 @@ function handleProfileAction(action) {
   }
 
   if (action === "profile") {
-    switchView(state.user?.role === "admin" ? "admin" : "orders");
-    return;
-  }
+  switchView("profile");
+  renderProfileForm();
+  return;
+}
+
+if (action === "settings") {
+  switchView("settings");
+  return;
+}
+
+if (action === "help") {
+  switchView("help");
+  return;
+}
 
   if (action === "recently-viewed") {
     showRecentlyViewed();
@@ -972,6 +1029,9 @@ function bindEvents() {
   $("#themeToggleButton")?.addEventListener("click", () => {
     applyTheme(state.theme === "light" ? "dark" : "light");
   });
+
+  $("#profileAvatar")?.addEventListener("change", previewProfileAvatar);
+  $("#profileForm")?.addEventListener("submit", (event) => saveProfile(event).catch((error) => toast(error.message)));
 
   $("#cartButton")?.addEventListener("click", () => {
     if (!requireSignin("Please sign in before opening your cart.")) return;

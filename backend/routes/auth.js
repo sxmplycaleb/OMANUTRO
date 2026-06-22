@@ -8,7 +8,8 @@ const {
   hashSecret,
   publicUser,
   getCurrentUser,
-  setCurrentUser
+  setCurrentUser,
+  requireSignedIn
 } = require("../services/store");
 const { normalizePhone, sendSignupCode, sendResetCode } = require("../services/whatsapp");
 
@@ -29,6 +30,27 @@ function findUserByIdentifier(db, identifier) {
 
 router.get("/me", (req, res) => {
   res.json({ user: publicUser(getCurrentUser()) });
+});
+
+router.put("/profile", (req, res) => {
+  const current = requireSignedIn(req, res);
+  if (!current) return;
+
+  const db = readDb();
+  const user = (db.users || []).find((entry) => entry.id === current.id);
+  if (!user) return res.status(404).json({ error: "User not found." });
+
+  user.name = String(req.body.name || user.name || "").trim();
+  user.phone = req.body.phone || user.phone;
+  user.dob = req.body.dob || "";
+  user.gender = req.body.gender || "";
+  user.username = req.body.username || "";
+  user.bio = req.body.bio || "";
+
+  writeDb(db);
+  setCurrentUser(user);
+
+  res.json({ user: publicUser(user) });
 });
 
 router.post("/login", (req, res) => {
