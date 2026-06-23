@@ -23,6 +23,7 @@ const state = {
 const $ = (selector) => document.querySelector(selector); 
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const money = (value) => `$${Number(value).toFixed(2)}`;
+let revealObserver = null;
 
 async function api(path, options = {}) {
     const body = options.body ? JSON.stringify(options.body) : undefined;
@@ -198,6 +199,7 @@ function renderProducts() {
 
   $("#resultCount").textContent = `${state.products.length} item${visibleProducts.length === 1 ? "" : "s"}`;
   if ($("#metricProducts")) $("#metricProducts").textContent = state.products.length;
+  renderHeroPreview();
 
   const grid = $("#productGrid");
 
@@ -224,6 +226,107 @@ function renderProducts() {
       </div>
     </article>
   `).join("");
+  prepareScrollReveals(grid.querySelectorAll(".product-card"));
+}
+
+function renderHeroPreview() {
+  const featureImage = $("#heroFeatureImage");
+  const miniImage = $("#heroMiniImage");
+  const miniName = $("#heroMiniName");
+  const miniMeta = $("#heroMiniMeta");
+  const strip = $("#heroProductStrip");
+  if (!featureImage || !state.products.length) return;
+
+  const featuredProducts = state.products
+    .filter((product) => product.stock > 0)
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+    .slice(0, 4);
+  const [featured, mini] = featuredProducts;
+  const fallback = featured || state.products[0];
+
+  featureImage.src = productImageSrc(fallback);
+  featureImage.alt = `${fallback.name} from L&C Enterprise`;
+
+  if (miniImage && (mini || fallback)) {
+    const miniProduct = mini || fallback;
+    miniImage.src = productImageSrc(miniProduct);
+    miniImage.alt = "";
+    if (miniName) miniName.textContent = miniProduct.name;
+    if (miniMeta) miniMeta.textContent = `${miniProduct.category} | ${money(miniProduct.price)}`;
+  }
+
+  if (strip) {
+    strip.innerHTML = featuredProducts.map((product) => `
+      <button class="hero-strip-item" type="button" onclick="openProductDetail('${product.id}')" aria-label="View ${escapeAttr(product.name)}">
+        <img src="${escapeAttr(productImageSrc(product))}" alt="">
+        <span>${escapeHtml(product.name)}</span>
+      </button>
+    `).join("");
+  }
+}
+
+function prepareScrollReveals(nodes) {
+  const revealNodes = [...nodes].filter(Boolean);
+  if (!revealNodes.length) return;
+
+  revealNodes.forEach((node, index) => {
+    node.classList.add("scroll-reveal");
+    node.style.setProperty("--reveal-delay", `${Math.min(index, 8) * 70}ms`);
+
+    if (!revealObserver) {
+      node.classList.add("is-visible");
+    } else {
+      revealObserver.observe(node);
+    }
+  });
+}
+
+function setupScrollAnimations() {
+  const motionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+  const revealTargets = [
+    ".hero-copy",
+    ".hero-showcase",
+    ".hero-trust-row > *",
+    ".filters",
+    ".wide-panel",
+    ".settings-group",
+    ".admin-form",
+    ".admin-product-row",
+    ".order-card",
+    ".footer-panel"
+  ];
+
+  if (motionQuery?.matches || !("IntersectionObserver" in window)) {
+    prepareScrollReveals($$(revealTargets.join(", ")));
+    return;
+  }
+
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      revealObserver.unobserve(entry.target);
+    });
+  }, {
+    threshold: 0.14,
+    rootMargin: "0px 0px -8% 0px"
+  });
+
+  prepareScrollReveals($$(revealTargets.join(", ")));
+}
+
+function animateToProducts() {
+  const shopView = $("#shopView");
+  if (!shopView) return;
+
+  document.body.classList.add("shop-transition-active");
+  shopView.classList.add("focus-arrive");
+  shopView.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  window.setTimeout(() => {
+    document.body.classList.remove("shop-transition-active");
+    shopView.classList.remove("focus-arrive");
+  }, 1300);
 }
 
 function openProductDetail(productId) {
@@ -933,6 +1036,7 @@ function updatePaymentFields() {
   $("#cardFields")?.classList.toggle("hidden", selected !== "credit_card");
   $("#mpesaFields")?.classList.toggle("hidden", selected !== "m-pesa");
   $("#paypalFields")?.classList.toggle("hidden", selected !== "paypal");
+  $("#dcashFields")?.classList.toggle("hidden", selected !== "d-cash");
 }
 
 function escapeHtml(value) {
@@ -989,16 +1093,7 @@ function bindEvents() {
   if (shopNowButton) {
     shopNowButton.addEventListener("click", (event) => {
       event.preventDefault();
-
-      if (!state.user) {
-        state.pendingCatalogRedirect = true;
-        openAuth("login");
-        toast("Sign in to view the full catalog.");
-        return;
-      }
-
-      state.redirectAfterDcashPopup = true;
-      showDcashPopup();
+      animateToProducts();
     });
   }
 
@@ -1092,6 +1187,7 @@ function bindEvents() {
 
 async function init() {
   bindEvents();
+  setupScrollAnimations();
   applyTheme(state.theme);
   if ($("#copyrightYear")) $("#copyrightYear").textContent = new Date().getFullYear();
   if ($("#priceLabel") && $("#priceRange")) $("#priceLabel").textContent = money($("#priceRange").value);
@@ -1117,4 +1213,3 @@ window.deleteProduct = deleteProduct;
 window.updateOrderStatus = updateOrderStatus;
 
 init().catch((error) => toast(error.message));
-
