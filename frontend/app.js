@@ -180,6 +180,7 @@ async function loadProducts() {
     minRating: $("#ratingSelect")?.value || "0",
     inStock: $("#stockCheckbox")?.checked || false
   });
+  renderProductLoadingState();
   const data = await api(`/api/products?${params}`);
   state.products = data.products;
   state.categories = data.categories;
@@ -205,31 +206,94 @@ function renderProducts() {
   renderHeroPreview();
 
   const grid = $("#productGrid");
+  grid?.setAttribute("aria-busy", "false");
 
   if (!visibleProducts.length) {
-    grid.innerHTML = `<div class="wide-panel">No products match those filters.</div>`;
+    grid.innerHTML = emptyStateMarkup({
+      title: "No products match those filters.",
+      message: "Try widening your price, rating, or stock filters to see more of the collection.",
+      action: `<button class="secondary-button" type="button" onclick="clearCatalogFilters()">Reset filters</button>`
+    });
     return;
   }
 
-  grid.innerHTML = visibleProducts.map((product) => `
-    <article class="product-card" onclick="openProductDetail('${product.id}')">
-      <img src="${escapeAttr(productImageSrc(product))}" alt="${escapeAttr(product.name)}">
+  grid.innerHTML = visibleProducts.map(productCardMarkup).join("");
+  prepareScrollReveals(grid.querySelectorAll(".product-card"));
+}
+
+function renderProductLoadingState() {
+  const grid = $("#productGrid");
+  if (!grid) return;
+  grid.setAttribute("aria-busy", "true");
+  grid.innerHTML = Array.from({ length: 6 }, (_, index) => `
+    <article class="product-card product-card-skeleton" aria-hidden="true" style="--reveal-delay: ${index * 50}ms">
+      <div class="skeleton-media"></div>
       <div class="product-body">
-        <div class="product-meta">
-          <span class="pill">${escapeHtml(product.category)}</span>
-          <strong>${product.rating.toFixed(1)} stars</strong>
-        </div>
-        <h3>${escapeHtml(product.name)}</h3>
-        <p>${escapeHtml(product.description)}</p>
-        <div class="product-footer">
-          <span class="price">${money(product.price)}</span>
-          <span>${product.stock} left</span>
-        </div>
-        <button class="primary-button" onclick="event.stopPropagation(); addToCart('${product.id}')" ${product.stock < 1 ? "disabled" : ""}>Add to cart</button>
+        <span class="skeleton-line short"></span>
+        <span class="skeleton-line title"></span>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-line"></span>
+        <span class="skeleton-button"></span>
       </div>
     </article>
   `).join("");
-  prepareScrollReveals(grid.querySelectorAll(".product-card"));
+}
+
+function productCardMarkup(product) {
+  const stock = Number(product.stock) || 0;
+  const isOutOfStock = stock < 1;
+  const stockLabel = isOutOfStock ? "Out of stock" : stock < 6 ? `Only ${stock} left` : `${stock} in stock`;
+  const rating = Number(product.rating || 0).toFixed(1);
+  const category = product.category || "Featured";
+  const description = product.description || "Product details are coming soon.";
+
+  return `
+    <article class="product-card${isOutOfStock ? " is-out-of-stock" : ""}" onclick="openProductDetail('${product.id}')">
+      <div class="product-media">
+        <img src="${escapeAttr(productImageSrc(product))}" alt="${escapeAttr(product.name)}" loading="lazy" onerror="this.onerror=null; this.src='${escapeAttr(productFallbackImage(product))}';">
+        <span class="stock-badge ${isOutOfStock ? "stock-badge-muted" : ""}">${escapeHtml(stockLabel)}</span>
+      </div>
+      <div class="product-body">
+        <div class="product-meta">
+          <span class="pill">${escapeHtml(category)}</span>
+          <strong aria-label="Rated ${rating} out of 5">${rating} stars</strong>
+        </div>
+        <h3>${escapeHtml(product.name)}</h3>
+        <p>${escapeHtml(description)}</p>
+        <div class="product-footer">
+          <span class="price">${money(product.price)}</span>
+          <span>${escapeHtml(stockLabel)}</span>
+        </div>
+        <div class="product-actions">
+          <button class="primary-button" type="button" onclick="event.stopPropagation(); addToCart('${product.id}')" ${isOutOfStock ? "disabled aria-disabled=\"true\"" : ""}>${isOutOfStock ? "Sold out" : "Add to cart"}</button>
+          <button class="secondary-button" type="button" onclick="event.stopPropagation(); openProductDetail('${product.id}')" aria-label="View ${escapeAttr(product.name)} details">Details</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function clearCatalogFilters() {
+  if ($("#searchInput")) $("#searchInput").value = "";
+  if ($("#topSearchInput")) $("#topSearchInput").value = "";
+  if ($("#categorySelect")) $("#categorySelect").value = "all";
+  if ($("#priceSelect")) $("#priceSelect").value = "";
+  if ($("#priceRange")) $("#priceRange").value = "2000";
+  if ($("#ratingSelect")) $("#ratingSelect").value = "0";
+  if ($("#stockCheckbox")) $("#stockCheckbox").checked = false;
+  if ($("#priceLabel") && $("#priceRange")) $("#priceLabel").textContent = money($("#priceRange").value);
+  loadProducts().catch((error) => toast(error.message));
+}
+
+function emptyStateMarkup({ title, message, action = "" }) {
+  return `
+    <div class="empty-state wide-panel" role="status">
+      <span class="empty-state-icon" aria-hidden="true">L&C</span>
+      <strong>${escapeHtml(title)}</strong>
+      <p>${escapeHtml(message)}</p>
+      ${action}
+    </div>
+  `;
 }
 
 function renderHeroPreview() {
@@ -472,6 +536,10 @@ function productImageSrc(product) {
   return window.CommerceCatalog?.imageSrc(product, escapeHtml) || "";
 }
 
+function productFallbackImage(product) {
+  return window.CommerceCatalog?.imageSrc({ ...product, image: "" }, escapeHtml) || "";
+}
+
 function renderProductReviews(reviews = []) {
   if (!reviews.length) return "";
   const featured = reviews.slice(0, 2).map((review) => `
@@ -518,8 +586,13 @@ function renderCart() {
   const items = $("#cartItems");
   const pageItems = $("#cartPageItems");
   if (!state.cart.length) {
-    if (items) items.innerHTML = `<div class="wide-panel">Your cart is empty.</div>`;
-    if (pageItems) pageItems.innerHTML = `<div class="wide-panel">Your cart is empty.</div>`;
+    const emptyCart = emptyStateMarkup({
+      title: "Your cart is empty.",
+      message: "Add a product from the collection and checkout will be ready when you are.",
+      action: `<button class="secondary-button" type="button" onclick="switchView('shop')">Continue shopping</button>`
+    });
+    if (items) items.innerHTML = emptyCart;
+    if (pageItems) pageItems.innerHTML = emptyCart;
     return;
   }
   const markup = state.cart.map((item) => {
@@ -612,7 +685,11 @@ async function checkout(event) {
 async function loadOrders() {
   const list = $("#ordersList");
   if (!state.user) {
-    list.innerHTML = `<div class="order-card">Sign in to track your orders.</div>`;
+    list.innerHTML = emptyStateMarkup({
+      title: "Sign in to track your orders.",
+      message: "Your order history, payment state, and delivery updates appear here after checkout.",
+      action: `<button class="primary-button" type="button" onclick="openAuth('login')">Sign in</button>`
+    });
     return;
   }
   const data = await api("/api/orders");
@@ -627,7 +704,12 @@ async function loadAdminOrders() {
 }
 
 function renderOrders(orders, adminMode) {
-  if (!orders.length) return `<div class="order-card">No orders yet.</div>`;
+  if (!orders.length) {
+    return emptyStateMarkup({
+      title: "No orders yet.",
+      message: adminMode ? "New customer orders will appear here as they are placed." : "When you place an order, tracking and payment details will appear here."
+    });
+  }
   return orders.map((order) => `
     <article class="order-card">
       <div class="order-line">

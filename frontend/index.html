@@ -9,8 +9,8 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <script>
             const savedTheme = localStorage.getItem("commerce-theme");
-            const prefferredTheme = window.window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";    
-            document.documentElement.dataset.theme = savedTheme || prefferredTheme;
+            const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";    
+            document.documentElement.dataset.theme = savedTheme || preferredTheme;
         </script>
         <link rel="stylesheet" href="/style.css">
     </head>
@@ -69,9 +69,9 @@
         <main>
             <section class="hero-band" aria-labelledby="heroTitle">
                 <div class="hero-copy">
-                    <span class="hero-kicker">Premium daily finds</span>
+                    <span class="hero-kicker">Curated daily essentials</span>
                     <h1 id="heroTitle"><span>L&C Enterprise</span></h1>
-                    <p>Discover our latest collection of stylish and sustainable fashion. Shop now and elevate your wardrobe with L&C Enterprise.</p>
+                    <p>Shop product-led finds with fast checkout, WhatsApp support, and polished picks selected for everyday style.</p>
                     <div class="hero-actions">
                         <a href="#shopView" class="primary-button" id="shopNowButton">View Collection</a>
                         <a class="secondary-button hero-whatsapp-link" href="https://wa.me/254747690999?text=Hello%20L%26C%20Enterprise%2C%20I%20would%20like%20to%20shop." target="_blank" rel="noopener noreferrer">
