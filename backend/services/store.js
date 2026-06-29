@@ -3,6 +3,13 @@ const jwt = require("jsonwebtoken");
 const config = require("../config");
 
 const TOKEN_TTL = "7d";
+let bcrypt = null;
+
+try {
+  bcrypt = require("bcrypt");
+} catch {
+  bcrypt = null;
+}
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
   const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
@@ -11,6 +18,10 @@ function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
 
 function verifyPassword(password, passwordHash) {
   const storedPassword = String(passwordHash || "");
+  if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+    return Boolean(password) && Boolean(bcrypt?.compareSync(String(password), storedPassword));
+  }
+
   const separator = storedPassword.includes(":") ? ":" : "$";
   const [salt, originalHash] = storedPassword.split(separator);
 

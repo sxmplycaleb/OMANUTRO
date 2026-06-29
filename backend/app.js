@@ -6,11 +6,13 @@ const { createUploadthingExpressHandler } = require("uploadthing/express");
 const { ourFileRouter } = require("./uploadthing");
 const config = require("./config");
 const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const uploadRoutes = require("./routes/uploads");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
+const ADMIN_DIR = path.join(__dirname, "..", "public", "admin");
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -51,7 +53,9 @@ function createApp() {
   app.use(cors({ origin: config.corsOrigin }));
   app.use(express.json({ limit: config.jsonBodyLimit }));
 
+  app.use("/admin", express.static(ADMIN_DIR));
   app.use("/api/auth", authRoutes);
+  app.use("/api/admin", adminRoutes);
   app.use("/api/products", productRoutes);
   app.use("/api/orders", orderRoutes);
   app.use("/api/uploads", uploadRoutes);
