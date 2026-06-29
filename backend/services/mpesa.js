@@ -36,6 +36,16 @@ async function getMpesaToken() {
 }
 
 async function initiateStkPush({ phone, amount, orderId }) {
+  if (process.env.MPESA_MOCK_SUCCESS === "1") {
+    return {
+      MerchantRequestID: `mock_merchant_${orderId}`,
+      CheckoutRequestID: `mock_checkout_${orderId}`,
+      ResponseCode: "0",
+      ResponseDescription: "Mock M-Pesa request accepted.",
+      CustomerMessage: `Mock prompt sent to ${phone} for ${amount}.`
+    };
+  }
+
   if (!hasMpesaConfig()) {
     throw new Error("M-Pesa is not configured. Add Safaricom credentials and callback URL in backend/.env.");
   }

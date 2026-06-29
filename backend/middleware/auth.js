@@ -1,16 +1,33 @@
-const jwt = require("jsonwebtoken");
+const { verifyAuthToken } = require("../services/store");
+const users = require("../repositories/users");
 
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(" ")[1];
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
-  if (!token) return res.status(401).json({ message: "Access token required" });
+  if (!token) {
+    return res.status(401).json({ error: "Sign in to continue." });
+  }
 
-  jwt.verify(token, process.env.JWT_SECRET || "your-secret-key", (err, user) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
+  try {
+    const payload = verifyAuthToken(token);
+    const user = users.findById(payload.sub);
+    if (!user) return res.status(401).json({ error: "Sign in to continue." });
     req.user = user;
-    next();
-  });
+    return next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired session." });
+  }
 }
 
-module.exports = authenticateToken;
+function requireAdmin(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Admin access required." });
+  }
+  return next();
+}
+
+module.exports = {
+  authenticate,
+  requireAdmin
+};

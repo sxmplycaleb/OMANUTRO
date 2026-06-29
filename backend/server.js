@@ -3,14 +3,15 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const dotenv = require("dotenv");
+
+dotenv.config({ path: path.join(__dirname, ".env") });
+
 const { createUploadthingExpressHandler } = require("uploadthing/express");
 const { ourFileRouter } = require("./uploadthing");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const uploadRoutes = require("./routes/uploads");
-
-dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);

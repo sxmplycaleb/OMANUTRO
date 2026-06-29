@@ -1,17 +1,10 @@
-const fs = require("fs");
-const path = require("path");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
-const DB_FILE = path.join(__dirname, "..", "..", "db.json");
+const TOKEN_TTL = "7d";
 
-let currentUser = null;
-
-function readDb() {
-  return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
-}
-
-function writeDb(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+function jwtSecret() {
+  return process.env.JWT_SECRET || "your-secret-key";
 }
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
@@ -54,52 +47,23 @@ function publicUser(user) {
   };
 }
 
-function getCurrentUser() {
-  return currentUser;
+function createAuthToken(user) {
+  return jwt.sign(
+    { sub: user.id, role: user.role },
+    jwtSecret(),
+    { expiresIn: TOKEN_TTL }
+  );
 }
 
-function setCurrentUser(user) {
-  currentUser = user || null;
-}
-
-function getBearerUser(req) {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-
-  if (!token) return currentUser;
-
-  const db = readDb();
-  return (db.users || []).find((user) => user.id === token) || currentUser;
-}
-
-function requireSignedIn(req, res) {
-  const user = getBearerUser(req);
-  if (!user) {
-    res.status(401).json({ error: "Sign in to continue." });
-    return null;
-  }
-  return user;
-}
-
-function requireAdmin(req, res) {
-  const user = getBearerUser(req);
-  if (user?.role !== "admin") {
-    res.status(403).json({ error: "Admin access required." });
-    return null;
-  }
-  return user;
+function verifyAuthToken(token) {
+  return jwt.verify(token, jwtSecret());
 }
 
 module.exports = {
-  readDb,
-  writeDb,
   hashPassword,
   verifyPassword,
   hashSecret,
   publicUser,
-  getCurrentUser,
-  setCurrentUser,
-  getBearerUser,
-  requireSignedIn,
-  requireAdmin
+  createAuthToken,
+  verifyAuthToken
 };

@@ -39,9 +39,8 @@
                     <span class="theme-label">Dark</span>
                 </button>
 
-                <button class="icon-button" id="cartButton" aria-label="Open Cart." title="Cart">
-                    <span class="icon">Cart</span>
-                    <span class="cart-count hidden" id="cartCount">0</span>
+                <button class="currency-toggle" id="currencyToggleButton" type="button" aria-label="Switch currency to KES" title="Switch currency">
+                    <span id="currencyLabel">USD</span>
                 </button>
 
                 <div class="account-menu" id="signedOutMenu">
@@ -98,14 +97,16 @@
                     <div class="hero-orbit hero-orbit-large"></div>
                     <div class="hero-orbit hero-orbit-small"></div>                
                     <article class="hero-product-stage">
+                        <button class="hero-stage-nav hero-stage-prev" id="heroPrevButton" type="button" aria-label="Previous featured product">&#11164;</button>
                         <img id="heroFeatureImage" src="" alt="Featured L&C product">
                         <span class="hero-discount-badge">25% OFF!!</span>
+                        <button class="hero-stage-nav hero-stage-next" id="heroNextButton" type="button" aria-label="Next featured product">&#11166;</button>
                     </article>
                    
                     <article class="hero-top-products">
                         <div>
                             <strong>Top Products</strong>
-                            <span>Scroll down to shop</span>
+                            <button class="link-button scroll-shop-link" id="scrollToShopButton" type="button">Scroll down to shop</button>
                         </div>
                         <div class="hero-product-strip" id="heroProductStrip" aria-label="Featured products"></div>
                     </article>
@@ -334,6 +335,7 @@
                                     <label>Tags<input type="text" id="productTags" placeholder="travel, laptop,canvas"></label>
                                 </div>
                                 <label>Image URL<input type="url" id="productImage" required placeholder="https://example.com/image.jpg"></label>
+                                <p class="muted-copy logo-help">Logo with UploadThing: upload your logo image, copy the returned file URL, then use that URL as the brand/logo image source in this page. For the current text logo, replace the content inside <code>.brand-mark</code> with an <code>&lt;img src=&quot;YOUR_UPLOADTHING_URL&quot; alt=&quot;L&amp;C Enterprise logo&quot;&gt;</code>.</p>
                                 <label class="upload-drop">
                                     Upload Image
                                     <input type="file" id="imageUpload" accept="image/*">  
@@ -574,6 +576,12 @@
             </div>
         </div>
 
+        <script src="/js/api.js"></script>
+        <script src="/js/auth.js"></script>
+        <script src="/js/cart.js"></script>
+        <script src="/js/catalog.js"></script>
+        <script src="/js/checkout.js"></script>
+        <script src="/js/admin.js"></script>
         <script src="/app.js"></script>
     </body>
 </html>

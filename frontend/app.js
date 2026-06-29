@@ -6,12 +6,17 @@ function getInitialsTheme() {
 
 const state = {
     user: null,
+    authToken: window.CommerceApi?.getToken() || "",
     products: [],
     categories: [],
-    cart: JSON.parse(localStorage.getItem("commerce-cart") || "[]"),
+    cart: window.CommerceCart?.load() || JSON.parse(localStorage.getItem("commerce-cart") || "[]"),
     authMode: "login",
     editProductId: null,
     theme: getInitialsTheme(),
+    currency: localStorage.getItem("commerce-currency") === "KES" ? "KES" : "USD",
+    heroProducts: [],
+    heroIndex: 0,
+    heroTimer: null,
     pendingCatalogRedirect: false,
     redirectAfterDcashPopup: false,
     resetStep: "email",
@@ -22,25 +27,21 @@ const state = {
 
 const $ = (selector) => document.querySelector(selector); 
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const money = (value) => `$${Number(value).toFixed(2)}`;
+const USD_TO_KES_RATE = 130;
+const money = (value) => {
+  const amount = Number(value) || 0;
+  if (state.currency === "KES") return `KES ${Math.round(amount * USD_TO_KES_RATE).toLocaleString("en-KE")}`;
+  return `$${amount.toFixed(2)}`;
+};
 let revealObserver = null;
 
 async function api(path, options = {}) {
-    const body = options.body ? JSON.stringify(options.body) : undefined;
-    if (typeof fetch !== "function") {
-        return xhrApi(path, options, body);
+    if (window.CommerceApi && typeof fetch === "function") {
+        return window.CommerceApi.request(path, options);
     }
 
-    const response = await fetch(path, {
-        headers: {
-            "Content-Type": "application/json", ...(options.headers || {}) },
-        credentials: "include",
-        ...options,
-        body
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Request failed");
-    return data;
+    const body = options.body ? JSON.stringify(options.body) : undefined;
+    return xhrApi(path, options, body);
 }
 
 function xhrApi(path, options = {}, body) {
@@ -102,26 +103,22 @@ function toast(message) {
 }
 
 function persistCart() {
-  localStorage.setItem("commerce-cart", JSON.stringify(state.cart));
+  window.CommerceCart?.save(state.cart);
   renderCart();
 }
 
 function currentCartTotal() {
-  return state.cart.reduce((sum, item) => {
-    const product = state.products.find((entry) => entry.id === item.productId);
-    return sum + (product ? product.price * item.quantity : 0);
-  }, 0);
+  return window.CommerceCart?.total(state.cart, state.products) || 0;
 }
 
 async function cleanCartBeforeCheckout() {
   const data = await api("/api/products");
   const products = data.products || [];
-  const productIds = new Set(products.map((product) => product.id));
-  const cleanCart = state.cart.filter((item) => productIds.has(item.productId) && Number(item.quantity) > 0);
+  const cleanCart = window.CommerceCart?.availableOnly(state.cart, products) || [];
 
   if (cleanCart.length !== state.cart.length) {
     state.cart = cleanCart;
-    localStorage.setItem("commerce-cart", JSON.stringify(state.cart));
+    window.CommerceCart?.save(state.cart);
     renderCart();
     toast("Removed unavailable items from your cart.");
   }
@@ -163,8 +160,15 @@ function updateAuthUI() {
 }
 
 async function loadMe() {
-  const data = await api("/api/auth/me");
-  state.user = data.user;
+  try {
+    const data = await api("/api/auth/me");
+    state.user = data.user;
+  } catch (error) {
+    if (error.status !== 401) throw error;
+    state.user = null;
+    state.authToken = "";
+    window.CommerceAuth?.clearSession();
+  }
   updateAuthUI();
 }
 
@@ -194,10 +198,9 @@ function renderCategoryOptions() {
 }
 
 function renderProducts() {
-  const isCatalogPage = location.pathname.includes("catalog.html");
-  const visibleProducts = isCatalogPage ? state.products : state.products.slice(0, 6);
+  const visibleProducts = state.products;
 
-  $("#resultCount").textContent = `${state.products.length} item${visibleProducts.length === 1 ? "" : "s"}`;
+  $("#resultCount").textContent = `${state.products.length} item${state.products.length === 1 ? "" : "s"}`;
   if ($("#metricProducts")) $("#metricProducts").textContent = state.products.length;
   renderHeroPreview();
 
@@ -230,41 +233,56 @@ function renderProducts() {
 }
 
 function renderHeroPreview() {
-  const featureImage = $("#heroFeatureImage");
-  const miniImage = $("#heroMiniImage");
-  const miniName = $("#heroMiniName");
-  const miniMeta = $("#heroMiniMeta");
   const strip = $("#heroProductStrip");
-  if (!featureImage || !state.products.length) return;
+  if (!state.products.length) return;
 
   const featuredProducts = state.products
     .filter((product) => product.stock > 0)
-    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
-    .slice(0, 4);
-  const [featured, mini] = featuredProducts;
-  const fallback = featured || state.products[0];
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
 
-  featureImage.src = productImageSrc(fallback);
-  featureImage.alt = `${fallback.name} from L&C Enterprise`;
-
-  if (miniImage && (mini || fallback)) {
-    const miniProduct = mini || fallback;
-    miniImage.src = productImageSrc(miniProduct);
-    miniImage.alt = "";
-    if (miniName) miniName.textContent = miniProduct.name;
-    if (miniMeta) miniMeta.textContent = `${miniProduct.category} | ${money(miniProduct.price)}`;
-  }
+  state.heroProducts = featuredProducts.length ? featuredProducts : state.products;
+  if (state.heroIndex >= state.heroProducts.length) state.heroIndex = 0;
+  renderHeroProduct();
 
   if (strip) {
-    strip.innerHTML = featuredProducts.map((product) => `
-      <button class="hero-strip-item" type="button" onclick="openProductDetail('${product.id}')" aria-label="View ${escapeAttr(product.name)}">
+    strip.innerHTML = state.heroProducts.slice(0, 4).map((product, index) => `
+      <button class="hero-strip-item" type="button" onclick="showHeroProduct(${index})" aria-label="Show ${escapeAttr(product.name)} in hero">
         <img src="${escapeAttr(productImageSrc(product))}" alt="">
         <span>${escapeHtml(product.name)}</span>
       </button>
     `).join("");
   }
+
+  startHeroRotation();
 }
 
+function renderHeroProduct() {
+  const featureImage = $("#heroFeatureImage");
+  if (!featureImage || !state.heroProducts.length) return;
+
+  const product = state.heroProducts[state.heroIndex] || state.heroProducts[0];
+  featureImage.classList.remove("is-swapping");
+  featureImage.src = productImageSrc(product);
+  featureImage.alt = `${product.name} from L&C Enterprise`;
+  window.requestAnimationFrame?.(() => featureImage.classList.add("is-swapping"));
+}
+
+function showHeroProduct(index) {
+  if (!state.heroProducts.length) return;
+  state.heroIndex = (index + state.heroProducts.length) % state.heroProducts.length;
+  renderHeroProduct();
+  startHeroRotation();
+}
+
+function moveHeroProduct(direction) {
+  showHeroProduct(state.heroIndex + direction);
+}
+
+function startHeroRotation() {
+  window.clearInterval(state.heroTimer);
+  if (state.heroProducts.length < 2) return;
+  state.heroTimer = window.setInterval(() => moveHeroProduct(1), 5000);
+}
 function prepareScrollReveals(nodes) {
   const revealNodes = [...nodes].filter(Boolean);
   if (!revealNodes.length) return;
@@ -329,6 +347,48 @@ function animateToProducts() {
   }, 1300);
 }
 
+function applyCurrency(currency) {
+  state.currency = currency === "KES" ? "KES" : "USD";
+  localStorage.setItem("commerce-currency", state.currency);
+  const button = $("#currencyToggleButton");
+  const label = $("#currencyLabel");
+  if (label) label.textContent = state.currency;
+  if (button) {
+    const nextCurrency = state.currency === "USD" ? "KES" : "USD";
+    button.setAttribute("aria-label", `Switch currency to ${nextCurrency}`);
+    button.setAttribute("title", `Switch currency to ${nextCurrency}`);
+  }
+  if ($("#priceLabel") && $("#priceRange")) $("#priceLabel").textContent = money($("#priceRange").value);
+  updatePriceSelectLabels();
+}
+
+function toggleCurrency() {
+  applyCurrency(state.currency === "USD" ? "KES" : "USD");
+  renderProducts();
+  renderCart();
+  if (!$("#productDetailModal")?.classList.contains("hidden")) closeProductDetail();
+}
+
+function updatePriceSelectLabels() {
+  const priceSelect = $("#priceSelect");
+  if (!priceSelect) return;
+  const labels = [
+    ["", "All prices"],
+    ["0-50", `Under ${money(50)}`],
+    ["50-250", `${money(50)} to ${money(250)}`],
+    ["250-550", `${money(250)} to ${money(550)}`],
+    ["550-1000", `${money(550)} to ${money(1000)}`],
+    ["1000+", `Over ${money(1000)}`]
+  ];
+  labels.forEach(([value, label]) => {
+    const option = [...priceSelect.options].find((entry) => entry.value === value);
+    if (option) option.textContent = label;
+  });
+}
+
+function updateTopbarState() {
+  document.body.classList.toggle("topbar-scrolled", window.scrollY > 18);
+}
 function openProductDetail(productId) {
   const product = state.products.find((entry) => entry.id === productId);
   if (!product) return;
@@ -403,35 +463,13 @@ function showRecentlyViewed() {
 }
 
 function productTags(product) {
-  if (Array.isArray(product.tags)) return product.tags;
-  return String(product.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+  return window.CommerceCatalog?.tags(product) || [];
 }
 
 function productImageSrc(product) {
   const image = String(product.image || "").trim();
   if (image && !image.includes("via.placeholder.com")) return image;
-
-  const label = escapeHtml(product.name || "Product");
-  const category = escapeHtml(product.category || "L&C Enterprise");
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450">
-      <defs>
-        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stop-color="#f8d66d"/>
-          <stop offset="0.55" stop-color="#5fc4b5"/>
-          <stop offset="1" stop-color="#315c96"/>
-        </linearGradient>
-      </defs>
-      <rect width="600" height="450" fill="url(#bg)"/>
-      <circle cx="475" cy="90" r="58" fill="#ffffff" opacity="0.22"/>
-      <rect x="70" y="92" width="460" height="266" rx="28" fill="#ffffff" opacity="0.86"/>
-      <text x="300" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#18202f">${label}</text>
-      <text x="300" y="254" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#3f4c5e">${category}</text>
-      <text x="300" y="314" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="3" fill="#315c96">L&C ENTERPRISE</text>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  return window.CommerceCatalog?.imageSrc(product, escapeHtml) || "";
 }
 
 function renderProductReviews(reviews = []) {
@@ -543,28 +581,25 @@ async function checkout(event) {
     return;
   }
 
-  if (paymentMethod.value !== "m-pesa") {
-    toast("Card and PayPal need real provider setup before orders can be accepted.");
-    return;
-  }
-
-  if (!$("#mpesaPhone")?.value && !state.user.phone) {
-    $("#mpesaPhone")?.focus();
-    toast("Enter the M-Pesa phone number.");
-    return;
-  }
-
-  const body = {
-    items: state.cart,
+  const payload = window.CommerceCheckout?.buildOrderPayload({
+    cart: state.cart,
     paymentMethod: paymentMethod.value,
     mpesaPhone: $("#mpesaPhone")?.value,
+    user: state.user,
     shippingAddress: {
       name: shipName.value,
       address: shipAddress.value,
       city: shipCity.value
     }
-  };
-  const data = await api("/api/orders", { method: "POST", body });
+  });
+
+  if (payload?.error) {
+    if (payload.error.includes("M-Pesa")) $("#mpesaPhone")?.focus();
+    toast(payload.error);
+    return;
+  }
+
+  const data = await api("/api/orders", { method: "POST", body: payload.body });
   $("#cartDrawer")?.classList.remove("open");
   if (data.checkoutUrl) {
     location.href = data.checkoutUrl;
@@ -616,7 +651,7 @@ function renderOrders(orders, adminMode) {
         <strong>${money(order.total)}</strong>
         ${adminMode ? `
           <select onchange="updateOrderStatus('${order.id}', this.value)">
-            ${["Processing", "Packed", "Shipped", "Delivered", "Cancelled"].map((status) => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}
+            ${(window.CommerceAdmin?.ORDER_STATUSES || ["Processing", "Packed", "Shipped", "Delivered", "Cancelled"]).map((status) => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}
           </select>
         ` : `<span>${escapeHtml(order.paymentProvider)} payment</span>`}
       </div>
@@ -854,6 +889,8 @@ async function submitAuth(event) {
   const path = state.authMode === "register" ? "/api/auth/register" : "/api/auth/login";
   const data = await api(path, { method: "POST", body });
   state.user = data.user;
+  state.authToken = data.token || "";
+  window.CommerceAuth?.rememberSession(state.authToken);
   $("#authModal").classList.add("hidden");
   updateAuthUI();
   toast(`Welcome, ${state.user.name}.`);
@@ -879,19 +916,15 @@ async function submitAuth(event) {
 async function logout() {
   await api("/api/auth/logout", { method: "POST" });
   state.user = null;
+  state.authToken = "";
+  window.CommerceAuth?.clearSession();
   updateAuthUI();
   toast("Signed out.");
   location.href = "/";
 }
 
 function getUserInitials(user) {
-  const source = user?.name || user?.email || "A";
-  return source
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "A";
+  return window.CommerceAuth?.initials(user) || "A";
 }
 
 function closeMenus() {
@@ -1097,6 +1130,13 @@ function bindEvents() {
     });
   }
 
+  $("#scrollToShopButton")?.addEventListener("click", animateToProducts);
+  $("#heroPrevButton")?.addEventListener("click", () => moveHeroProduct(-1));
+  $("#heroNextButton")?.addEventListener("click", () => moveHeroProduct(1));
+  $("#currencyToggleButton")?.addEventListener("click", toggleCurrency);
+  updateTopbarState();
+  window.addEventListener("scroll", updateTopbarState, { passive: true });
+
   $$(".nav-tab").forEach((tab) => tab.addEventListener("click", () => {
     if (!state.user) {
       requireSignin("Sign in to view this section.");
@@ -1135,11 +1175,6 @@ function bindEvents() {
   $("#profileAvatar")?.addEventListener("change", previewProfileAvatar);
   $("#profileForm")?.addEventListener("submit", (event) => saveProfile(event).catch((error) => toast(error.message)));
 
-  $("#cartButton")?.addEventListener("click", () => {
-    if (!requireSignin("Please sign in before opening your cart.")) return;
-    if ($("#cartView")) switchView("cart");
-    else $("#cartDrawer")?.classList.add("open");
-  });
   $("#openCheckoutButton")?.addEventListener("click", () => {
     if (!requireSignin("Please sign in before checkout.")) return;
     $("#cartDrawer")?.classList.add("open");
@@ -1189,6 +1224,7 @@ async function init() {
   bindEvents();
   setupScrollAnimations();
   applyTheme(state.theme);
+  applyCurrency(state.currency);
   if ($("#copyrightYear")) $("#copyrightYear").textContent = new Date().getFullYear();
   if ($("#priceLabel") && $("#priceRange")) $("#priceLabel").textContent = money($("#priceRange").value);
   updatePaymentFields();
@@ -1208,6 +1244,7 @@ window.openProductDetail = openProductDetail;
 window.addToCart = addToCart;
 window.changeQuantity = changeQuantity;
 window.removeFromCart = removeFromCart;
+window.showHeroProduct = showHeroProduct;
 window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;
 window.updateOrderStatus = updateOrderStatus;

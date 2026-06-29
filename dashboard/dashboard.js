@@ -85,6 +85,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
 document.getElementById('logout-btn').addEventListener('click', (e) => {
     e.preventDefault();
     if (confirm('Are you sure you want to log out?')) {
+        localStorage.removeItem('commerce-auth-token');
         window.location.href = '/login.html';
     }
 });
@@ -104,7 +105,11 @@ initTheme();
 
 async function loadDashboard() {
     try {
-        const ordersResponse = await fetch("/api/orders", { credentials: "include" });
+        const token = localStorage.getItem("commerce-auth-token") || "";
+        const ordersResponse = await fetch("/api/orders", {
+            credentials: "include",
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         const ordersData = await ordersResponse.json();
         const orders = ordersData.orders || [];
 

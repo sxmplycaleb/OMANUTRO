@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const express = require("express");
-const { readDb, writeDb, requireAdmin } = require("../services/store");
+const productsRepository = require("../repositories/products");
+const { authenticate, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -29,17 +30,22 @@ function filterProducts(products, query) {
   ));
 }
 
+function parseTags(tags) {
+  return Array.isArray(tags)
+    ? tags
+    : String(tags || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+}
+
 router.get("/", (req, res) => {
-  const db = readDb();
-  const products = filterProducts(db.products || [], req.query);
-  const categories = [...new Set((db.products || []).map((product) => product.category))].sort();
-  res.json({ products, categories });
+  const products = productsRepository.all();
+  const filteredProducts = filterProducts(products, req.query);
+  const categories = [...new Set(products.map((product) => product.category))].sort();
+  res.json({ products: filteredProducts, categories });
 });
 
 router.get("/suggestions", (req, res) => {
-  const db = readDb();
   const search = String(req.query.search || "").trim().toLowerCase();
-  const suggestions = (db.products || [])
+  const suggestions = productsRepository.all()
     .filter((product) => search && productText(product).includes(search))
     .flatMap((product) => [product.name, product.category, ...productTags(product)])
     .filter(Boolean)
@@ -49,12 +55,9 @@ router.get("/suggestions", (req, res) => {
   res.json({ suggestions });
 });
 
-router.post("/", (req, res) => {
-  if (!requireAdmin(req, res)) return;
-
-  const db = readDb();
+router.post("/", authenticate, requireAdmin, (req, res) => {
   const now = new Date().toISOString();
-  const product = {
+  const product = productsRepository.create({
     id: `prod_${crypto.randomBytes(8).toString("hex")}`,
     name: req.body.name,
     category: req.body.category,
@@ -62,60 +65,37 @@ router.post("/", (req, res) => {
     price: Number(req.body.price || 0),
     stock: Number(req.body.stock || 0),
     rating: Number(req.body.rating || 0),
-    tags: Array.isArray(req.body.tags)
-      ? req.body.tags
-      : String(req.body.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean),
+    tags: parseTags(req.body.tags),
     image: req.body.image || "",
     reviews: [],
     createdAt: now,
     updatedAt: now
-  };
-
-  db.products = db.products || [];
-  db.products.unshift(product);
-  writeDb(db);
+  });
 
   res.status(201).json({ product });
 });
 
-router.put("/:productId", (req, res) => {
-  if (!requireAdmin(req, res)) return;
-
-  const db = readDb();
-  const product = (db.products || []).find((entry) => entry.id === req.params.productId);
-  if (!product) return res.status(404).json({ error: "Product not found." });
-
+router.put("/:productId", authenticate, requireAdmin, (req, res) => {
+  const patch = {};
   ["name", "category", "description", "image"].forEach((key) => {
-    if (req.body[key] !== undefined) product[key] = req.body[key];
+    if (req.body[key] !== undefined) patch[key] = req.body[key];
   });
-  if (req.body.price !== undefined) product.price = Number(req.body.price);
-  if (req.body.stock !== undefined) product.stock = Number(req.body.stock);
-  if (req.body.rating !== undefined) product.rating = Number(req.body.rating);
-  if (req.body.tags !== undefined) {
-    product.tags = Array.isArray(req.body.tags)
-      ? req.body.tags
-      : String(req.body.tags).split(",").map((tag) => tag.trim()).filter(Boolean);
-  }
+  if (req.body.price !== undefined) patch.price = Number(req.body.price);
+  if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
+  if (req.body.rating !== undefined) patch.rating = Number(req.body.rating);
+  if (req.body.tags !== undefined) patch.tags = parseTags(req.body.tags);
 
-  product.updatedAt = new Date().toISOString();
-  writeDb(db);
-
-  res.json({ product });
+  const product = productsRepository.update(req.params.productId, patch);
+  if (!product) return res.status(404).json({ error: "Product not found." });
+  return res.json({ product });
 });
 
-router.delete("/:productId", (req, res) => {
-  if (!requireAdmin(req, res)) return;
-
-  const db = readDb();
-  const originalLength = (db.products || []).length;
-  db.products = (db.products || []).filter((entry) => entry.id !== req.params.productId);
-
-  if (db.products.length === originalLength) {
+router.delete("/:productId", authenticate, requireAdmin, (req, res) => {
+  if (!productsRepository.remove(req.params.productId)) {
     return res.status(404).json({ error: "Product not found." });
   }
 
-  writeDb(db);
-  res.json({ message: "Product deleted." });
+  return res.json({ message: "Product deleted." });
 });
 
 module.exports = router;
