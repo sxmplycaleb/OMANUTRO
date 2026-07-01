@@ -1297,8 +1297,7 @@ input[type="range"] {
   background:
     linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent),
     var(--glass-bg);
-  background-size: 220% 100%;
-  animation: skeletonShimmer 1.45s ease-in-out infinite;
+  background-size: 220% 100%;  
 }
 
 .skeleton-media {
@@ -1324,11 +1323,6 @@ input[type="range"] {
   width: 100%;
   height: 46px;
   border-radius: 8px;
-}
-
-@keyframes skeletonShimmer {
-  0% { background-position: 180% 0; }
-  100% { background-position: -80% 0; }
 }
 
 .wide-panel {
@@ -1871,19 +1865,6 @@ input[type="range"] {
   scroll-margin-top: 112px;
 }
 
-#shopView.focus-arrive .filters,
-#shopView.focus-arrive .product-card.is-visible {
-  animation: productArrival 0.82s ease both;
-}
-
-#shopView.focus-arrive .product-card.is-visible {
-  animation-delay: var(--reveal-delay, 0ms);
-}
-
-body.shop-transition-active .hero-band {
-  animation: heroSettle 0.72s ease both;
-}
-
 @keyframes heroSettle {
   0% {
     transform: scale(1);
@@ -2231,7 +2212,6 @@ body.shop-transition-active .hero-band {
   font-weight: 900;
   letter-spacing: 0.08;
   text-transform: uppercase;
-  animation: flashText 1s infinite;
   transform: rotate(-3deg);
   transform-origin: center;
 }
@@ -2256,7 +2236,6 @@ body.shop-transition-active .hero-band {
   height: 104px;
   margin-bottom: 8px;
   overflow: visible;
-  animation: flashText 1s infinite;  
 }
 
 .curved-eyebrow text {
@@ -2417,7 +2396,6 @@ body.topbar-scrolled .topbar {
   width: 46%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
   transform: skewX(-20deg);
-  animation: buttonLightSweep 7s linear infinite;
   pointer-events: none;
 }
 
@@ -2456,10 +2434,6 @@ body.topbar-scrolled .topbar {
     rgba(255, 250, 246, 0.28);
 }
 
-.hero-product-stage img.is-swapping {
-  animation: heroProductSwap 0.52s ease both;
-}
-
 .hero-stage-nav {
   position: absolute;
   top: 50%;
@@ -2495,10 +2469,6 @@ body.topbar-scrolled .topbar {
 
 .hero-stage-nav:hover {
   transform: translateY(-50%) scale(1.04);
-}
-
-.hero-discount-badge {
-  animation: discountFlash 1.05s ease-in-out infinite;
 }
 
 .hero-top-products {
@@ -2996,7 +2966,6 @@ textarea::placeholder {
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(0 34px 42px rgba(20, 10, 20, 0.3));
-  animation: heroModelFloat 7s ease-in-out infinite;
 }
 
 .hero-copy {
@@ -3056,9 +3025,6 @@ textarea::placeholder {
     color-mix(in srgb, var(--hero-card-bg) 86%, transparent);
 }
 
-.hero-glass-card {
-  animation: heroCardFloat 7.5s ease-in-out infinite;
-}
 
 .hero-rating-card {
   left: clamp(0px, 2vw, 18px);
@@ -4020,17 +3986,18 @@ main {
 }
 
 .hero-bg-word {
+  --hero-word-fit: 4.78;
   position: absolute;
   top: clamp(148px, 29svh, 310px);
   right: 0;
   left: 0;
   z-index: 5;
   color: var(--om-hero-word-fill);
-  font-family: Impact, Haettenschweiler, "Arial Black", Inter, sans-serif;
-  font-size: min(clamp(78px, 15.2vw, 228px), calc(100vw / 4.08));
-  font-weight: 950;
+  font-family: "Trebuchet MS", "Segoe UI", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: min(clamp(78px, 15.2vw, 228px), calc(100vw / var(--hero-word-fit)));
+  font-weight: 1500;
   line-height: 0.82;
-  letter-spacing: 0;
+  letter-spacing: 0.075em;
   text-align: center;
   white-space: nowrap;
   opacity: 0.92;
@@ -4306,7 +4273,7 @@ main {
   }
 
   .hero-bg-word {
-    font-size: min(clamp(66px, 14.4vw, 166px), calc(100vw / 4.08));
+    font-size: min(clamp(66px, 14.4vw, 166px), calc(100vw / var(--hero-word-fit)));
   }
 
   .hero-copy {
@@ -4340,7 +4307,7 @@ main {
     top: clamp(148px, 31svh, 280px);
     right: 0;
     left: 0;
-    font-size: min(clamp(48px, 15.4vw, 118px), calc(100vw / 4.08));
+    font-size: min(clamp(48px, 15.4vw, 118px), calc(100vw / var(--hero-word-fit)));
     text-align: center;
   }
 
@@ -4416,7 +4383,7 @@ main {
     top: clamp(122px, 28svh, 204px);
     right: 0;
     left: 0;
-    font-size: min(clamp(36px, 14.7vw, 74px), calc(100vw / 4.08));
+    font-size: min(clamp(36px, 14.7vw, 74px), calc(100vw / var(--hero-word-fit)));
   }
 
   .hero-band {
