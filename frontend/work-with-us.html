@@ -35,8 +35,8 @@
                     <span class="toggle-icon moon-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18.9 15.4A7.2 7.2 0 0 1 8.6 5.1 7.9 7.9 0 1 0 18.9 15.4Z"/></svg></span>
                     <span class="theme-label visually-hidden">Theme</span>
                 </button>
-                <a class="icon-button about-account-link" href="/catalog.html" aria-label="Open catalog" title="Catalog">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 13H7L6 8Zm3 0a3 3 0 0 1 6 0"/></svg>
+                <a class="icon-button about-account-link" href="/account.html" aria-label="Open account" title="Account">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>
                 </a>
             </div>
         </header>
@@ -68,28 +68,28 @@
                 <div class="career-card-grid career-card-grid-four">
                     <article class="career-glass-card reveal-on-scroll">
                         <span class="career-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><path d="m12 3 2.2 6.8H21l-5.5 4 2.1 6.7-5.6-4.1-5.6 4.1 2.1-6.7-5.5-4h6.8L12 3Z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 3l1.5 5.2L19 10l-5.5 1.8L12 17l-1.5-5.2L5 10l5.5-1.8L12 3Z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15Z"/></svg>
                         </span>
                         <h3>Creative Culture</h3>
                         <p>Bring bold ideas to life and help shape collections, campaigns, and customer experiences.</p>
                     </article>
                     <article class="career-glass-card reveal-on-scroll">
                         <span class="career-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M4 18h16"/><path d="M6 15l4-4 3 3 5-7"/><path d="M15 7h3v3"/></svg>
                         </span>
                         <h3>Career Growth</h3>
                         <p>Grow alongside a brand that's constantly evolving and creating new opportunities.</p>
                     </article>
                     <article class="career-glass-card reveal-on-scroll">
                         <span class="career-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3.5 19a5 5 0 0 1 9 0M11.5 19a5 5 0 0 1 9 0"/></svg>
                         </span>
                         <h3>Collaboration</h3>
                         <p>Work with passionate individuals who value creativity, teamwork, and innovation.</p>
                     </article>
                     <article class="career-glass-card reveal-on-scroll">
                         <span class="career-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><path d="M12 3 21 12 12 21 3 12 12 3Z"/></svg>
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/><path d="M4 4l3 3M20 4l-3 3"/></svg>
                         </span>
                         <h3>Make an Impact</h3>
                         <p>Every contribution helps shape the Omanutro experience for customers around the world.</p>
@@ -162,11 +162,11 @@
                 <form class="career-application-form reveal-on-scroll" id="applicationForm" novalidate>
                     <fieldset>
                         <legend>Personal Information</legend>
-                        <label class="career-field"><input name="fullName" autocomplete="name" required placeholder=" "><span>Full Name</span></label>
-                        <label class="career-field"><input name="email" type="email" autocomplete="email" required placeholder=" "><span>Email Address</span></label>
-                        <label class="career-field"><input name="phone" type="tel" autocomplete="tel" required placeholder=" "><span>Phone Number</span></label>
-                        <label class="career-field"><input name="country" autocomplete="country-name" required placeholder=" "><span>Country</span></label>
-                        <label class="career-field"><input name="city" autocomplete="address-level2" required placeholder=" "><span>City</span></label>
+                        <label class="career-field"><input name="fullName" autocomplete="name" required placeholder="Jane Amani"><span>Full Name</span></label>
+                        <label class="career-field"><input name="email" type="email" autocomplete="email" required placeholder="jane@example.com"><span>Email Address</span></label>
+                        <label class="career-field"><input name="phone" type="tel" autocomplete="tel" required placeholder="0747690999"><span>Phone Number</span></label>
+                        <label class="career-field"><input name="country" autocomplete="country-name" required placeholder="Kenya"><span>Country</span></label>
+                        <label class="career-field"><input name="city" autocomplete="address-level2" required placeholder="Nairobi"><span>City</span></label>
                     </fieldset>
                     <fieldset>
                         <legend>Application</legend>
@@ -187,12 +187,27 @@
                             </select>
                             <span>Employment Type</span>
                         </label>
-                        <label class="career-field"><input name="linkedin" type="url" placeholder=" "><span>LinkedIn Profile</span></label>
-                        <label class="career-field"><input name="portfolio" type="url" placeholder=" "><span>Portfolio Website (Optional)</span></label>
+                        <label class="career-field"><input name="linkedin" type="url" placeholder="https://linkedin.com/in/jane"><span>LinkedIn Profile</span></label>
+                        <label class="career-field"><input name="portfolio" type="url" placeholder="https://yourportfolio.com"><span>Portfolio Website (Optional)</span></label>
                         <label class="career-upload-field">Upload Resume (PDF)<input name="resume" type="file" accept=".pdf,application/pdf" required></label>
                         <label class="career-upload-field">Upload Portfolio (Optional)<input name="portfolioFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
                     </fieldset>
-                    <label class="career-field career-textarea-field"><textarea name="coverLetter" rows="7" minlength="40" required placeholder=" "></textarea><span>Cover Letter</span></label>
+                    <fieldset class="application-questions">
+                        <legend>Application Questions</legend>
+                        <article class="application-question is-open">
+                            <button type="button" aria-expanded="true">Why do you want to work with Omanutro?<span aria-hidden="true">+</span></button>
+                            <label class="career-field career-textarea-field"><textarea name="answerWhy" rows="4" minlength="20" placeholder="Share what draws you to Omanutro."></textarea><span>Your answer</span></label>
+                        </article>
+                        <article class="application-question">
+                            <button type="button" aria-expanded="false">What experience best fits this role?<span aria-hidden="true">+</span></button>
+                            <label class="career-field career-textarea-field"><textarea name="answerExperience" rows="4" minlength="20" placeholder="Describe relevant experience for this role."></textarea><span>Your answer</span></label>
+                        </article>
+                        <article class="application-question">
+                            <button type="button" aria-expanded="false">Share a project or achievement you are proud of.<span aria-hidden="true">+</span></button>
+                            <label class="career-field career-textarea-field"><textarea name="answerProject" rows="4" minlength="20" placeholder="Share one project and your contribution."></textarea><span>Your answer</span></label>
+                        </article>
+                    </fieldset>
+                    <label class="career-field career-textarea-field"><textarea name="coverLetter" rows="7" minlength="40" required placeholder="Tell us why you are a strong fit in at least 40 characters."></textarea><span>Cover Letter</span></label>
                     <label class="career-consent"><input name="consent" type="checkbox" required><span>I agree to the Privacy Policy and Terms.</span></label>
                     <button class="primary-button" type="submit">Submit Application</button>
                 </form>
@@ -230,6 +245,7 @@
 
         <div class="toast" id="toast" role="status"></div>
 
+        <script src="/js/form-validation.js"></script>
         <script>
             const careerRoot = document.documentElement;
             const careerThemeButton = document.getElementById("themeToggleButton");
@@ -314,8 +330,24 @@
             const iconSvg = {
                 briefcase: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7V5h6v2M4 8h16v11H4V8Zm0 5h16"/></svg>',
                 bookmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-3-6 3V4Z"/></svg>',
-                plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+                plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+                spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.5 5.2L19 10l-5.5 1.8L12 17l-1.5-5.2L5 10l5.5-1.8L12 3Z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15Z"/></svg>',
+                growth: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16"/><path d="M6 15l4-4 3 3 5-7"/><path d="M15 7h3v3"/></svg>',
+                team: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3.5 19a5 5 0 0 1 9 0M11.5 19a5 5 0 0 1 9 0"/></svg>',
+                impact: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/><path d="M4 4l3 3M20 4l-3 3"/></svg>'
             };
+            const benefitIcons = [
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v11H4z"/><path d="M8 8V6h8v2M4 13h16"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7 9 18l-5-5"/><path d="M15 7h5v5"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="7" r="2"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6Z"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M5 11l7-7 7 7"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L12 3Z"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v16H7z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z"/><path d="M8 7V5h8v2M8 17v2h8v-2"/></svg>'
+            ];
 
             function safeId(value) {
                 return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -381,7 +413,7 @@
             function renderBenefits() {
                 document.getElementById("benefitsGrid").innerHTML = benefitCards.map((benefit, index) => `
                     <article class="career-benefit-card reveal-on-scroll" style="--reveal-delay: ${index * 45}ms">
-                        <span aria-hidden="true">${["$", "%", "&#8596;", "&#8599;", "&#10022;", "&#9678;", "+", "&#9733;", "&#10003;", "&#9635;"][index]}</span>
+                        <span aria-hidden="true">${benefitIcons[index]}</span>
                         <strong>${benefit}</strong>
                     </article>
                 `).join("");
@@ -491,9 +523,51 @@
                         showToast("Please complete the required fields.");
                         return;
                     }
+                    const data = new FormData(form);
+                    const answers = [
+                        `Why Omanutro: ${data.get("answerWhy") || ""}`,
+                        `Experience: ${data.get("answerExperience") || ""}`,
+                        `Project: ${data.get("answerProject") || ""}`
+                    ].join("\n\n");
+                    const message = [
+                        "New Job Application",
+                        "",
+                        "Name:",
+                        data.get("fullName") || "",
+                        "",
+                        "Email:",
+                        data.get("email") || "",
+                        "",
+                        "Phone:",
+                        data.get("phone") || "",
+                        "",
+                        "Position:",
+                        data.get("position") || "",
+                        "",
+                        "Experience:",
+                        data.get("employmentType") || "",
+                        "",
+                        "Portfolio:",
+                        data.get("portfolio") || data.get("linkedin") || "Not provided",
+                        "",
+                        "Cover Letter:",
+                        data.get("coverLetter") || "",
+                        "",
+                        "Answers:",
+                        answers
+                    ].join("\n");
+                    const body = encodeURIComponent(message);
+                    window.location.href = `mailto:support.omanutro@gmail.com?subject=${encodeURIComponent(`Omanutro Job Application: ${data.get("position") || "General Application"}`)}&body=${body}`;
+                    setTimeout(() => {
+                        window.open(`https://wa.me/254747690999?text=${body}`, "_blank", "noopener,noreferrer");
+                    }, 900);
                     form.reset();
                     openSuccessModal();
                 });
+            }
+
+            function setupApplicationQuestions() {
+                setupSingleOpen(".application-questions", ".application-question", ".application-question > button");
             }
 
             renderPositions();
@@ -505,6 +579,7 @@
             setupPositionLinks();
             setupSaves();
             setupForm();
+            setupApplicationQuestions();
             setupReveals();
             applyCareerTheme(careerCurrentTheme);
             careerThemeButton?.addEventListener("click", () => applyCareerTheme(careerCurrentTheme === "light" ? "dark" : "light"));

@@ -2,20 +2,34 @@ const express = require("express");
 const productsRepository = require("../repositories/products");
 const ordersRepository = require("../repositories/orders");
 const usersRepository = require("../repositories/users");
-const { authenticate, requireAdmin } = require("../middleware/auth");
+const rbac = require("../repositories/rbac");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const { publicUser } = require("../services/store");
 
 const router = express.Router();
 
-router.use(authenticate, requireAdmin);
+router.use(authenticate, requirePermission("admin:access"));
 
 router.get("/auth/me", (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
+function can(user, permission) {
+  return user.permissions?.includes("*") || user.permissions?.includes(permission);
+}
+
+function canAny(user, permissions) {
+  return permissions.some((permission) => can(user, permission));
+}
+
 router.get("/dashboard", (req, res) => {
   const products = productsRepository.all();
   const orders = ordersRepository.all();
+  const canProducts = canAny(req.user, ["products:manage", "inventory:manage", "products:quantities", "products:descriptions", "products:feature"]);
+  const canOrders = canAny(req.user, ["orders:manage", "orders:view", "shipping:manage", "delivery:manage"]);
+  const canCustomers = canAny(req.user, ["customers:view", "customer_notes:update", "staff:manage"]);
+  const canFinance = canAny(req.user, ["payments:view", "reports:revenue", "reports:sales", "reports:finance", "reports:all", "analytics:view"]);
+  const canAnalytics = canAny(req.user, ["analytics:view", "reports:sales", "reports:customers", "reports:products", "reports:inventory", "reports:all"]);
   const today = new Date().toISOString().slice(0, 10);
   const ordersToday = orders.filter((order) => String(order.createdAt || "").startsWith(today));
   const paidOrders = orders.filter((order) => !["Failed", "Refunded", "Cancelled"].includes(order.paymentStatus));
@@ -64,43 +78,59 @@ router.get("/dashboard", (req, res) => {
   const failedPayments = orders.filter((order) => order.paymentStatus === "Failed");
 
   res.json({
+    roles: req.user.roles || [],
+    permissions: req.user.permissions || [],
     kpis: {
-      totalRevenue: revenue,
-      revenueToday,
-      totalOrders: orders.length,
-      activeCustomers: users.filter((user) => user.role !== "admin").length,
-      lowStockProducts: lowStockProducts.length,
-      outOfStockProducts: outOfStock.length,
-      totalProducts: products.length,
-      ordersToday: ordersToday.length,
-      revenue
+      totalRevenue: canFinance ? revenue : 0,
+      revenueToday: canFinance ? revenueToday : 0,
+      totalOrders: canOrders ? orders.length : 0,
+      activeCustomers: canCustomers ? users.filter((user) => !["admin", "super_admin"].includes(user.role)).length : 0,
+      lowStockProducts: canProducts ? lowStockProducts.length : 0,
+      outOfStockProducts: canProducts ? outOfStock.length : 0,
+      totalProducts: canProducts ? products.length : 0,
+      ordersToday: canOrders ? ordersToday.length : 0,
+      revenue: canFinance ? revenue : 0
     },
     charts: {
-      revenueByDay,
-      ordersByDay,
-      bestSellingProducts: toSortedSeries(productSales),
-      salesByCategory: toSortedSeries(categorySales)
+      revenueByDay: canFinance || canAnalytics ? revenueByDay : [],
+      ordersByDay: canOrders || canAnalytics ? ordersByDay : [],
+      bestSellingProducts: canAnalytics ? toSortedSeries(productSales) : [],
+      salesByCategory: canAnalytics ? toSortedSeries(categorySales) : []
     },
     orderCards: {
-      pending: countByStatus("Pending"),
-      processing: countByStatus("Processing"),
-      completed: countByStatus("Completed"),
-      cancelled: countByStatus("Cancelled"),
-      refunded: orders.filter((order) => order.paymentStatus === "Refunded").length
+      pending: canOrders ? countByStatus("Pending") : 0,
+      processing: canOrders ? countByStatus("Processing") : 0,
+      completed: canOrders ? countByStatus("Completed") : 0,
+      cancelled: canOrders ? countByStatus("Cancelled") : 0,
+      refunded: canFinance || canOrders ? orders.filter((order) => order.paymentStatus === "Refunded").length : 0
     },
-    products,
-    orders,
-    recentOrders,
-    lowStock,
-    outOfStock,
-    failedPayments: failedPayments.slice(0, 8),
-    recentActivity: recentOrders.map((order) => ({
+    products: canProducts ? products : [],
+    orders: canOrders ? orders : [],
+    recentOrders: canOrders ? recentOrders : [],
+    lowStock: canProducts ? lowStock : [],
+    outOfStock: canProducts ? outOfStock : [],
+    failedPayments: canFinance ? failedPayments.slice(0, 8) : [],
+    recentActivity: canOrders ? recentOrders.map((order) => ({
       label: `Order ${order.id} is ${order.status}`,
       at: order.createdAt
-    })),
-    users: users.map(publicUser),
-    latestUsers: users.slice(0, 8).map(publicUser)
+    })) : [],
+    users: canCustomers ? users.map(publicUser) : [],
+    latestUsers: canCustomers ? users.slice(0, 8).map(publicUser) : []
   });
+});
+
+router.get("/rbac", requirePermission("staff:manage"), (req, res) => {
+  res.json({
+    roles: rbac.allRoles(),
+    permissions: rbac.allPermissions()
+  });
+});
+
+router.put("/users/:userId/roles", requirePermission("staff:manage"), (req, res) => {
+  const user = usersRepository.findById(req.params.userId);
+  if (!user) return res.status(404).json({ error: "User not found." });
+  rbac.replaceRoles(user.id, req.body.roleIds || [], req.user.id);
+  res.json({ user: publicUser({ ...user, ...rbac.accessForUser(user) }) });
 });
 
 module.exports = router;

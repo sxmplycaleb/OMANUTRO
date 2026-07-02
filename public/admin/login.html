@@ -15,12 +15,13 @@
       <p class="muted">Manage the OMANUTRO catalog, drops, orders, and revenue desk.</p>
     </div>
     <form id="loginForm" class="form-stack">
-      <label>Email<input id="email" type="email" autocomplete="email" required></label>
-      <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <label>Email<input id="email" type="email" autocomplete="email" required placeholder="admin@example.com"></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" required placeholder="Enter your password"></label>
       <button class="primary-button" type="submit">Sign In</button>
     </form>
     <p class="error-message" id="loginError" role="alert"></p>
   </main>
+  <script src="/js/form-validation.js"></script>
   <script src="/admin/admin.js"></script>
 </body>
 </html>

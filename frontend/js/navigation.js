@@ -4,14 +4,7 @@
   const INTERNAL_NAV_KEY = "omanutro-internal-nav";
 
   function redirectReloadsToHome() {
-    const navigation = performance.getEntriesByType?.("navigation")?.[0];
-    const isReload = navigation?.type === "reload" || performance.navigation?.type === 1;
-    if (!isReload) return;
-
-    const isHome = location.pathname === "/" || location.pathname.endsWith("/index.html");
-    if (!isHome || location.search || location.hash) {
-      location.replace("/");
-    }
+    return;
   }
 
   function setupTopbarScrollState() {
@@ -105,7 +98,7 @@
               <li><a href="/#shopView">Shop</a></li>
               <li><a href="/catalog.html">Collections</a></li>
               <li><a href="/about">About</a></li>
-              <li><a href="/contact#contactFaq">FAQs</a></li>
+              <li><a href="/faq.html">FAQs</a></li>
               <li><a href="/contact">Contact</a></li>
             </ul>
           </nav>
@@ -113,9 +106,9 @@
           <nav class="footer-column" aria-labelledby="footerSupportTitle">
             <h2 class="footer-heading" id="footerSupportTitle">Support</h2>
             <ul class="footer-link-list">
-              <li><a href="/contact#contactFaq">Shipping Information</a></li>
-              <li><a href="/contact#contactFaq">Returns &amp; Exchanges</a></li>
-              <li><a href="/contact#contactFaq">Size Guide</a></li>
+              <li><a href="/faq.html#shipping">Shipping Information</a></li>
+              <li><a href="/faq.html#returns">Returns &amp; Exchanges</a></li>
+              <li><a href="/size-guide.html">Size Guide</a></li>
               <li><a href="/catalog.html">Order Tracking</a></li>
               <li><a href="/contact">Privacy Policy</a></li>
               <li><a href="/contact">Terms &amp; Conditions</a></li>
@@ -138,7 +131,7 @@
               <a href="https://www.tiktok.com/@sxmplycaleb?_r=1&_t=ZS-96gVmON5zYG" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4c.5 2.4 2 3.9 4.5 4.3v3.4c-1.7 0-3.2-.5-4.5-1.4V16a4.8 4.8 0 1 1-4.8-4.8c.4 0 .8 0 1.1.1v3.6a1.5 1.5 0 1 0 .9 1.4V4H14Z"/></svg></a>
               <a href="https://x.com/sxmplycaleb" target="_blank" rel="noopener noreferrer" aria-label="X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4.3l3.3 4.7L16.7 4H20l-5.8 6.7L20.5 20h-4.3l-3.7-5.3L7.9 20H4.5l6.3-7.3L5 4Z"/></svg></a>
               <a href="https://www.facebook.com/share/1B6xXmP99d/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3.1 0-5 1.9-5 5v3H6v4h3v4h4v-4h3.2l.8-4h-4V9c0-.7.3-1 1-1Z"/></svg></a>
-              <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8.4a3 3 0 0 0-2.1-2.1C17 5.8 12 5.8 12 5.8s-5 0-6.9.5A3 3 0 0 0 3 8.4 31.4 31.4 0 0 0 2.5 12c0 1.2.1 2.4.5 3.6a3 3 0 0 0 2.1 2.1c1.9.5 6.9.5 6.9.5s5 0 6.9-.5a3 3 0 0 0 2.1-2.1c.4-1.2.5-2.4.5-3.6 0-1.2-.1-2.4-.5-3.6Z"/><path d="m10 15 5.2-3L10 9v6Z"/></svg></a>
+              <a href="https://whatsapp.com/channel/0029VbDY5lc3GJOpwXBDgj2Q" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Channel" title="WhatsApp Channel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8.7 8.7 0 0 0-7.4 13.2L3.7 21l4.9-1.1A8.7 8.7 0 1 0 12 3Z"/><path d="M8.8 8.4c.3-.5.6-.5.9-.1l.8 1.2c.2.3.2.7-.1 1l-.3.4c.6 1 1.4 1.8 2.4 2.4l.4-.3c.3-.2.7-.3 1 0l1.2.7c.5.3.5.7.1 1.1-.6.6-1.3.9-2.1.8-2.6-.3-5.2-2.9-5.5-5.5-.1-.8.2-1.5 1.2-1.7Z"/></svg></a>
             </div>
           </section>
         </div>

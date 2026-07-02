@@ -1,7 +1,8 @@
 const express = require("express");
 const ordersService = require("../application/orders-service");
-const { authenticate, requireAdmin } = require("../middleware/auth");
+const { authenticate, requirePermission } = require("../middleware/auth");
 const asyncHandler = require("../http/async-handler");
+const rbac = require("../repositories/rbac");
 
 const router = express.Router();
 
@@ -19,8 +20,10 @@ router.post("/", asyncHandler(async (req, res) => {
   });
 }));
 
-router.put("/:orderId", requireAdmin, asyncHandler(async (req, res) => {
-  res.json({ order: await ordersService.updateStatus(req.params.orderId, req.body.status) });
+router.put("/:orderId", requirePermission("orders:manage"), asyncHandler(async (req, res) => {
+  const order = await ordersService.updateStatus(req.params.orderId, req.body.status);
+  rbac.log(req.user.id, "order.status_updated", "order", order.id, { status: order.status });
+  res.json({ order });
 }));
 
 const handleMpesaCallback = asyncHandler(async (req, res) => {

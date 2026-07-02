@@ -72,7 +72,7 @@
                         <div class="contact-message contact-message-two"></div>
                         <div class="contact-message contact-message-three"></div>
                     </div>
-                    <div class="contact-floating-chip chip-one">24-48h</div>
+                    <div class="contact-floating-chip chip-one">Replies in 24-48 Hrs</div>
                     <div class="contact-floating-chip chip-two">Nairobi</div>
                 </div>
             </section>
@@ -92,7 +92,7 @@
                     <article class="contact-glass-card scroll-reveal">
                         <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 4.5 10 9l-1.8 1.5c.8 1.8 2.5 3.5 4.3 4.3L14 13l4.5 2.5c.5.3.7.9.5 1.4-.6 1.7-1.8 2.6-3.5 2.6-5.7 0-11-5.3-11-11 0-1.7.9-2.9 2.6-3.5.5-.2 1.1 0 1.4.5Z"/></svg></span>
                         <h3>Phone</h3>
-                        <strong><a href="tel:+254747690999">+254 747 690 999</a></strong>
+                        <strong class="phone-action-row"><a href="tel:+254747690999">+254 747 690 999</a><button class="copy-phone-button" type="button" data-copy-phone="+254747690999">Copy</button><span class="copy-confirmation" aria-live="polite"></span></strong>
                         <p>Speak directly with our customer support team during business hours.</p>
                     </article>
                     <article class="contact-glass-card scroll-reveal">
@@ -120,15 +120,12 @@
                     <form class="contact-form" id="contactMessageForm" novalidate>
                         <div class="form-alert hidden" id="contactFormAlert" role="status"></div>
                         <div class="split">
-                            <label for="contactName">Full Name<input id="contactName" name="name" autocomplete="name" required></label>
-                            <label for="contactEmail">Email Address<input id="contactEmail" name="email" type="email" autocomplete="email" required></label>
+                            <label for="contactName">Full Name<input id="contactName" name="name" autocomplete="name" placeholder="Jane Amani" pattern="[A-Za-z\s.'-]{2,}" title="Use letters only." required></label>
+                            <label for="contactEmail">Email Address<input id="contactEmail" name="email" type="email" autocomplete="email" placeholder="jane@email.com" required></label>
                         </div>
-                        <div class="split">
-                            <label for="contactPhone">Phone Number (Optional)<input id="contactPhone" name="phone" type="tel" autocomplete="tel"></label>
-                            <label for="contactSubject">Subject<input id="contactSubject" name="subject" required></label>
-                        </div>
-                        <label for="contactOrder">Order Number (Optional)<input id="contactOrder" name="order" autocomplete="off"></label>
-                        <label for="contactMessage">Message<textarea id="contactMessage" name="message" rows="7" minlength="20" required></textarea></label>
+                        <label for="contactSubject">Subject<input id="contactSubject" name="subject" placeholder="Order inquiry" required></label>
+                        <label for="contactOrder">Order Number (Optional)<input id="contactOrder" name="order" autocomplete="off" placeholder="OMN-1007"></label>
+                        <label for="contactMessage">Message<textarea id="contactMessage" name="message" rows="7" minlength="20" placeholder="Tell us what you need help with in at least 20 characters." required></textarea></label>
                         <button class="primary-button" type="submit">Send Message</button>
                     </form>
                     <div class="contact-success hidden" id="contactSuccess" role="status" tabindex="-1">
@@ -153,25 +150,25 @@
                         <p>Track your current order.</p>
                         <span class="quick-arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="quick-help-card scroll-reveal" href="#contactFaq">
+                    <a class="quick-help-card scroll-reveal" href="/faq.html#shipping">
                         <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 7h11v10h-11zM14.5 10h3.5l2.5 3v4h-6z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17.5" cy="18" r="1.5"/></svg></span>
                         <strong>Shipping Information</strong>
                         <p>Learn about delivery times and shipping costs.</p>
                         <span class="quick-arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="quick-help-card scroll-reveal" href="#contactFaq">
+                    <a class="quick-help-card scroll-reveal" href="/faq.html#returns">
                         <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h10v10H7z"/><path d="M4 12h3M17 12h3M12 4v3M12 17v3"/></svg></span>
                         <strong>Returns &amp; Exchanges</strong>
                         <p>Understand our return and exchange policy.</p>
                         <span class="quick-arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="quick-help-card scroll-reveal" href="#contactFaq">
+                    <a class="quick-help-card scroll-reveal" href="/faq.html">
                         <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 18h.01M9.5 9a2.7 2.7 0 1 1 4.7 1.8c-1.5 1-2.2 1.7-2.2 3.2"/><circle cx="12" cy="12" r="9"/></svg></span>
                         <strong>FAQs</strong>
                         <p>Browse answers to common questions.</p>
                         <span class="quick-arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="quick-help-card scroll-reveal" href="/catalog.html">
+                    <a class="quick-help-card scroll-reveal" href="/size-guide.html">
                         <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h14M7 6v13h10V6"/><path d="M9.5 10h5M9.5 14h5"/></svg></span>
                         <strong>Size Guide</strong>
                         <p>Find your perfect fit before purchasing.</p>
@@ -214,7 +211,7 @@
                     <a href="https://www.tiktok.com/@sxmplycaleb?_r=1&_t=ZS-96gVmON5zYG" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4c.5 2.4 2 3.9 4.5 4.3v3.4c-1.7 0-3.2-.5-4.5-1.4V16a4.8 4.8 0 1 1-4.8-4.8c.4 0 .8 0 1.1.1v3.6a1.5 1.5 0 1 0 .9 1.4V4H14Z"/></svg></a>
                     <a href="https://x.com/sxmplycaleb" target="_blank" rel="noopener noreferrer" aria-label="X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4.3l3.3 4.7L16.7 4H20l-5.8 6.7L20.5 20h-4.3l-3.7-5.3L7.9 20H4.5l6.3-7.3L5 4Z"/></svg></a>
                     <a href="https://www.facebook.com/share/1B6xXmP99d/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3.1 0-5 1.9-5 5v3H6v4h3v4h4v-4h3.2l.8-4h-4V9c0-.7.3-1 1-1Z"/></svg></a>
-                    <a href="https://www.pinterest.com/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" title="Pinterest"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8a8.2 8.2 0 0 0-3.1 15.8c-.1-.7-.1-1.8 0-2.6l1.1-4.5s-.3-.6-.3-1.4c0-1.3.8-2.3 1.7-2.3.8 0 1.2.6 1.2 1.4 0 .8-.5 2-0.8 3.1-.2.9.5 1.7 1.4 1.7 1.7 0 3-1.8 3-4.4 0-2.3-1.7-3.9-4-3.9-2.8 0-4.4 2.1-4.4 4.2 0 .8.3 1.7.7 2.2.1.1.1.2.1.4l-.3 1.1c0 .2-.2.3-.4.2-1.1-.5-1.8-2-1.8-3.2 0-2.7 2-5.2 5.8-5.2 3 0 5.4 2.2 5.4 5.1 0 3-1.9 5.4-4.5 5.4-.9 0-1.7-.5-2-1l-.6 2.1c-.2.8-.8 1.8-1.2 2.4a8.2 8.2 0 1 0 3-16.8Z"/></svg></a>
+                    <a href="https://whatsapp.com/channel/0029VbDY5lc3GJOpwXBDgj2Q" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Channel" title="WhatsApp Channel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8.7 8.7 0 0 0-7.4 13.2L3.7 21l4.9-1.1A8.7 8.7 0 1 0 12 3Z"/><path d="M8.8 8.4c.3-.5.6-.5.9-.1l.8 1.2c.2.3.2.7-.1 1l-.3.4c.6 1 1.4 1.8 2.4 2.4l.4-.3c.3-.2.7-.3 1 0l1.2.7c.5.3.5.7.1 1.1-.6.6-1.3.9-2.1.8-2.6-.3-5.2-2.9-5.5-5.5-.1-.8.2-1.5 1.2-1.7Z"/></svg></a>
                 </div>
             </section>
 
@@ -258,7 +255,7 @@
                         <p>Use the contact form, email us, or call during business hours for assistance.</p>
                     </article>
                 </div>
-                <a class="secondary-button contact-center-button scroll-reveal" href="#contactFaq">View All FAQs</a>
+                <a class="secondary-button contact-center-button scroll-reveal" href="/faq.html">View All FAQs</a>
             </section>
 
             <section class="contact-section contact-final-cta scroll-reveal" aria-labelledby="finalCtaTitle">
@@ -309,6 +306,7 @@
         </footer>
 
         <div class="toast" id="toast" role="status"></div>
+        <script src="/js/form-validation.js"></script>
         <script src="/js/navigation.js"></script>
         <script src="/js/contact.js"></script>
         <script defer src="/_vercel/insights/script.js"></script>

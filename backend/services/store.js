@@ -46,10 +46,13 @@ function publicUser(user) {
     email: user.email,
     phone: user.phone,
     role: user.role,
+    roles: user.roles || [],
+    permissions: user.permissions || [],
     dob: user.dob,
     gender: user.gender,
     username: user.username,
     bio: user.bio,
+    avatarUrl: user.avatarUrl,
     phoneVerifiedAt: user.phoneVerifiedAt,
     emailVerifiedAt: user.emailVerifiedAt,
     createdAt: user.createdAt

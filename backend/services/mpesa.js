@@ -35,7 +35,7 @@ async function getMpesaToken() {
   return data.access_token;
 }
 
-async function initiateStkPush({ phone, amount, orderId }) {
+async function initiateStkPush({ phone, amount, orderId, transactionReference }) {
   if (process.env.MPESA_MOCK_SUCCESS === "1") {
     return {
       MerchantRequestID: `mock_merchant_${orderId}`,
@@ -71,7 +71,7 @@ async function initiateStkPush({ phone, amount, orderId }) {
       PartyB: shortcode,
       PhoneNumber: phone,
       CallBackUrl: process.env.MPESA_CALLBACK_URL,
-      AccountReference: orderId,
+      AccountReference: transactionReference || orderId,
       TransactionDesc: "OMANUTRO checkout"
     })
   });

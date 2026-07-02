@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account | OMANUTRO</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="account-dashboard-page">
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <main class="account-shell">
+    <aside class="account-sidebar">
+      <a class="brand" href="/">OMANUTRO</a>
+      <div class="account-cardlet">
+        <div class="account-photo" id="accountPhoto">O</div>
+        <strong id="accountName">Loading...</strong>
+        <span id="accountEmail"></span>
+      </div>
+      <nav class="account-nav" aria-label="Account dashboard">
+        <button class="active" type="button" data-panel="overview">🏠 Dashboard</button>
+        <button type="button" data-panel="orders">📦 Orders</button>
+        <button type="button" data-panel="wishlist">❤️ Wishlist</button>
+        <button type="button" data-panel="addresses">📍 Addresses</button>
+        <button type="button" data-panel="profile">👤 Profile</button>
+        <button type="button" data-panel="security">⚙️ Settings</button>
+        <button type="button" data-action="logout">🚪 Logout</button>
+      </nav>
+    </aside>
+
+    <section class="account-main">
+      <div class="account-topline">
+        <div>
+          <span>Account</span>
+          <h1 id="accountTitle">Dashboard</h1>
+        </div>
+        <a class="secondary-button" href="/catalog.html">Continue Shopping</a>
+      </div>
+
+      <section class="account-panel active" id="panel-overview">
+        <div class="overview-hero">
+          <div class="account-photo large" id="overviewPhoto">O</div>
+          <div>
+            <span id="welcomeText">Welcome back</span>
+            <h2 id="overviewName">Your Account</h2>
+            <p id="overviewEmail"></p>
+            <p id="overviewCreated"></p>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <div><span>Total Orders</span><strong id="metricOrders">0</strong></div>
+          <div><span>Pending</span><strong id="metricPending">0</strong></div>
+          <div><span>Completed</span><strong id="metricCompleted">0</strong></div>
+          <div><span>Cart Items</span><strong id="metricCartItems">0</strong></div>
+          <div><span>Wishlist</span><strong id="metricWishlist">0</strong></div>
+        </div>
+        <div class="quick-actions">
+          <a href="/catalog.html">Continue Shopping</a>
+          <button type="button" data-panel="orders">View Orders</button>
+          <button type="button" data-panel="addresses">Manage Addresses</button>
+          <button type="button" data-panel="profile">Edit Profile</button>
+        </div>
+      </section>
+
+      <section class="account-panel" id="panel-orders">
+        <div class="panel-heading"><h2>Orders</h2><button class="secondary-button" id="refreshOrders">Refresh</button></div>
+        <div class="account-list" id="ordersList"></div>
+      </section>
+
+      <section class="account-panel" id="panel-wishlist">
+        <div class="panel-heading"><h2>Wishlist</h2><a class="secondary-button" href="/catalog.html">Add Products</a></div>
+        <div class="account-list product-list" id="wishlistList"></div>
+      </section>
+
+      <section class="account-panel" id="panel-addresses">
+        <div class="panel-heading"><h2>Addresses</h2></div>
+        <form class="account-form" id="addressForm">
+          <input type="hidden" id="addressId">
+          <label>Full Name<input id="addressFullName" required placeholder="Jane Amani"></label>
+          <label>Phone<input id="addressPhone" type="tel" placeholder="0747690999"></label>
+          <label>County<input id="addressCounty" placeholder="Nairobi County"></label>
+          <label>City/Town<input id="addressCity" required placeholder="Nairobi"></label>
+          <label>Area<input id="addressArea" placeholder="Westlands"></label>
+          <label>Street<input id="addressStreet" placeholder="Muthithi Road"></label>
+          <label>Building<input id="addressBuilding" placeholder="Omanutro House"></label>
+          <label>Additional Notes<textarea id="addressNotes" rows="3" placeholder="Delivery instructions or landmarks"></textarea></label>
+          <label class="checkbox-row">Default address<input id="addressDefault" type="checkbox"></label>
+          <button class="primary-button" type="submit">Save Address</button>
+        </form>
+        <div class="account-list" id="addressesList"></div>
+      </section>
+
+      <section class="account-panel" id="panel-profile">
+        <div class="panel-heading"><h2>Profile</h2></div>
+        <form class="account-form compact" id="profileForm">
+          <label>Full Name<input id="profileName" required placeholder="Jane Amani"></label>
+          <label>Email<input id="profileEmail" readonly placeholder="jane@example.com"></label>
+          <label>Phone<input id="profilePhone" type="tel" placeholder="0747690999"></label>
+          <label>Profile Picture URL<input id="profileAvatarUrl" type="url" placeholder="https://example.com/photo.jpg"></label>
+          <button class="primary-button" type="submit">Save Profile</button>
+        </form>
+      </section>
+
+      <section class="account-panel" id="panel-security">
+        <div class="security-card">
+          <span>Authentication Provider</span>
+          <strong>Google</strong>
+        </div>
+        <div class="security-card">
+          <span>Account Status</span>
+          <strong>Verified</strong>
+        </div>
+        <button class="danger-button" type="button" id="securityLogout">Sign Out</button>
+      </section>
+    </section>
+  </main>
+
+  <script src="/js/form-validation.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/account-dashboard.js"></script>
+  <script type="module" src="/js/firebase-auth.js"></script>
+</body>
+</html>

@@ -83,6 +83,8 @@ function createSchema() {
 
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
+      order_number TEXT,
+      checkout_attempt_id TEXT,
       user_id TEXT NOT NULL,
       customer_json TEXT NOT NULL,
       items_json TEXT NOT NULL,
@@ -91,12 +93,18 @@ function createSchema() {
       shipping REAL NOT NULL,
       tax REAL NOT NULL,
       total REAL NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'KES',
       status TEXT NOT NULL,
       payment_status TEXT NOT NULL,
       payment_provider TEXT NOT NULL,
       mpesa_phone TEXT,
       mpesa_checkout_request_id TEXT,
       mpesa_merchant_request_id TEXT,
+      mpesa_transaction_reference TEXT,
+      mpesa_amount REAL,
+      mpesa_receipt_number TEXT,
+      mpesa_transaction_date TEXT,
+      mpesa_callback_received_at TEXT,
       mpesa_response_json TEXT,
       mpesa_result_json TEXT,
       timeline_json TEXT NOT NULL DEFAULT '[]',
@@ -107,6 +115,100 @@ function createSchema() {
 
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
     CREATE INDEX IF NOT EXISTS idx_orders_mpesa_checkout ON orders(mpesa_checkout_request_id);
+
+    CREATE TABLE IF NOT EXISTS cart_items (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      options_json TEXT NOT NULL DEFAULT '{}',
+      variant_key TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_user_product_variant
+      ON cart_items(user_id, product_id, variant_key);
+    CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+
+    CREATE TABLE IF NOT EXISTS addresses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      phone TEXT,
+      county TEXT,
+      city TEXT NOT NULL,
+      area TEXT,
+      street TEXT,
+      building TEXT,
+      notes TEXT,
+      is_default INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+
+    CREATE TABLE IF NOT EXISTS wishlist_items (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_user_product
+      ON wishlist_items(user_id, product_id);
+    CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_items(user_id);
+
+    CREATE TABLE IF NOT EXISTS roles (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS permissions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      role_id TEXT NOT NULL,
+      permission_id TEXT NOT NULL,
+      PRIMARY KEY (role_id, permission_id),
+      FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE,
+      FOREIGN KEY(permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS user_roles (
+      user_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      assigned_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, role_id),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id TEXT,
+      metadata_json TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 
     CREATE TABLE IF NOT EXISTS verification_records (
       id TEXT PRIMARY KEY,
@@ -186,6 +288,188 @@ function migrateFirebaseUserColumns() {
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))");
 }
 
+function migrateCartItems() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS cart_items (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      options_json TEXT NOT NULL DEFAULT '{}',
+      variant_key TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_user_product_variant
+      ON cart_items(user_id, product_id, variant_key);
+    CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+  `);
+}
+
+function migrateSecureCheckoutColumns() {
+  addColumnIfMissing("orders", "order_number TEXT");
+  addColumnIfMissing("orders", "checkout_attempt_id TEXT");
+  addColumnIfMissing("orders", "currency TEXT NOT NULL DEFAULT 'KES'");
+  addColumnIfMissing("orders", "mpesa_transaction_reference TEXT");
+  addColumnIfMissing("orders", "mpesa_amount REAL");
+  addColumnIfMissing("orders", "mpesa_receipt_number TEXT");
+  addColumnIfMissing("orders", "mpesa_transaction_date TEXT");
+  addColumnIfMissing("orders", "mpesa_callback_received_at TEXT");
+
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number
+      ON orders(order_number)
+      WHERE order_number IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_checkout_attempt
+      ON orders(user_id, checkout_attempt_id)
+      WHERE checkout_attempt_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_mpesa_checkout_unique
+      ON orders(mpesa_checkout_request_id)
+      WHERE mpesa_checkout_request_id IS NOT NULL;
+  `);
+}
+
+function migrateAccountDashboardTables() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS addresses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      phone TEXT,
+      county TEXT,
+      city TEXT NOT NULL,
+      area TEXT,
+      street TEXT,
+      building TEXT,
+      notes TEXT,
+      is_default INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+
+    CREATE TABLE IF NOT EXISTS wishlist_items (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_user_product
+      ON wishlist_items(user_id, product_id);
+    CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_items(user_id);
+  `);
+}
+
+const ROLE_PERMISSION_MAP = {
+  customer: [
+    "profile:manage_own", "addresses:manage_own", "wishlist:manage_own", "orders:view_own", "checkout:create"
+  ],
+  super_admin: [
+    "*", "staff:manage", "settings:manage", "firebase:manage", "mpesa:settings",
+    "security:manage", "reports:all", "logs:view"
+  ],
+  store_manager: [
+    "admin:access", "dashboard:view", "products:manage", "categories:manage", "collections:manage",
+    "inventory:manage", "orders:manage", "customers:view", "marketing:banners", "collections:feature"
+  ],
+  finance: [
+    "admin:access", "dashboard:view", "payments:view", "payments:manage", "mpesa:manage",
+    "refunds:manage", "reports:revenue", "reports:sales", "reports:finance", "reports:tax", "exports:finance"
+  ],
+  inventory: ["admin:access", "inventory:manage", "inventory:adjust", "sku:manage", "products:quantities"],
+  fulfillment: ["admin:access", "orders:manage", "shipping:manage", "packing:manage", "delivery:manage", "invoices:print", "packing_slips:print"],
+  customer_support: ["admin:access", "customers:view", "orders:view", "customer_notes:update", "orders:cancel"],
+  marketing: ["admin:access", "marketing:banners", "products:feature", "coupons:manage", "discounts:manage", "campaigns:manage", "marketing:analytics"],
+  content: ["admin:access", "content:manage", "about:manage", "homepage:manage", "products:descriptions", "images:manage", "collections:manage", "lookbooks:manage"],
+  analytics: ["admin:access", "dashboard:view", "reports:sales", "reports:customers", "reports:products", "reports:inventory", "analytics:view"],
+  developer: ["admin:access", "logs:view", "api:monitor", "integrations:manage", "debug:tools", "feature_flags:manage"]
+};
+
+const ROLE_DESCRIPTIONS = {
+  customer: "Customer account access",
+  super_admin: "Full unrestricted system access",
+  store_manager: "Store operations and catalog management",
+  finance: "Payments and finance reports",
+  inventory: "Stock and inventory management",
+  fulfillment: "Order fulfillment and shipping",
+  customer_support: "Customer and order support",
+  marketing: "Marketing campaigns and promotions",
+  content: "Content and media management",
+  analytics: "Read-only analytics and reports",
+  developer: "Technical tools and integrations"
+};
+
+function migrateRbacTables() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS roles (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS permissions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      role_id TEXT NOT NULL,
+      permission_id TEXT NOT NULL,
+      PRIMARY KEY (role_id, permission_id),
+      FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE,
+      FOREIGN KEY(permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS user_roles (
+      user_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      assigned_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, role_id),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id TEXT,
+      metadata_json TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+  `);
+
+  const now = new Date().toISOString();
+  const insertRole = db.prepare("INSERT OR IGNORE INTO roles (id, name, description, created_at) VALUES (?, ?, ?, ?)");
+  const insertPermission = db.prepare("INSERT OR IGNORE INTO permissions (id, name, description, created_at) VALUES (?, ?, ?, ?)");
+  const linkPermission = db.prepare("INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)");
+  const linkUserRole = db.prepare("INSERT OR IGNORE INTO user_roles (user_id, role_id, assigned_at) VALUES (?, ?, ?)");
+
+  for (const [role, permissions] of Object.entries(ROLE_PERMISSION_MAP)) {
+    insertRole.run(role, role, ROLE_DESCRIPTIONS[role] || role, now);
+    for (const permission of permissions) {
+      insertPermission.run(permission, permission, permission, now);
+      linkPermission.run(role, permission);
+    }
+  }
+
+  for (const user of db.prepare("SELECT id, role FROM users").all()) {
+    const roleId = user.role === "admin" ? "super_admin" : user.role || "customer";
+    linkUserRole.run(user.id, ROLE_PERMISSION_MAP[roleId] ? roleId : "customer", now);
+  }
+}
+
 const MIGRATIONS = [
   {
     version: 1,
@@ -213,6 +497,26 @@ const MIGRATIONS = [
     version: 3,
     name: "add_firebase_user_columns",
     up: migrateFirebaseUserColumns
+  },
+  {
+    version: 4,
+    name: "add_cart_items",
+    up: migrateCartItems
+  },
+  {
+    version: 5,
+    name: "add_secure_checkout_columns",
+    up: migrateSecureCheckoutColumns
+  },
+  {
+    version: 6,
+    name: "add_account_dashboard_tables",
+    up: migrateAccountDashboardTables
+  },
+  {
+    version: 7,
+    name: "add_rbac_tables",
+    up: migrateRbacTables
   }
 ];
 
@@ -262,14 +566,16 @@ function seedFromJson() {
   `);
   const insertOrder = db.prepare(`
     INSERT INTO orders (
-      id, user_id, customer_json, items_json, shipping_address_json, subtotal,
-      shipping, tax, total, status, payment_status, payment_provider, mpesa_phone,
-      mpesa_checkout_request_id, mpesa_merchant_request_id, mpesa_response_json,
+      id, order_number, checkout_attempt_id, user_id, customer_json, items_json, shipping_address_json,
+      subtotal, shipping, tax, total, currency, status, payment_status, payment_provider, mpesa_phone,
+      mpesa_checkout_request_id, mpesa_merchant_request_id, mpesa_transaction_reference, mpesa_amount,
+      mpesa_receipt_number, mpesa_transaction_date, mpesa_callback_received_at, mpesa_response_json,
       mpesa_result_json, timeline_json, stock_reduced_at, created_at
     ) VALUES (
-      @id, @userId, @customerJson, @itemsJson, @shippingAddressJson, @subtotal,
-      @shipping, @tax, @total, @status, @paymentStatus, @paymentProvider, @mpesaPhone,
-      @mpesaCheckoutRequestId, @mpesaMerchantRequestId, @mpesaResponseJson,
+      @id, @orderNumber, @checkoutAttemptId, @userId, @customerJson, @itemsJson, @shippingAddressJson,
+      @subtotal, @shipping, @tax, @total, @currency, @status, @paymentStatus, @paymentProvider, @mpesaPhone,
+      @mpesaCheckoutRequestId, @mpesaMerchantRequestId, @mpesaTransactionReference, @mpesaAmount,
+      @mpesaReceiptNumber, @mpesaTransactionDate, @mpesaCallbackReceivedAt, @mpesaResponseJson,
       @mpesaResultJson, @timelineJson, @stockReducedAt, @createdAt
     )
   `);
@@ -330,6 +636,14 @@ function seedFromJson() {
         mpesaPhone: order.mpesaPhone || null,
         mpesaCheckoutRequestId: order.mpesaCheckoutRequestId || null,
         mpesaMerchantRequestId: order.mpesaMerchantRequestId || null,
+        orderNumber: order.orderNumber || null,
+        checkoutAttemptId: order.checkoutAttemptId || null,
+        currency: order.currency || "KES",
+        mpesaTransactionReference: order.mpesaTransactionReference || null,
+        mpesaAmount: order.mpesaAmount || null,
+        mpesaReceiptNumber: order.mpesaReceiptNumber || null,
+        mpesaTransactionDate: order.mpesaTransactionDate || null,
+        mpesaCallbackReceivedAt: order.mpesaCallbackReceivedAt || null,
         mpesaResponseJson: json(order.mpesaResponse),
         mpesaResultJson: json(order.mpesaResult),
         timelineJson: json(order.timeline || [], []),

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FAQ | OMANUTRO</title>
+        <meta name="description" content="Frequently asked questions for Omanutro orders, shipping, sizing, returns, payments, and support.">
+        <link rel="icon" href="https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8yDVcyQJzaKjUe9vH8TXdxR3ynPCQW5BhGcz4t">
+        <script>
+            const savedTheme = localStorage.getItem("commerce-theme");
+            const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.dataset.theme = savedTheme || preferredTheme;
+        </script>
+        <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+        <header class="topbar contact-topbar">
+            <a class="brand" href="/" aria-label="OMANUTRO home"><span>OMANUTRO</span></a>
+            <button class="mobile-menu-toggle icon-button" id="mobileMenuButton" type="button" aria-label="Open navigation" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+            <nav class="nav-tabs" aria-label="Primary navigation">
+                <a class="nav-tab" href="/">Home</a>
+                <a class="nav-tab" href="/about">About</a>
+                <a class="nav-tab" href="/#shopView">Collection</a>
+                <a class="nav-tab" href="/work-with-us.html">Work With Us</a>
+                <a class="nav-tab" href="/contact">Contact</a>
+            </nav>
+            <div class="topbar-actions contact-topbar-actions">
+                <button class="theme-toggle" id="themeToggleButton" type="button" role="switch" aria-checked="false" aria-label="Switch theme"><span class="toggle-icon sun-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.8v2.3M12 18.9v2.3M21.2 12h-2.3M5.1 12H2.8M18.5 5.5l-1.6 1.6M7.1 16.9l-1.6 1.6M18.5 18.5l-1.6-1.6M7.1 7.1 5.5 5.5"/></svg></span><span class="toggle-icon moon-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18.9 15.4A7.2 7.2 0 0 1 8.6 5.1 7.9 7.9 0 1 0 18.9 15.4Z"/></svg></span></button>
+                <a class="icon-button about-account-link" href="/account.html" aria-label="Open account" title="Account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg></a>
+            </div>
+        </header>
+
+        <main class="premium-info-page faq-page">
+            <section class="premium-info-hero">
+                <span class="contact-kicker">Support</span>
+                <h1>Frequently Asked Questions</h1>
+                <p>Clear answers for orders, delivery, sizing, returns, payment, and customer care.</p>
+            </section>
+            <section class="premium-info-grid" aria-label="Frequently asked questions">
+                <article class="info-accordion is-open" id="shipping"><button type="button" aria-expanded="true">How long does shipping take?<span>+</span></button><p>Orders are processed quickly after payment confirmation. Delivery timelines depend on your location and are shared during checkout or by support after dispatch.</p></article>
+                <article class="info-accordion"><button type="button" aria-expanded="false">How do I track my order?<span>+</span></button><p>Use your account order history or contact support with your order number. Tracking details are sent once your order ships.</p></article>
+                <article class="info-accordion" id="returns"><button type="button" aria-expanded="false">Can I return or exchange an item?<span>+</span></button><p>Eligible items can be returned or exchanged within the stated return window when unworn, unwashed, and in original condition.</p></article>
+                <article class="info-accordion"><button type="button" aria-expanded="false">What payment methods are accepted?<span>+</span></button><p>Omanutro supports secure checkout options using M-Pesa for now.</p></article>
+                <article class="info-accordion"><button type="button" aria-expanded="false">How do I choose the right size?<span>+</span></button><p>Use the dedicated Size Guide for chest, shoulder, sleeve, length, waist, and international size comparisons.</p></article>
+                <article class="info-accordion"><button type="button" aria-expanded="false">Do you offer oversized fits?<span>+</span></button><p>Some Omanutro pieces are intentionally cut wider with dropped shoulders. Check each product description and compare your measurements before ordering.</p></article>
+                <article class="info-accordion"><button type="button" aria-expanded="false">Can I change an order after placing it?<span>+</span></button><p>Contact support as soon as possible. Changes can only be made before the order has been packed or dispatched.</p></article>
+                <article class="info-accordion"><button type="button" aria-expanded="false">How can I contact support?<span>+</span></button><p>Email <a href="mailto:support.omanutro@gmail.com">support.omanutro@gmail.com</a>, call or WhatsApp us at +254 747 690 999, or use the contact form for a formatted email or WhatsApp message.</p></article>
+            </section>
+        </main>
+        <div class="toast" id="toast" role="status"></div>
+        <script src="/js/form-validation.js"></script>
+        <script src="/js/navigation.js"></script>
+        <script src="/js/contact.js"></script>
+        <script>
+            document.querySelectorAll(".info-accordion button").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const item = button.closest(".info-accordion");
+                    const open = !item.classList.contains("is-open");
+                    item.classList.toggle("is-open", open);
+                    button.setAttribute("aria-expanded", String(open));
+                });
+            });
+        </script>
+    </body>
+</html>

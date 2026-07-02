@@ -131,6 +131,16 @@ input, select {
   border-radius: 8px;
 }
 
+.required-marker {
+  color: #dc2626;
+  font-weight: 950;
+}
+
+input:invalid:not(:placeholder-shown),
+select:invalid {
+  border-color: #dc2626;
+}
+
 .primary-button, .secondary-button, .danger-button, .icon-button, .avatar-button, .filter-button, .table-action, .pager {
   display: inline-flex;
   align-items: center;

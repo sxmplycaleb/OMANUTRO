@@ -7,8 +7,12 @@ const { ourFileRouter } = require("./uploadthing");
 const config = require("./config");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
+const accountRoutes = require("./routes/account");
+const addressRoutes = require("./routes/addresses");
+const wishlistRoutes = require("./routes/wishlist");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
+const cartRoutes = require("./routes/cart");
 const uploadRoutes = require("./routes/uploads");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
@@ -60,7 +64,11 @@ function createApp() {
   app.use("/admin", express.static(ADMIN_DIR));
   app.use("/api/auth", authRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/account", accountRoutes);
+  app.use("/api/addresses", addressRoutes);
+  app.use("/api/wishlist", wishlistRoutes);
   app.use("/api/products", productRoutes);
+  app.use("/api/cart", cartRoutes);
   app.use("/api/orders", orderRoutes);
   app.use("/api/uploads", uploadRoutes);
   app.post("/api/mpesa/callback", orderRoutes.mpesaCallback);

@@ -37,18 +37,18 @@
   };
 
   const navItems = [
-    { id: "overview", label: "Overview", icon: "overview", roles: ["admin"] },
-    { id: "profile", label: "Profile", icon: "profile", roles: ["admin"] },
-    { id: "products", label: "Products", icon: "products", roles: ["admin"] },
-    { id: "orders", label: "Orders", icon: "orders", roles: ["admin"] },
-    { id: "users", label: "Users", icon: "users", roles: ["admin"] },
-    { id: "categories", label: "Categories", icon: "categories", roles: ["admin"] },
-    { id: "brands", label: "Brands", icon: "brands", roles: ["admin"] },
-    { id: "inventory", label: "Inventory", icon: "inventory", roles: ["admin"] },
-    { id: "reviews", label: "Reviews", icon: "reviews", roles: ["admin"] },
-    { id: "coupons", label: "Coupons", icon: "coupons", roles: ["admin"] },
-    { id: "analytics", label: "Analytics", icon: "analytics", roles: ["admin"] },
-    { id: "settings", label: "Settings", icon: "settings", roles: ["admin"] }
+    { id: "overview", label: "Overview", icon: "overview", permissions: ["admin:access"] },
+    { id: "profile", label: "Profile", icon: "profile", permissions: ["admin:access"] },
+    { id: "products", label: "Products", icon: "products", permissions: ["products:manage", "products:descriptions", "products:feature"] },
+    { id: "orders", label: "Orders", icon: "orders", permissions: ["orders:manage", "orders:view"] },
+    { id: "users", label: "Users", icon: "users", permissions: ["customers:view", "staff:manage"] },
+    { id: "categories", label: "Categories", icon: "categories", permissions: ["categories:manage", "collections:manage"] },
+    { id: "brands", label: "Brands", icon: "brands", permissions: ["content:manage", "collections:manage"] },
+    { id: "inventory", label: "Inventory", icon: "inventory", permissions: ["inventory:manage", "products:quantities"] },
+    { id: "reviews", label: "Reviews", icon: "reviews", permissions: ["customer_notes:update", "content:manage"] },
+    { id: "coupons", label: "Coupons", icon: "coupons", permissions: ["coupons:manage", "discounts:manage"] },
+    { id: "analytics", label: "Analytics", icon: "analytics", permissions: ["analytics:view", "reports:sales", "reports:customers", "reports:products", "reports:inventory", "reports:all"] },
+    { id: "settings", label: "Settings", icon: "settings", permissions: ["settings:manage", "mpesa:settings", "firebase:manage", "security:manage"] }
   ];
 
   const pageMeta = {
@@ -142,12 +142,18 @@
 
   function dashboardPathForRole(user) {
     const role = String(user?.role || "").toLowerCase();
-    if (role === "admin") return "/admin/index.html#overview";
+    const permissions = user?.permissions || [];
+    if (role === "admin" || role === "super_admin" || permissions.includes("*") || permissions.includes("admin:access")) return "/admin/index.html#overview";
     return "/catalog.html";
   }
 
+  function hasPermission(permission) {
+    const permissions = state.user?.permissions || [];
+    return permissions.includes("*") || permissions.includes(permission);
+  }
+
   function canAccess(item) {
-    return item.roles.includes(state.user?.role);
+    return (item.permissions || []).some(hasPermission);
   }
 
   function renderNav() {
@@ -173,12 +179,12 @@
 
   function actionMarkup(route) {
     const actions = {
-      overview: `<button class="secondary-button" data-action="refresh">${icons.refresh}Refresh</button><a class="primary-button" href="#analytics">${icons.analytics}Open Analytics</a>`,
-      products: `<button class="secondary-button" data-action="export-products">${icons.export}Export CSV</button><button class="primary-button" data-action="add-product">${icons.plus}Add Product</button>`,
-      orders: `<button class="secondary-button" data-action="print-invoice">${icons.print}Print Invoice</button><button class="primary-button" data-action="refresh">${icons.refresh}Refresh</button>`,
-      users: `<button class="secondary-button" data-action="rbac">${icons.shield}RBAC Matrix</button><button class="primary-button" data-action="invite-user">${icons.plus}Invite User</button>`,
-      analytics: `<button class="secondary-button" data-action="export-pdf">${icons.export}Export PDF</button><button class="primary-button" data-action="export-csv">${icons.export}Export CSV</button>`,
-      settings: `<button class="primary-button" data-action="save-settings">${icons.settings}Save Settings</button>`
+      overview: `<button class="secondary-button" data-action="refresh">${icons.refresh}Refresh</button>${hasPermission("analytics:view") ? `<a class="primary-button" href="#analytics">${icons.analytics}Open Analytics</a>` : ""}`,
+      products: `${hasPermission("products:manage") ? `<button class="secondary-button" data-action="export-products">${icons.export}Export CSV</button><button class="primary-button" data-action="add-product">${icons.plus}Add Product</button>` : ""}`,
+      orders: `${hasPermission("invoices:print") ? `<button class="secondary-button" data-action="print-invoice">${icons.print}Print Invoice</button>` : ""}<button class="primary-button" data-action="refresh">${icons.refresh}Refresh</button>`,
+      users: `${hasPermission("staff:manage") ? `<button class="secondary-button" data-action="rbac">${icons.shield}RBAC Matrix</button><button class="primary-button" data-action="invite-user">${icons.plus}Invite User</button>` : ""}`,
+      analytics: `${hasPermission("reports:all") || hasPermission("exports:finance") ? `<button class="secondary-button" data-action="export-pdf">${icons.export}Export PDF</button><button class="primary-button" data-action="export-csv">${icons.export}Export CSV</button>` : ""}`,
+      settings: `${hasPermission("settings:manage") ? `<button class="primary-button" data-action="save-settings">${icons.settings}Save Settings</button>` : ""}`
     };
     return actions[route] || `<button class="primary-button" data-action="create">${icons.plus}Create</button>`;
   }
@@ -489,7 +495,8 @@
   function setRoute() {
     const next = (window.location.hash || "#overview").replace("#", "") || "overview";
     const item = navItems.find((entry) => entry.id === next);
-    state.route = item && canAccess(item) ? next : "overview";
+    const fallback = navItems.find(canAccess)?.id || "overview";
+    state.route = item && canAccess(item) ? next : fallback;
     state.tableFilter = "";
     renderView();
     closeMobileSidebar();
@@ -502,7 +509,7 @@
       renderView();
       const me = await api("/api/admin/auth/me");
       state.user = me.user;
-      if (state.user?.role !== "admin") throw new Error("Admin access required.");
+      if (!hasPermission("admin:access")) throw new Error("Admin access required.");
       const initials = (state.user.name || state.user.email || "AD").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
       document.getElementById("avatarInitials").textContent = initials;
       state.dashboard = await api("/api/admin/dashboard");

@@ -106,11 +106,60 @@
         return;
       }
 
+      const data = new FormData(form);
+      const message = [
+        "New Contact Form Submission",
+        "",
+        "Name:",
+        data.get("name") || "",
+        "",
+        "Email:",
+        data.get("email") || "",
+        "",
+        "Subject:",
+        data.get("subject") || "",
+        "",
+        "Order:",
+        data.get("order") || "Not provided",
+        "",
+        "Message:",
+        data.get("message") || ""
+      ].join("\n");
+      const subject = encodeURIComponent(`Omanutro Contact: ${data.get("subject") || "Website message"}`);
+      const body = encodeURIComponent(message);
+      const mailto = `mailto:support.omanutro@gmail.com?subject=${subject}&body=${body}`;
+      const whatsapp = `https://wa.me/254747690999?text=${body}`;
+
       form.reset();
       form.classList.add("hidden");
       success.classList.remove("hidden");
       success.focus({ preventScroll: true });
-      showAlert("Message sent. Thanks for reaching out.", "success");
+      showAlert("Opening your email app. WhatsApp will be used if email is unavailable.", "success");
+      window.location.href = mailto;
+      setTimeout(() => {
+        window.open(whatsapp, "_blank", "noopener,noreferrer");
+      }, 900);
+    });
+  }
+
+  function setupPhoneCopy() {
+    document.querySelectorAll("[data-copy-phone]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const phone = button.dataset.copyPhone || "";
+        const status = button.parentElement?.querySelector(".copy-confirmation");
+        try {
+          await navigator.clipboard.writeText(phone);
+          if (status) status.textContent = "Copied!";
+          showAlert("Phone number copied.", "success");
+        } catch (error) {
+          if (status) status.textContent = phone;
+          showAlert("Copy unavailable. Select the number manually.", "error");
+        }
+        clearTimeout(button.copyTimeout);
+        button.copyTimeout = setTimeout(() => {
+          if (status) status.textContent = "";
+        }, 2200);
+      });
     });
   }
 
@@ -124,6 +173,7 @@
     setupReveals();
     setupFaq();
     setupForm();
+    setupPhoneCopy();
     updateTopbarState();
     window.addEventListener("scroll", updateTopbarState, { passive: true });
 

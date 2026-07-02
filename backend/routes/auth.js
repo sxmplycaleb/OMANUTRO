@@ -6,7 +6,7 @@ const asyncHandler = require("../http/async-handler");
 const router = express.Router();
 
 router.get("/me", authenticate, (req, res) => {
-  res.json({ user: authService.currentUser(req.user) });
+  res.json({ user: authService.currentUser(req.user, req.firebaseUser) });
 });
 
 router.put("/profile", authenticate, (req, res) => {

@@ -90,6 +90,7 @@
                 <div class="account-menu" id="signedOutMenu">
                     <button class="icon-button account-trigger" id="accountMenuButton" type="button" aria-label="Open account menu" aria-expanded="false">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>
+                        <span>Sign In</span>
                     </button>
                     <div class="dropdown-menu hidden" id="accountMenu">
                         <button class="primary-button" type="button" data-account-action="signin">Sign in</button>
@@ -102,12 +103,15 @@
                 <div class="account-menu hidden" id="signedInMenu">
                     <button class="icon-button account-avatar" id="profileMenuButton" type="button" aria-label="Open account menu" aria-expanded="false">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>
+                        <span id="profileMenuName"></span>
+                        <span class="menu-caret" aria-hidden="true">⌄</span>
                     </button>
                     <div class="dropdown-menu hidden" id="profileMenu">
-                        <button type="button" data-profile-action="profile">Profile</button>
-                        <button type="button" data-profile-action="recently-viewed">Recently viewed</button>
+                        <div class="dropdown-greeting" id="profileGreeting">Welcome back</div>
+                        <button type="button" data-profile-action="dashboard">Dashboard</button>
+                        <button type="button" data-profile-action="orders">Orders</button>
+                        <button type="button" data-profile-action="wishlist">Wishlist</button>
                         <button type="button" data-profile-action="settings">Settings</button>
-                        <button type="button" data-profile-action="help">Help</button>
                         <button type="button" data-profile-action="signout">Sign out</button>
                     </div>
                 </div>
@@ -242,11 +246,11 @@
                             <form id="profileForm" class="account-form">
                                 <label>Profile Picture<input id="profileAvatar" type="file" accept="image/*"></label>
                                 <div class="split">
-                                    <label>First Name<input id="profileFirstName" required></label>
-                                    <label>Last Name<input id="profileLastName" required></label>
+                                    <label>First Name<input id="profileFirstName" required placeholder="Jane"></label>
+                                    <label>Last Name<input id="profileLastName" required placeholder="Amani"></label>
                                 </div>
                                 
-                                <label>Email Address<input id="profileEmail" type="email" disabled></label>
+                                <label>Email Address<input id="profileEmail" type="email" disabled placeholder="jane@example.com"></label>
                                 <label>Phone Number<input id="profilePhone" type="tel" placeholder="+2547XXXXXXXX"></label>
                                 
                                 <div class="split">
@@ -259,8 +263,8 @@
                                     </select></label>
                                 </div>
                                 
-                                <label>Display Name / Username<input id="profileUsername"></label>
-                                <label>Bio / About<textarea id="profileBio" rows="4"></textarea></label>
+                                <label>Display Name / Username<input id="profileUsername" placeholder="janeamani"></label>
+                                <label>Bio / About<textarea id="profileBio" rows="4" placeholder="Tell us a little about yourself."></textarea></label>
                                 
                                 <button class="primary-button" type="submit">Save Profile</button>
                             </form>
@@ -321,8 +325,8 @@
                                 <div class="settings-grid">
                                     <section class="settings-group">
                                         <h3>Contact Us</h3>
-                                        <label>Subject<input id="supportSubject"></label>
-                                        <label>Message<textarea id="supportMessage" rows="4"></textarea></label>
+                                        <label>Subject<input id="supportSubject" placeholder="Order inquiry"></label>
+                                        <label>Message<textarea id="supportMessage" rows="4" placeholder="Tell support what you need help with."></textarea></label>
                                         <button class="primary-button" type="button">Submit Ticket</button>
                                     </section>
                                     
@@ -368,15 +372,15 @@
                                     <button class="secondary-button" type="button" id="resetProductForm">Reset</button>
                                 </div>
                                 <input type="hidden" id="productId">
-                                <label>Name<input type="text" id="productName" required></label>
-                                <label>Category<input type="text" id="productCategory" required></label>
-                                <label>Description<textarea id="productDescription" required rows="4"></textarea></label>
+                                <label>Name<input type="text" id="productName" required placeholder="Classic Hoodie"></label>
+                                <label>Category<input type="text" id="productCategory" required placeholder="Hoodies"></label>
+                                <label>Description<textarea id="productDescription" required rows="4" placeholder="Describe the product, material, and fit."></textarea></label>
                                 <div class="split">
-                                    <label>Price<input type="number" id="productPrice" required min="0" step="0.01"></label>
-                                    <label>Stock<input type="number" id="productStock" required min="0" step="1"></label>
+                                    <label>Price<input type="number" id="productPrice" required min="0" step="0.01" placeholder="49.99"></label>
+                                    <label>Stock<input type="number" id="productStock" required min="0" step="1" placeholder="12"></label>
                                 </div>
                                 <div class="split">
-                                    <label>Rating<input type="number" id="productRating" required min="0" max="5" step="0.1" value="4.5"></label>
+                                    <label>Rating<input type="number" id="productRating" required min="0" max="5" step="0.1" value="4.5" placeholder="4.5"></label>
                                     <label>Tags<input type="text" id="productTags" placeholder="travel, laptop,canvas"></label>
                                 </div>
                                 <label>Image URL<input type="url" id="productImage" required placeholder="https://example.com/image.jpg"></label>
@@ -651,13 +655,13 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg>
                     </button>
                 </div>
-                <label class="register-only hidden">Name<input id="authName" autocomplete="name"></label>
+                <label class="register-only hidden">Name<input id="authName" autocomplete="name" placeholder="Jane Amani"></label>
                 <label class="register-only hidden">WhatsApp Phone<input id="authPhone" type="tel" autocomplete="tel" placeholder="2547XXXXXXXX"></label>
-                <label class="signup-code-field hidden">WhatsApp Code<input id="authSignupCode" inputmode="numeric" autocomplete="one-time-code"></label>
-                <label>Email<input id="authEmail" type="email" autocomplete="email" required></label>
-                <label>Password<input id="authPassword" type="password" autocomplete="current-password" required></label>
+                <label class="signup-code-field hidden">WhatsApp Code<input id="authSignupCode" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"></label>
+                <label>Email<input id="authEmail" type="email" autocomplete="email" required placeholder="customer@example.com"></label>
+                <label>Password<input id="authPassword" type="password" autocomplete="current-password" required placeholder="Enter your password"></label>
                 <button class="primary-button" type="submit" id="authSubmit">Login</button>
-                <button id="googleLogin">Continue with Google</button>
+                <button class="google-auth-button" type="button" id="googleLogin"><span class="google-mark" aria-hidden="true">G</span><span>Continue with Google</span></button>
                 <button class="link-button auth-signup-link" type="button" id="toggleAuthMode">Sign Up</button>
                 <button class="link-button" type="button" id="forgotPasswordButton">Forgot Password</button>
             </form>
@@ -672,9 +676,9 @@
                     </button>
                 </div>
                 <p class="muted-copy" id="resetHelp">Enter your account email or phone and we will send a reset code to WhatsApp.</p>
-                <label>Email or phone<input id="resetIdentifier" autocomplete="username" required></label>
-                <label class="reset-code-field hidden">Reset code<input id="resetCode" inputmode="numeric" autocomplete="one-time-code"></label>
-                <label class="reset-password-field hidden">New password<input id="resetPassword" type="password" autocomplete="new-password"></label>
+                <label>Email or phone<input id="resetIdentifier" autocomplete="username" required placeholder="customer@example.com or 0747690999"></label>
+                <label class="reset-code-field hidden">Reset code<input id="resetCode" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"></label>
+                <label class="reset-password-field hidden">New password<input id="resetPassword" type="password" autocomplete="new-password" placeholder="Enter a new password"></label>
                 <button class="primary-button" type="submit" id="resetSubmit">Send code</button>
             </form>
         </div>
@@ -723,6 +727,7 @@
             </div>
         </div>
 
+        <script src="/js/form-validation.js"></script>
         <script src="/js/api.js"></script>
         <script src="/js/auth.js"></script>
         <script src="/js/cart.js"></script>

@@ -1,7 +1,8 @@
 const crypto = require("crypto");
 const admin = require("../services/firebase-admin");
 const users = require("../repositories/users");
-const { hashPassword } = require("../services/store");
+const rbac = require("../repositories/rbac");
+const { hashPassword, verifyAuthToken } = require("../services/store");
 
 function authTokenFromHeader(req) {
   const authHeader = req.headers.authorization || "";
@@ -48,6 +49,21 @@ async function userForFirebaseToken(idToken) {
   return { user, firebase: { uid, email, name, picture } };
 }
 
+function userForLegacyToken(token) {
+  const payload = verifyAuthToken(token);
+  const user = users.findById(payload.sub);
+  return user ? { user, firebase: null } : null;
+}
+
+function attachAccess(user) {
+  const access = rbac.accessForUser(user);
+  return {
+    ...user,
+    roles: access.roles,
+    permissions: access.permissions
+  };
+}
+
 async function authenticate(req, res, next) {
   const token = authTokenFromHeader(req);
 
@@ -56,9 +72,14 @@ async function authenticate(req, res, next) {
   }
 
   try {
-    const session = await userForFirebaseToken(token);
+    let session = null;
+    try {
+      session = userForLegacyToken(token);
+    } catch {
+      session = await userForFirebaseToken(token);
+    }
     if (!session?.user) return res.status(401).json({ error: "Sign in to continue." });
-    req.user = session.user;
+    req.user = attachAccess(session.user);
     req.firebaseUser = session.firebase;
     return next();
   } catch {
@@ -66,14 +87,52 @@ async function authenticate(req, res, next) {
   }
 }
 
+function requireAuth(req, res, next) {
+  return authenticate(req, res, next);
+}
+
+function requirePermission(permission) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: "Sign in to continue." });
+    if (!req.user.permissions?.includes("*") && !req.user.permissions?.includes(permission)) {
+      rbac.log(req.user.id, "access.denied", "permission", permission, { path: req.originalUrl });
+      return res.status(403).json({ error: "Admin access required. You do not have permission to access this resource." });
+    }
+    return next();
+  };
+}
+
+function requireRole(role) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: "Sign in to continue." });
+    if (!req.user.roles?.includes(role)) {
+      rbac.log(req.user.id, "access.denied", "role", role, { path: req.originalUrl });
+      return res.status(403).json({ error: "Required role missing." });
+    }
+    return next();
+  };
+}
+
+function requireAnyRole(roles) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: "Sign in to continue." });
+    if (!roles.some((role) => req.user.roles?.includes(role))) {
+      rbac.log(req.user.id, "access.denied", "role", roles.join(","), { path: req.originalUrl });
+      return res.status(403).json({ error: "Required role missing." });
+    }
+    return next();
+  };
+}
+
 function requireAdmin(req, res, next) {
-  if (req.user?.role !== "admin") {
-    return res.status(403).json({ error: "Admin access required." });
-  }
-  return next();
+  return requirePermission("admin:access")(req, res, next);
 }
 
 module.exports = {
   authenticate,
+  requireAuth,
+  requireRole,
+  requireAnyRole,
+  requirePermission,
   requireAdmin
 };

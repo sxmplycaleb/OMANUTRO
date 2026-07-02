@@ -1,31 +1,95 @@
 (function () {
   const LEGACY_CART_KEY = "commerce-cart";
-  const CART_KEY_PREFIX = "omanutro-cart";
+  const GUEST_CART_KEY = "omanutro-cart:guest";
+  let saveTimer = null;
 
-  function ownerKey(user) {
-    const ownerId = user?.id || user?.email;
-    return ownerId ? `${CART_KEY_PREFIX}:${ownerId}` : `${CART_KEY_PREFIX}:guest`;
+  function stableValue(value) {
+    if (Array.isArray(value)) return value.map(stableValue);
+    if (value && typeof value === "object") {
+      return Object.keys(value)
+        .sort()
+        .reduce((acc, key) => {
+          if (value[key] !== undefined && value[key] !== null && value[key] !== "") {
+            acc[key] = stableValue(value[key]);
+          }
+          return acc;
+        }, {});
+    }
+    return value;
+  }
+
+  function variantKey(item) {
+    return JSON.stringify(stableValue(item.options || item.variant || {}));
   }
 
   function normalize(cart) {
-    return (Array.isArray(cart) ? cart : [])
-      .map((item) => ({
-        productId: item.productId,
-        quantity: Math.max(1, Number(item.quantity) || 1)
-      }))
-      .filter((item) => item.productId);
+    const merged = new Map();
+
+    for (const item of Array.isArray(cart) ? cart : []) {
+      const productId = String(item.productId || "").trim();
+      if (!productId) continue;
+
+      const options = stableValue(item.options || item.variant || {});
+      const key = `${productId}:${JSON.stringify(options)}`;
+      const existing = merged.get(key);
+      const quantity = Math.max(1, Math.trunc(Number(item.quantity) || 1));
+
+      if (existing) existing.quantity += quantity;
+      else merged.set(key, { id: item.id, productId, quantity, options });
+    }
+
+    return Array.from(merged.values());
   }
 
-  function load(user) {
-    return normalize(JSON.parse(localStorage.getItem(ownerKey(user)) || "[]"));
+  function loadGuest() {
+    return normalize(JSON.parse(localStorage.getItem(GUEST_CART_KEY) || localStorage.getItem(LEGACY_CART_KEY) || "[]"));
   }
 
-  function save(cart, user) {
-    localStorage.setItem(ownerKey(user), JSON.stringify(normalize(cart)));
+  function hasGuestCart() {
+    return loadGuest().length > 0;
   }
 
-  function clearLegacy() {
+  function saveGuest(cart) {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(normalize(cart)));
+  }
+
+  function clearGuest() {
+    localStorage.removeItem(GUEST_CART_KEY);
     localStorage.removeItem(LEGACY_CART_KEY);
+  }
+
+  async function request(path, options = {}) {
+    if (!window.CommerceApi) return { cart: [] };
+    return window.CommerceApi.request(path, options);
+  }
+
+  async function loadRemote() {
+    const data = await request("/api/cart");
+    return normalize(data.cart || []);
+  }
+
+  async function saveRemote(cart) {
+    const data = await request("/api/cart", { method: "POST", body: { items: normalize(cart) } });
+    return normalize(data.cart || []);
+  }
+
+  function debounceSaveRemote(cart, onSaved, onError) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try {
+        const savedCart = await saveRemote(cart);
+        onSaved?.(savedCart);
+      } catch (error) {
+        onError?.(error);
+      }
+    }, 250);
+  }
+
+  async function mergeGuestIntoRemote() {
+    const guestCart = loadGuest();
+    const data = await request("/api/cart/merge", { method: "POST", body: { items: guestCart } });
+    clearGuest();
+    return normalize(data.cart || []);
   }
 
   function total(cart, products) {
@@ -41,9 +105,16 @@
   }
 
   window.CommerceCart = {
-    load,
-    save,
-    clearLegacy,
+    loadGuest,
+    hasGuestCart,
+    saveGuest,
+    clearGuest,
+    loadRemote,
+    saveRemote,
+    debounceSaveRemote,
+    mergeGuestIntoRemote,
+    normalize,
+    variantKey,
     total,
     availableOnly
   };

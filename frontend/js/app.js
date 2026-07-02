@@ -5,7 +5,7 @@ function getInitialsTheme() {
 }
 
 const state = {
-    user: null,
+    user: JSON.parse(localStorage.getItem("omanutro-auth-user") || "null"),
     authToken: window.CommerceApi?.getToken() || "",
     products: [],
     categories: [],
@@ -18,12 +18,23 @@ const state = {
     heroIndex: 0,
     heroTimer: null,
     pendingCatalogRedirect: false,
+    pendingCheckout: false,
+    postLoginRedirect: sessionStorage.getItem("omanutro-post-login") || "",
     redirectAfterDcashPopup: false,
     resetStep: "email",
     resetToken: null,
     signupStep: "details",
     signupVerificationId: null
 };
+
+function hasPermission(permission) {
+  const permissions = state.user?.permissions || [];
+  return permissions.includes("*") || permissions.includes(permission);
+}
+
+function isAdminUser() {
+  return state.user?.role === "admin" || state.user?.role === "super_admin" || hasPermission("admin:access");
+}
 
 const $ = (selector) => document.querySelector(selector); 
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -49,6 +60,7 @@ let revealObserver = null;
 const iosIcon = (name) => ({
   bag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8.5h12l-.8 11H6.8l-.8-11ZM9 8.5a3 3 0 0 1 6 0"/></svg>',
   eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12s3.1-5.5 8.5-5.5S20.5 12 20.5 12 17.4 17.5 12 17.5 3.5 12 3.5 12Z"/><path d="M12 14.8a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6Z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-8.8-9.1C2.1 8 3.7 5.2 6.7 4.7c1.8-.3 3.4.6 4.3 2 1-1.4 2.6-2.3 4.4-2 3 .5 4.6 3.3 3.5 6.2C17.1 15.6 12 20 12 20Z"/></svg>',
   refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M19 11a7 7 0 1 0-2 5"/></svg>',
   arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   minus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>',
@@ -129,7 +141,21 @@ function toast(message) {
 }
 
 function persistCart() {
-  if (state.user) window.CommerceCart?.save(state.cart, state.user);
+  state.cart = window.CommerceCart?.normalize?.(state.cart) || state.cart;
+
+  if (state.user) {
+    window.CommerceCart?.debounceSaveRemote?.(
+      state.cart,
+      (cart) => {
+        state.cart = cart;
+        renderCart();
+      },
+      (error) => toast(error.message)
+    );
+  } else {
+    window.CommerceCart?.saveGuest(state.cart);
+  }
+
   renderCart();
 }
 
@@ -144,7 +170,8 @@ async function cleanCartBeforeCheckout() {
 
   if (cleanCart.length !== state.cart.length) {
     state.cart = cleanCart;
-    window.CommerceCart?.save(state.cart);
+    if (state.user) await window.CommerceCart?.saveRemote?.(state.cart);
+    else window.CommerceCart?.saveGuest?.(state.cart);
     renderCart();
     toast("Removed unavailable items from your cart.");
   }
@@ -173,32 +200,110 @@ function updateAuthUI() {
   const signedOutMenu = $("#signedOutMenu");
   const signedInMenu = $("#signedInMenu");
   const avatar = $("#profileMenuButton");
+  const profileName = $("#profileMenuName");
+  const profileGreeting = $("#profileGreeting");
+  const firstName = String(state.user?.name || state.user?.email || "Account").split(/\s+/)[0];
 
   if (signedOutMenu) signedOutMenu.classList.toggle("hidden", Boolean(state.user));
   if (signedInMenu) signedInMenu.classList.toggle("hidden", !state.user);
   if (avatar && state.user) {
-    avatar.title = state.user.name || state.user.email;
+    avatar.title = `${timeGreeting()}, ${firstName}`;
+    avatar.setAttribute("aria-label", `Open account menu for ${firstName}`);
+    avatar.innerHTML = state.user.avatarUrl
+      ? `<img src="${escapeHtml(state.user.avatarUrl)}" alt=""><span id="profileMenuName">${escapeHtml(firstName)}</span><span class="menu-caret" aria-hidden="true">⌄</span>`
+      : `<span class="avatar-initials">${escapeHtml(getUserInitials(state.user))}</span><span id="profileMenuName">${escapeHtml(firstName)}</span><span class="menu-caret" aria-hidden="true">⌄</span>`;
+  }
+  if (profileName && state.user) {
+    profileName.textContent = firstName;
+  }
+  if (profileGreeting && state.user) {
+    profileGreeting.textContent = `${timeGreeting()}, ${firstName}`;
   }
 
   $$(".auth-only").forEach((node) => node.classList.toggle("hidden", !state.user));
-  $$(".admin-only").forEach((node) => node.classList.toggle("hidden", state.user?.role !== "admin"));
+  $$(".admin-only").forEach((node) => node.classList.toggle("hidden", !isAdminUser()));
   renderCart();
+}
+
+function timeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+function rememberAuthenticatedUser(user) {
+  if (user) localStorage.setItem("omanutro-auth-user", JSON.stringify(user));
+  else localStorage.removeItem("omanutro-auth-user");
+}
+
+function rememberPostLogin(destination = location.pathname + location.search + location.hash) {
+  sessionStorage.setItem("omanutro-post-login", destination);
+  state.postLoginRedirect = destination;
+}
+
+function prefillCheckoutProfile() {
+  if (!state.user) return;
+  const shipName = $("#shipName");
+  const mpesaPhone = $("#mpesaPhone");
+
+  if (shipName && !shipName.value) shipName.value = state.user.name || "";
+  if (mpesaPhone && !mpesaPhone.value) mpesaPhone.value = state.user.phone || "";
+}
+
+function openCheckout() {
+  if (!state.user) {
+    state.pendingCheckout = true;
+    openAuth("login");
+    toast("Sign in before checkout.");
+    return;
+  }
+
+  prefillCheckoutProfile();
+  $("#cartDrawer")?.classList.add("open");
 }
 
 async function loadMe() {
   try {
     const data = await api("/api/auth/me");
     state.user = data.user;
-    state.cart = window.CommerceCart?.load(state.user) || [];
-    window.CommerceCart?.clearLegacy?.();
+    rememberAuthenticatedUser(state.user);
+    state.cart = window.CommerceCart?.hasGuestCart?.()
+      ? await window.CommerceCart?.mergeGuestIntoRemote?.() || []
+      : await window.CommerceCart?.loadRemote?.() || [];
   } catch (error) {
     if (error.status !== 401) throw error;
+    const hadToken = Boolean(state.authToken);
     state.user = null;
     state.authToken = "";
-    state.cart = [];
+    state.cart = window.CommerceCart?.loadGuest?.() || [];
+    rememberAuthenticatedUser(null);
     window.CommerceAuth?.clearSession();
+    if (hadToken) toast("Session expired. Please sign in again.");
   }
   updateAuthUI();
+}
+
+async function handleAuthChanged() {
+  await loadMe();
+  if (state.user && state.pendingCheckout) {
+    state.pendingCheckout = false;
+    openCheckout();
+    return;
+  }
+
+  if (state.user && sessionStorage.getItem("omanutro-account-redirect") === "1") {
+    sessionStorage.removeItem("omanutro-account-redirect");
+    location.href = "/account.html";
+    return;
+  }
+
+  if (state.user && state.postLoginRedirect) {
+    const destination = state.postLoginRedirect;
+    sessionStorage.removeItem("omanutro-post-login");
+    state.postLoginRedirect = "";
+    location.href = destination;
+  }
 }
 
 async function loadProducts() {
@@ -297,6 +402,7 @@ function productCardMarkup(product) {
         </div>
         <div class="product-actions">
           <button class="primary-button" type="button" onclick="event.stopPropagation(); addToCart('${product.id}')" ${isOutOfStock ? "disabled aria-disabled=\"true\"" : ""}>${iosIcon(isOutOfStock ? "check" : "bag")}${isOutOfStock ? "Sold out" : "Add to cart"}</button>
+          <button class="secondary-button" type="button" onclick="event.stopPropagation(); addToWishlist('${product.id}')" aria-label="Add ${escapeAttr(product.name)} to wishlist">${iosIcon("heart")}Wishlist</button>
           <button class="secondary-button" type="button" onclick="event.stopPropagation(); openProductDetail('${product.id}')" aria-label="View ${escapeAttr(product.name)} details">${iosIcon("eye")}Details</button>
         </div>
       </div>
@@ -583,6 +689,7 @@ function openProductDetail(productId) {
         </div>
         <div class="detail-tags">${tags}</div>
         <button class="primary-button" onclick="addToCart('${product.id}'); closeProductDetail();" ${product.stock < 1 ? "disabled" : ""}>${iosIcon("bag")}Add to cart</button>
+        <button class="secondary-button" onclick="addToWishlist('${product.id}')">${iosIcon("heart")}Add to wishlist</button>
       </div>
     </div>
     <div class="detail-review-section">
@@ -658,26 +765,39 @@ function renderProductReviews(reviews = []) {
   return `<div class="product-reviews">${featured}</div>`;
 }
 function addToCart(productId) {
-  if (!requireSignin("Sign in to add items to your cart.")) return;
   const product = state.products.find((entry) => entry.id === productId);
   if (!product || product.stock < 1) return;
-  const line = state.cart.find((item) => item.productId === productId);
+  const line = state.cart.find((item) => item.productId === productId && window.CommerceCart?.variantKey?.(item) === "{}");
   if (line) line.quantity += 1;
   else state.cart.push({ productId, quantity: 1 });
   persistCart();
   toast(`${product.name} added to cart`);
 }
 
-function changeQuantity(productId, delta) {
-  const line = state.cart.find((item) => item.productId === productId);
+async function addToWishlist(productId) {
+  if (!requireSignin("Sign in to save wishlist items.")) return;
+  await api("/api/wishlist", { method: "POST", body: { productId } });
+  toast("Saved to wishlist.");
+}
+
+function decodedVariantKey(value) {
+  return value ? decodeURIComponent(value) : "{}";
+}
+
+function changeQuantity(productId, delta, encodedVariantKey = "") {
+  const key = decodedVariantKey(encodedVariantKey);
+  const line = state.cart.find((item) => item.productId === productId && window.CommerceCart?.variantKey?.(item) === key);
   if (!line) return;
   line.quantity += delta;
-  if (line.quantity < 1) state.cart = state.cart.filter((item) => item.productId !== productId);
+  if (line.quantity < 1) {
+    state.cart = state.cart.filter((item) => item.productId !== productId || window.CommerceCart?.variantKey?.(item) !== key);
+  }
   persistCart();
 }
 
-function removeFromCart(productId) {
-  state.cart = state.cart.filter((item) => item.productId !== productId);
+function removeFromCart(productId, encodedVariantKey = "") {
+  const key = decodedVariantKey(encodedVariantKey);
+  state.cart = state.cart.filter((item) => item.productId !== productId || window.CommerceCart?.variantKey?.(item) !== key);
   persistCart();
 }
 
@@ -685,7 +805,7 @@ function renderCart() {
   const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
   if ($("#cartCount")) {
     $("#cartCount").textContent = count;
-    $("#cartCount").classList.toggle("hidden", !state.user || count === 0);
+    $("#cartCount").classList.toggle("hidden", count === 0);
   }
 
   if ($("#cartTotal")) $("#cartTotal").textContent = money(currentCartTotal());
@@ -705,6 +825,10 @@ function renderCart() {
   }
   const markup = state.cart.map((item) => {
     const product = state.products.find((entry) => entry.id === item.productId);
+    const key = encodeURIComponent(window.CommerceCart?.variantKey?.(item) || "{}");
+    const options = Object.entries(item.options || {})
+      .map(([name, value]) => `${escapeHtml(name)}: ${escapeHtml(value)}`)
+      .join(", ");
     if (!product) {
       return `
         <div class="cart-line">
@@ -712,7 +836,7 @@ function renderCart() {
             <strong>Unavailable product</strong>
             <div>This item will be removed at checkout.</div>
           </div>
-          <button class="danger-button" type="button" onclick="removeFromCart('${item.productId}')">${iosIcon("trash")}Remove</button>
+          <button class="danger-button" type="button" onclick="removeFromCart('${item.productId}', '${key}')">${iosIcon("trash")}Remove</button>
         </div>
       `;
     }
@@ -721,13 +845,14 @@ function renderCart() {
         <div>
           <strong>${escapeHtml(product.name)}</strong>
           <div>${money(product.price)} each</div>
+          ${options ? `<div>${options}</div>` : ""}
         </div>
         <div class="quantity-controls">
-          <button class="icon-button quantity-button" type="button" onclick="changeQuantity('${item.productId}', -1)" aria-label="Decrease quantity">${iosIcon("minus")}</button>
+          <button class="icon-button quantity-button" type="button" onclick="changeQuantity('${item.productId}', -1, '${key}')" aria-label="Decrease quantity">${iosIcon("minus")}</button>
           <span>${item.quantity}</span>
-          <button class="icon-button quantity-button" type="button" onclick="changeQuantity('${item.productId}', 1)" aria-label="Increase quantity">${iosIcon("plus")}</button>
+          <button class="icon-button quantity-button" type="button" onclick="changeQuantity('${item.productId}', 1, '${key}')" aria-label="Increase quantity">${iosIcon("plus")}</button>
         </div>
-        <button class="danger-button" type="button" onclick="removeFromCart('${item.productId}')">${iosIcon("trash")}Remove</button>
+        <button class="danger-button" type="button" onclick="removeFromCart('${item.productId}', '${key}')">${iosIcon("trash")}Remove</button>
       </div>
     `;
   }).join("");
@@ -738,8 +863,7 @@ function renderCart() {
 async function checkout(event) {
   event.preventDefault();
   if (!state.user) {
-    openAuth("login");
-    toast("Sign in before checkout.");
+    openCheckout();
     return;
   }
   if (!state.cart.length) return toast("Add products to your cart first.");
@@ -781,8 +905,7 @@ async function checkout(event) {
   }
 
   const data = await api("/api/orders", { method: "POST", body: payload.body });
-  state.cart = [];
-  persistCart();
+  window.CommerceCheckout?.clearCheckoutAttempt?.();
   $("#cartDrawer")?.classList.remove("open");
   if (data.checkoutUrl) {
     location.href = data.checkoutUrl;
@@ -803,11 +926,11 @@ async function loadOrders() {
     return;
   }
   const data = await api("/api/orders");
-  list.innerHTML = renderOrders(data.orders, state.user.role === "admin");
+  list.innerHTML = renderOrders(data.orders, isAdminUser());
 }
 
 async function loadAdminOrders() {
-  if (state.user?.role !== "admin") return;
+  if (!isAdminUser()) return;
   const data = await api("/api/orders");
   $("#adminOrderCount").textContent = `${data.orders.length} order${data.orders.length === 1 ? "" : "s"}`;
   $("#adminOrders").innerHTML = renderOrders(data.orders, true);
@@ -1081,15 +1204,36 @@ async function submitAuth(event) {
   const path = state.authMode === "register" ? "/api/auth/register" : "/api/auth/login";
   const data = await api(path, { method: "POST", body });
   state.user = data.user;
+  rememberAuthenticatedUser(state.user);
   state.authToken = data.token || "";
   window.CommerceAuth?.rememberSession(state.authToken);
-  state.cart = window.CommerceCart?.load(state.user) || [];
+  state.cart = await window.CommerceCart?.mergeGuestIntoRemote?.() || [];
   $("#authModal").classList.add("hidden");
   updateAuthUI();
   toast(`Welcome, ${state.user.name}.`);
 
+  if (state.pendingCheckout) {
+    state.pendingCheckout = false;
+    openCheckout();
+    return;
+  }
+
+  if (sessionStorage.getItem("omanutro-account-redirect") === "1") {
+    sessionStorage.removeItem("omanutro-account-redirect");
+    location.href = "/account.html";
+    return;
+  }
+
+  if (state.postLoginRedirect) {
+    const destination = state.postLoginRedirect;
+    sessionStorage.removeItem("omanutro-post-login");
+    state.postLoginRedirect = "";
+    location.href = destination;
+    return;
+  }
+
   state.pendingCatalogRedirect = false;
-  if (state.user.role === "admin") {
+  if (isAdminUser()) {
     location.href = "/admin/index.html#overview";
     return;
   }
@@ -1103,13 +1247,17 @@ async function submitAuth(event) {
 }
 
 async function logout() {
-  await api("/api/auth/logout", { method: "POST" });
+  if (window.FirebaseAuth?.logoutGoogle) {
+    await window.FirebaseAuth.logoutGoogle({ silent: true }).catch(() => {});
+  }
+  await api("/api/auth/logout", { method: "POST" }).catch(() => {});
   state.user = null;
   state.authToken = "";
-  state.cart = [];
+  state.cart = window.CommerceCart?.loadGuest?.() || [];
+  rememberAuthenticatedUser(null);
   window.CommerceAuth?.clearSession();
   updateAuthUI();
-  toast("Signed out.");
+  sessionStorage.setItem("omanutro-logout-success", "1");
   location.href = "/";
 }
 
@@ -1136,10 +1284,36 @@ function toggleMenu(buttonSelector, menuSelector) {
   closeMenus();
   menu.classList.toggle("hidden", !willOpen);
   button.setAttribute("aria-expanded", String(willOpen));
+  if (willOpen) {
+    const firstItem = menu.querySelector("button, a");
+    firstItem?.focus();
+  }
+}
+
+function handleMenuKeydown(event) {
+  const menu = event.target.closest(".dropdown-menu");
+  if (!menu) return;
+  const items = [...menu.querySelectorAll("button, a")];
+  const index = items.indexOf(document.activeElement);
+
+  if (event.key === "Escape") {
+    closeMenus();
+    $("#accountMenuButton, #profileMenuButton")?.focus();
+    return;
+  }
+
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const next = event.key === "ArrowDown"
+      ? (index + 1) % items.length
+      : (index - 1 + items.length) % items.length;
+    items[next]?.focus();
+  }
 }
 
 function requireSignin(message = "Sign in first.") {
   if (state.user) return true;
+  rememberPostLogin();
   openAuth("login");
   toast(message);
   return false;
@@ -1148,14 +1322,20 @@ function requireSignin(message = "Sign in first.") {
 function handleAccountAction(action) {
   closeMenus();
   if (action === "signin") {
+    rememberPostLogin();
     openAuth("login");
     return;
   }
 
   if (!requireSignin("Sign in to continue.")) return;
 
-  if (action === "orders" || action === "my-account") {
-    switchView(state.user.role === "admin" && action === "my-account" ? "admin" : "orders");
+  if (action === "orders") {
+    location.href = "/account.html#orders";
+    return;
+  }
+
+  if (action === "my-account") {
+    location.href = isAdminUser() ? "/admin/index.html#overview" : "/account.html";
     return;
   }
 
@@ -1165,7 +1345,7 @@ function handleAccountAction(action) {
   }
 
   if (action === "wishlist") {
-    toast("Wishlist will be available from your account soon.");
+    location.href = "/account.html#wishlist";
   }
 }
 
@@ -1219,6 +1399,12 @@ function handleProfileAction(action) {
   closeMenus();
   if (action === "signout") {
     logout().catch((error) => toast(error.message));
+    return;
+  }
+
+  if (["dashboard", "profile", "orders", "wishlist", "settings"].includes(action)) {
+    const panel = action === "dashboard" ? "" : `#${action === "settings" ? "security" : action}`;
+    location.href = `/account.html${panel}`;
     return;
   }
 
@@ -1417,14 +1603,21 @@ function bindEvents() {
   $("#profileAvatar")?.addEventListener("change", previewProfileAvatar);
   $("#profileForm")?.addEventListener("submit", (event) => saveProfile(event).catch((error) => toast(error.message)));
 
-  $("#openCheckoutButton")?.addEventListener("click", () => {
-    if (!requireSignin("Please sign in before checkout.")) return;
-    $("#cartDrawer")?.classList.add("open");
-  });
+  $("#openCheckoutButton")?.addEventListener("click", openCheckout);
 
   $("#accountMenuButton")?.addEventListener("click", (event) => {
     event.stopPropagation();
-    toggleMenu("#accountMenuButton", "#accountMenu");
+    rememberPostLogin();
+    openAuth("login");
+    closeMenus();
+  });
+
+  $("#accountMenuButton")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      rememberPostLogin();
+      openAuth("login");
+    }
   });
   $("#profileMenuButton")?.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -1444,6 +1637,26 @@ function bindEvents() {
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") collapseTopSearchIfEmpty();
+  });
+  document.addEventListener("keydown", handleMenuKeydown);
+  window.addEventListener("storage", (event) => {
+    if (!state.user && event.key === "omanutro-cart:guest") {
+      state.cart = window.CommerceCart?.loadGuest?.() || [];
+      renderCart();
+    }
+  });
+  window.addEventListener("commerce-auth-changed", () => {
+    handleAuthChanged().catch((error) => toast(error.message));
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && state.user) {
+      window.CommerceCart?.loadRemote?.()
+        .then((cart) => {
+          state.cart = cart;
+          renderCart();
+        })
+        .catch(() => {});
+    }
   });
   $$(".dropdown-menu").forEach((menu) => menu.addEventListener("click", (event) => event.stopPropagation()));
 
@@ -1480,17 +1693,26 @@ async function init() {
   await loadMe();
   await loadProducts();
   const params = new URLSearchParams(location.search);
+  if (params.get("signin") === "1" && !state.user) {
+    rememberPostLogin("/account.html");
+    openAuth("login");
+  }
+  if (sessionStorage.getItem("omanutro-logout-success") === "1") {
+    sessionStorage.removeItem("omanutro-logout-success");
+    toast("Signed out.");
+  }
   if (params.get("order")) {
     toast(`Payment returned for ${params.get("order")}.`);
     switchView("orders");
   }
-  if (params.get("view") === "admin" && state.user?.role === "admin") {
+  if (params.get("view") === "admin" && isAdminUser()) {
     switchView("admin");
   }
 }
 
 window.openProductDetail = openProductDetail;
 window.addToCart = addToCart;
+window.addToWishlist = addToWishlist;
 window.changeQuantity = changeQuantity;
 window.removeFromCart = removeFromCart;
 window.showHeroProduct = showHeroProduct;
@@ -1509,6 +1731,10 @@ function setupGoogleLogin() {
   });
 
 }
+
+window.addEventListener("commerce-auth-feedback", (event) => {
+  if (event.detail?.message) toast(event.detail.message);
+});
 
 init().catch((error) => toast(error.message));
 

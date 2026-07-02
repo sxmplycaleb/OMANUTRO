@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const users = require("../repositories/users");
 const verifications = require("../repositories/verifications");
+const rbac = require("../repositories/rbac");
 const {
   hashPassword,
   verifyPassword,
@@ -15,12 +16,21 @@ function isValidTimedSecret(record) {
   return Boolean(record?.expiresAt && new Date(record.expiresAt).getTime() > Date.now());
 }
 
-function sessionFor(user) {
-  return { user: publicUser(user), token: createAuthToken(user) };
+function withAccess(user) {
+  const access = rbac.accessForUser(user);
+  return { ...user, roles: access.roles, permissions: access.permissions };
 }
 
-function currentUser(user) {
-  return publicUser(user);
+function sessionFor(user) {
+  return { user: publicUser(withAccess(user)), token: createAuthToken(user) };
+}
+
+function currentUser(user, firebaseUser) {
+  if (firebaseUser?.picture && firebaseUser.picture !== user.avatarUrl && users.updateAvatar) {
+    return publicUser(withAccess(users.updateAvatar(user.id, firebaseUser.picture)));
+  }
+
+  return publicUser(withAccess(user));
 }
 
 function updateProfile(user, body) {
@@ -42,6 +52,11 @@ function login(body) {
 
   if (!user || !verifyPassword(body.password, user.passwordHash)) {
     throw unauthorized("Invalid email/phone or password.");
+  }
+
+  const access = rbac.accessForUser(user);
+  if (access.permissions.includes("*") || access.permissions.includes("admin:access")) {
+    rbac.log(user.id, "staff.login", "user", user.id);
   }
 
   return sessionFor(user);
