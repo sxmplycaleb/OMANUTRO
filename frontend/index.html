@@ -15,7 +15,12 @@
             const savedTheme = localStorage.getItem("commerce-theme");
             const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";    
             document.documentElement.dataset.theme = savedTheme || preferredTheme;
-            document.documentElement.classList.add("session-splash-pending");
+            window.__skipSessionSplash = sessionStorage.getItem("omanutro-internal-nav") === "1";
+            if (window.__skipSessionSplash) {
+                sessionStorage.removeItem("omanutro-internal-nav");
+            } else {
+                document.documentElement.classList.add("session-splash-pending");
+            }
         </script>
         <link rel="stylesheet" href="/style.css">
     </head>
@@ -29,10 +34,11 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
             <nav class="nav-tabs" aria-label="Primary navigation">
-                <a class="nav-tab" href="#footer">About</a>
+                <a class="nav-tab" href="/about">About</a>
                 <a class="nav-tab active" href="#top">Home</a>
                 <a class="nav-tab" href="#shopView">Collection</a>
                 <a class="nav-tab" href="/work-with-us.html">Work With Us</a>
+                <a class="nav-tab" href="/contact">Contact</a>
                 <datalist id="searchSuggestions"></datalist>
             </nav>
             <div class="topbar-actions">
@@ -390,6 +396,97 @@
                             </div>
                         </div>
                     </section>
+
+                    <section class="faq-section" id="faq" aria-labelledby="faqTitle">
+                        <div class="faq-shell">
+                            <div class="faq-header scroll-reveal">
+                                <h2 id="faqTitle">Frequently Asked Questions</h2>
+                                <p>Everything you need to know about shopping with Omanutro. Can't find what you're looking for? We're here to help.</p>
+                            </div>
+
+                            <div class="faq-grid" data-faq-accordion>
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-order-arrival" id="faq-question-order-arrival">
+                                        <span>When will my order arrive?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-order-arrival" role="region" aria-labelledby="faq-question-order-arrival">
+                                        <p>Orders are typically processed within <strong>1-3 business days</strong>. Shipping times vary depending on your location, and you'll receive a tracking number once your order has been dispatched.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-international" id="faq-question-international">
+                                        <span>Do you ship internationally?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-international" role="region" aria-labelledby="faq-question-international">
+                                        <p>Yes. We ship to most countries worldwide. Shipping costs and delivery times are calculated at checkout based on your destination.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-size" id="faq-question-size">
+                                        <span>How do I choose the right size?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-size" role="region" aria-labelledby="faq-question-size">
+                                        <p>Each product includes a detailed size guide to help you find your best fit. If you're between sizes or prefer an oversized look, we recommend sizing up.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-returns" id="faq-question-returns">
+                                        <span>Can I return or exchange an item?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-returns" role="region" aria-labelledby="faq-question-returns">
+                                        <p>Yes. Returns and exchanges are accepted within <strong>14 days</strong> of delivery, provided the item is unworn, unwashed, and in its original condition with tags attached.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-payment" id="faq-question-payment">
+                                        <span>What payment methods do you accept?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-payment" role="region" aria-labelledby="faq-question-payment">
+                                        <p>We accept major credit and debit cards, mobile payment options, and other secure payment methods available during checkout.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-tracking" id="faq-question-tracking">
+                                        <span>How can I track my order?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-tracking" role="region" aria-labelledby="faq-question-tracking">
+                                        <p>Once your order ships, you'll receive an email with a tracking link so you can follow your package every step of the way.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-limited" id="faq-question-limited">
+                                        <span>Are your collections limited?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-limited" role="region" aria-labelledby="faq-question-limited">
+                                        <p>Many Omanutro releases are produced in limited quantities. Once a design sells out, it may not be restocked, so we recommend purchasing while it's available.</p>
+                                    </div>
+                                </article>
+
+                                <article class="faq-card scroll-reveal">
+                                    <button class="faq-toggle" type="button" aria-expanded="false" aria-controls="faq-answer-contact" id="faq-question-contact">
+                                        <span>How can I contact Omanutro?</span>
+                                        <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    </button>
+                                    <div class="faq-answer" id="faq-answer-contact" role="region" aria-labelledby="faq-question-contact">
+                                        <p>You can reach us through the Contact page or by emailing our support team. We aim to respond to all inquiries within <strong>24-48 business hours</strong>.</p>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </section>
         </main>
 
         <footer class="site-footer" id="footer">
@@ -631,6 +728,7 @@
         <script src="/js/catalog.js"></script>
         <script src="/js/checkout.js"></script>
         <script src="/js/admin.js"></script>
+        <script src="/js/navigation.js"></script>
         <script src="/js/session-splash.js"></script>
         <script src="/app.js"></script>
         <script defer src="/_vercel/insights/script.js"></script>

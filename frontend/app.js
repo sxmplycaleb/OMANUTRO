@@ -396,7 +396,8 @@ function prepareScrollReveals(nodes) {
 
   revealNodes.forEach((node, index) => {
     node.classList.add("scroll-reveal");
-    node.style.setProperty("--reveal-delay", `${Math.min(index, 8) * 70}ms`);
+    const delayStep = node.classList.contains("feature-card") ? 90 : 70;
+    node.style.setProperty("--reveal-delay", `${Math.min(index, 8) * delayStep}ms`);
 
     if (!revealObserver) {
       node.classList.add("is-visible");
@@ -412,12 +413,16 @@ function setupScrollAnimations() {
     ".hero-copy",
     ".hero-showcase",
     ".hero-trust-row > *",
+    ".features-header",
+    ".feature-card",
     ".filters",
     ".wide-panel",
     ".settings-group",
     ".admin-form",
     ".admin-product-row",
     ".order-card",
+    ".faq-header",
+    ".faq-card",
     ".footer-panel"
   ];
 
@@ -438,6 +443,37 @@ function setupScrollAnimations() {
   });
 
   prepareScrollReveals($$(revealTargets.join(", ")));
+}
+
+function setFaqCardOpen(card, open) {
+  const toggle = card?.querySelector(".faq-toggle");
+  const answer = card?.querySelector(".faq-answer");
+  if (!toggle || !answer) return;
+
+  card.classList.toggle("is-open", open);
+  toggle.setAttribute("aria-expanded", String(open));
+  answer.setAttribute("aria-hidden", String(!open));
+}
+
+function setupFaqAccordion() {
+  const accordion = $("[data-faq-accordion]");
+  if (!accordion) return;
+
+  const cards = [...accordion.querySelectorAll(".faq-card")];
+  const toggleCard = (card) => {
+    const shouldOpen = !card.classList.contains("is-open");
+    cards.forEach((entry) => setFaqCardOpen(entry, entry === card && shouldOpen));
+  };
+
+  cards.forEach((card) => {
+    setFaqCardOpen(card, false);
+    const toggle = card.querySelector(".faq-toggle");
+    toggle?.addEventListener("click", () => toggleCard(card));
+    card.addEventListener("click", (event) => {
+      if (event.target.closest(".faq-toggle")) return;
+      toggleCard(card);
+    });
+  });
 }
 
 function animateToProducts() {
@@ -1433,6 +1469,7 @@ function bindEvents() {
 
 async function init() {
   bindEvents();
+  setupFaqAccordion();
   setupScrollAnimations();
   applyTheme(state.theme);
   applyCurrency(state.currency);

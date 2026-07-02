@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const SPLASH_IMAGE_URL = "https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8yWUEcNazPVjgpf1LJ95aFliKEU3kwNuBomy2G";
+  const SPLASH_IMAGE_URL = "https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8yyAYEvw1G1IAJPjTZgCNHEFxS5KObMdw0VltX";
   const HOLD_DURATION = 2600;
   const EXIT_DURATION = 650;
 
@@ -95,6 +95,11 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    if (window.__skipSessionSplash) {
+      document.documentElement.classList.remove("session-splash-pending");
+      return;
+    }
+
     new SessionSplash({
       imageUrl: SPLASH_IMAGE_URL,
       holdDuration: HOLD_DURATION,

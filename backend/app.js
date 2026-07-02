@@ -30,7 +30,11 @@ const MIME_TYPES = {
 
 function serveStatic(req, res) {
   const requestedPath = req.path === "/" ? "/index.html" : decodeURIComponent(req.path);
-  const filePath = path.normalize(path.join(PUBLIC_DIR, requestedPath));
+  let filePath = path.normalize(path.join(PUBLIC_DIR, requestedPath));
+
+  if (!fs.existsSync(filePath) && !path.extname(filePath)) {
+    filePath = `${filePath}.html`;
+  }
 
   if (!filePath.startsWith(PUBLIC_DIR) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     res.status(404).type("text/plain").send("Not found");
