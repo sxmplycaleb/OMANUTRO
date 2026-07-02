@@ -34,8 +34,8 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
             <nav class="nav-tabs" aria-label="Primary navigation">
-                <a class="nav-tab" href="/about">About</a>
                 <a class="nav-tab active" href="#top">Home</a>
+                <a class="nav-tab" href="/about">About</a>
                 <a class="nav-tab" href="#shopView">Collection</a>
                 <a class="nav-tab" href="/work-with-us.html">Work With Us</a>
                 <a class="nav-tab" href="/contact">Contact</a>
@@ -657,6 +657,7 @@
                 <label>Email<input id="authEmail" type="email" autocomplete="email" required></label>
                 <label>Password<input id="authPassword" type="password" autocomplete="current-password" required></label>
                 <button class="primary-button" type="submit" id="authSubmit">Login</button>
+                <button id="googleLogin">Continue with Google</button>
                 <button class="link-button auth-signup-link" type="button" id="toggleAuthMode">Sign Up</button>
                 <button class="link-button" type="button" id="forgotPasswordButton">Forgot Password</button>
             </form>
@@ -730,9 +731,9 @@
         <script src="/js/admin.js"></script>
         <script src="/js/navigation.js"></script>
         <script src="/js/session-splash.js"></script>
-        <script src="/app.js"></script>
-        <script defer src="/_vercel/insights/script.js"></script>
-        <script defer src="/_vercel/speed-insights/script.js"></script>
+        <script src="/js/app.js"></script>
+        
+        <script type="module" src="/js/firebase-auth.js"></script>
 
     </body>
 </html>

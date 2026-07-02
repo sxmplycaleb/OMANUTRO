@@ -3,9 +3,10 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>WORK WITH US | OMANUTRO</title>
-        <meta name="description" content="Apply for fashion, creative, marketing, and support opportunities at OMANUTRO.">
+        <title>Work With Us | OMANUTRO</title>
+        <meta name="description" content="Join Omanutro and build the future of modern streetwear across fashion, marketing, operations, and creative roles.">
         <link rel="icon" href="https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8yDVcyQJzaKjUe9vH8TXdxR3ynPCQW5BhGcz4t">
+        <link rel="preconnect" href="https://3z8qdlgzk1.ufs.sh" crossorigin>
         <script>
             const savedTheme = localStorage.getItem("commerce-theme");
             const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -15,203 +16,512 @@
     </head>
     <body>
         <header class="topbar work-topbar">
-            <a class="brand" href="/" aria-label="OMANUTRO home.">
+            <a class="brand" href="/" aria-label="OMANUTRO home">
                 <span>OMANUTRO</span>
             </a>
+            <button class="mobile-menu-toggle icon-button" id="mobileMenuButton" type="button" aria-label="Open navigation" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
             <nav class="nav-tabs" aria-label="Primary navigation">
-                <a class="nav-tab" href="/">Home</a>               
+                <a class="nav-tab" href="/">Home</a>
                 <a class="nav-tab" href="/about">About</a>
+                <a class="nav-tab" href="/#shopView">Collection</a>
                 <a class="nav-tab active" href="/work-with-us.html">Work With Us</a>
                 <a class="nav-tab" href="/contact">Contact</a>
             </nav>
             <div class="topbar-actions work-topbar-actions">
-                <button
-                    class="theme-toggle"
-                    id="themeToggleButton"
-                    type="button"
-                    role="switch"
-                    aria-checked="false"
-                    aria-label="Switch theme">
+                <button class="theme-toggle" id="themeToggleButton" type="button" role="switch" aria-checked="false" aria-label="Switch theme">
                     <span class="toggle-icon sun-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.8v2.3M12 18.9v2.3M21.2 12h-2.3M5.1 12H2.8M18.5 5.5l-1.6 1.6M7.1 16.9l-1.6 1.6M18.5 18.5l-1.6-1.6M7.1 7.1 5.5 5.5"/></svg></span>
                     <span class="toggle-icon moon-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18.9 15.4A7.2 7.2 0 0 1 8.6 5.1 7.9 7.9 0 1 0 18.9 15.4Z"/></svg></span>
                     <span class="theme-label visually-hidden">Theme</span>
                 </button>
-                <a class="icon-button about-account-link" href="/catalog.html" aria-label="Open account" title="Account">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>
+                <a class="icon-button about-account-link" href="/catalog.html" aria-label="Open catalog" title="Catalog">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 13H7L6 8Zm3 0a3 3 0 0 1 6 0"/></svg>
                 </a>
             </div>
         </header>
 
-        <main class="work-page">
-            <section class="work-hero" aria-labelledby="workHeroTitle">
-                <span class="work-kicker">Careers at OMANUTRO</span>
-                <h1 id="workHeroTitle">Build the next language of modern streetwear.</h1>
-                <p>Join a fashion and e-commerce team shaped by sharp design, clear storytelling, reliable operations, and a deep respect for the people who wear the brand.</p>
-                <a class="primary-button work-hero-button" href="#applicationForm">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                    Apply Now
+        <main class="work-page career-page">
+            <section class="career-hero" aria-labelledby="careerHeroTitle">
+                <div class="career-hero-media" aria-hidden="true">
+                    <img src="https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8ynac7i2RMD7fJSrOIdBgK3Ruz8wocQHsWb9Gi" alt="" loading="eager" fetchpriority="high">
+                </div>
+                <div class="career-hero-copy reveal-on-scroll">
+                    <span class="career-kicker">Careers at Omanutro</span>
+                    <h1 id="careerHeroTitle">Work With Us</h1>
+                    <p>Join the team behind Omanutro and help shape the future of modern streetwear. Whether you're passionate about fashion, creativity, marketing, or operations, we're always looking for talented people who want to build something meaningful.</p>
+                    <div class="career-actions">
+                        <a class="primary-button" href="#openPositions">View Open Positions</a>
+                        <a class="secondary-button" href="#generalApplication">Submit General Application</a>
+                    </div>
+                </div>
+                <a class="career-scroll-indicator" href="#whyJoin" aria-label="Scroll to why join Omanutro">
+                    <span></span>
                 </a>
             </section>
 
-            <section class="work-section" aria-labelledby="opportunitiesTitle">
-                <div class="work-section-heading">
-                    <span>Available Opportunities</span>
-                    <h2 id="opportunitiesTitle">Creative, commercial, and customer-facing roles.</h2>
+            <section class="career-section" id="whyJoin" aria-labelledby="whyJoinTitle">
+                <div class="career-section-heading reveal-on-scroll">
+                    <span class="career-kicker">Why Join Omanutro</span>
+                    <h2 id="whyJoinTitle">Build inside a culture made for sharp ideas.</h2>
                 </div>
-                <div class="opportunity-grid">
-                    <article><h3>Fashion Model</h3><p>Represent seasonal drops through campaigns, fittings, lookbooks, and launch content.</p></article>
-                    <article><h3>Clothing Designer</h3><p>Develop silhouettes, fabrics, graphics, trims, and production-ready concepts.</p></article>
-                    <article><h3>Brand Ambassador</h3><p>Grow community trust through events, social content, and authentic brand advocacy.</p></article>
-                    <article><h3>Photographer</h3><p>Create premium product, campaign, lifestyle, and behind-the-scenes imagery.</p></article>
-                    <article><h3>Videographer</h3><p>Capture short-form stories, launch films, reels, and product motion assets.</p></article>
-                    <article><h3>Content Creator</h3><p>Shape social-first concepts that make drops feel current, useful, and desirable.</p></article>
-                    <article><h3>Graphic Designer</h3><p>Design visual systems for apparel graphics, campaigns, packaging, and digital channels.</p></article>
-                    <article><h3>Marketing & Social Media</h3><p>Plan campaigns, content calendars, partnerships, performance tests, and audience growth.</p></article>
-                    <article><h3>Customer Support</h3><p>Help customers with sizing, orders, returns, payments, and post-purchase care.</p></article>
-                    <article><h3>E-commerce Operations</h3><p>Support catalog setup, product uploads, merchandising, fulfillment, and order quality.</p></article>
-                    <article><h3>Stylist</h3><p>Build looks for campaigns, shoots, retail moments, and customer-facing edits.</p></article>
-                    <article><h3>Production Assistant</h3><p>Coordinate sampling, inventory checks, vendor follow-ups, and launch readiness.</p></article>
+                <div class="career-card-grid career-card-grid-four">
+                    <article class="career-glass-card reveal-on-scroll">
+                        <span class="career-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="m12 3 2.2 6.8H21l-5.5 4 2.1 6.7-5.6-4.1-5.6 4.1 2.1-6.7-5.5-4h6.8L12 3Z"/></svg>
+                        </span>
+                        <h3>Creative Culture</h3>
+                        <p>Bring bold ideas to life and help shape collections, campaigns, and customer experiences.</p>
+                    </article>
+                    <article class="career-glass-card reveal-on-scroll">
+                        <span class="career-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>
+                        </span>
+                        <h3>Career Growth</h3>
+                        <p>Grow alongside a brand that's constantly evolving and creating new opportunities.</p>
+                    </article>
+                    <article class="career-glass-card reveal-on-scroll">
+                        <span class="career-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                        <h3>Collaboration</h3>
+                        <p>Work with passionate individuals who value creativity, teamwork, and innovation.</p>
+                    </article>
+                    <article class="career-glass-card reveal-on-scroll">
+                        <span class="career-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M12 3 21 12 12 21 3 12 12 3Z"/></svg>
+                        </span>
+                        <h3>Make an Impact</h3>
+                        <p>Every contribution helps shape the Omanutro experience for customers around the world.</p>
+                    </article>
                 </div>
             </section>
 
-            <section class="work-section application-layout" aria-labelledby="applicationTitle">
-                <div class="work-section-heading">
-                    <span>Application Form</span>
-                    <h2 id="applicationTitle">Tell us where you want to contribute.</h2>
-                    <p>Share enough detail for the team to understand your craft, experience, and availability.</p>
+            <section class="career-section" id="openPositions" aria-labelledby="openPositionsTitle">
+                <div class="career-section-heading reveal-on-scroll">
+                    <span class="career-kicker">Open Positions</span>
+                    <h2 id="openPositionsTitle">Explore departments where your craft can move the brand.</h2>
+                    <p>Open one department at a time, review role details, and apply directly from the role card.</p>
                 </div>
+                <div class="career-accordion" id="positionsAccordion"></div>
+            </section>
 
-                <form class="application-form" id="applicationForm" novalidate>
-                    <div class="form-alert hidden" id="applicationMessage" role="status"></div>
-                    <div class="split">
-                        <label>Full Name<input id="applicantName" name="name" autocomplete="name" required></label>
-                        <label>Email<input id="applicantEmail" name="email" type="email" autocomplete="email" required></label>
-                    </div>
-                    <div class="split">
-                        <label>Phone Number<input id="applicantPhone" name="phone" type="tel" autocomplete="tel" required></label>
-                        <label>Position Applying For
-                            <select id="applicantPosition" name="position" required>
+            <section class="career-feature-section reveal-on-scroll" aria-labelledby="internshipTitle">
+                <div>
+                    <span class="career-kicker">Internship Program</span>
+                    <h2 id="internshipTitle">Start Your Career With Omanutro</h2>
+                    <p>Whether you're a student or recent graduate, our internship program offers hands-on experience in fashion, e-commerce, marketing, and creative design while working alongside passionate professionals.</p>
+                </div>
+                <div class="career-chip-list" aria-label="Available internships">
+                    <span>Fashion Design</span>
+                    <span>Graphic Design</span>
+                    <span>Marketing</span>
+                    <span>Content Creation</span>
+                    <span>Customer Experience</span>
+                    <span>E-commerce Operations</span>
+                </div>
+                <a class="primary-button" href="#applicationForm" data-position-link="Internship Program">Apply for Internship</a>
+            </section>
+
+            <section class="career-section" aria-labelledby="hiringTitle">
+                <div class="career-section-heading reveal-on-scroll">
+                    <span class="career-kicker">Hiring Process</span>
+                    <h2 id="hiringTitle">A clear path from application to welcome.</h2>
+                </div>
+                <ol class="career-timeline">
+                    <li class="reveal-on-scroll"><span>1</span><strong>Submit Application</strong></li>
+                    <li class="reveal-on-scroll"><span>2</span><strong>Application Review</strong></li>
+                    <li class="reveal-on-scroll"><span>3</span><strong>Interview</strong></li>
+                    <li class="reveal-on-scroll"><span>4</span><strong>Skills Assessment</strong></li>
+                    <li class="reveal-on-scroll"><span>5</span><strong>Offer</strong></li>
+                    <li class="reveal-on-scroll"><span>6</span><strong>Welcome to Omanutro</strong></li>
+                </ol>
+            </section>
+
+            <section class="career-section" aria-labelledby="benefitsTitle">
+                <div class="career-section-heading reveal-on-scroll">
+                    <span class="career-kicker">Employee Benefits</span>
+                    <h2 id="benefitsTitle">Support for the work and the person doing it.</h2>
+                </div>
+                <div class="career-benefits-grid" id="benefitsGrid"></div>
+            </section>
+
+            <section class="career-general-card reveal-on-scroll" id="generalApplication" aria-labelledby="generalTitle">
+                <span class="career-kicker">General Application</span>
+                <h2 id="generalTitle">Don't See Your Role?</h2>
+                <p>We're always looking for talented people who share our passion for fashion, creativity, and innovation. If your ideal position isn't listed, we'd still love to hear from you.</p>
+                <a class="primary-button" href="#applicationForm" data-position-link="General Application">Submit General Application</a>
+            </section>
+
+            <section class="career-section career-application-section" aria-labelledby="applicationTitle">
+                <div class="career-section-heading reveal-on-scroll">
+                    <span class="career-kicker">Application Form</span>
+                    <h2 id="applicationTitle">Send your application.</h2>
+                    <p>Use the form below for open roles, internships, or a general application.</p>
+                </div>
+                <form class="career-application-form reveal-on-scroll" id="applicationForm" novalidate>
+                    <fieldset>
+                        <legend>Personal Information</legend>
+                        <label class="career-field"><input name="fullName" autocomplete="name" required placeholder=" "><span>Full Name</span></label>
+                        <label class="career-field"><input name="email" type="email" autocomplete="email" required placeholder=" "><span>Email Address</span></label>
+                        <label class="career-field"><input name="phone" type="tel" autocomplete="tel" required placeholder=" "><span>Phone Number</span></label>
+                        <label class="career-field"><input name="country" autocomplete="country-name" required placeholder=" "><span>Country</span></label>
+                        <label class="career-field"><input name="city" autocomplete="address-level2" required placeholder=" "><span>City</span></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Application</legend>
+                        <label class="career-field career-select-field">
+                            <select name="position" id="positionSelect" required>
                                 <option value="">Select a position</option>
-                                <option>Fashion Model</option>
-                                <option>Clothing Designer</option>
-                                <option>Brand Ambassador</option>
-                                <option>Photographer</option>
-                                <option>Videographer</option>
-                                <option>Content Creator</option>
-                                <option>Graphic Designer</option>
-                                <option>Marketing & Social Media</option>
-                                <option>Customer Support</option>
-                                <option>E-commerce Operations</option>
-                                <option>Stylist</option>
-                                <option>Production Assistant</option>
-                                <option>Other</option>
                             </select>
+                            <span>Position Applying For</span>
                         </label>
-                    </div>
-                    <label>Portfolio/Website URL (optional)<input id="applicantPortfolio" name="portfolio" type="url" placeholder="https://"></label>
-                    <label>CV/Resume Upload<input id="applicantResume" name="resume" type="file" accept=".pdf,.doc,.docx" required></label>
-                    <label>Cover Letter / About Yourself<textarea id="applicantAbout" name="about" rows="6" minlength="40" required></textarea></label>
-                    <button class="primary-button" type="submit">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>
-                        Submit Application
-                    </button>
+                        <label class="career-field career-select-field">
+                            <select name="employmentType" required>
+                                <option value="">Select employment type</option>
+                                <option>Full-time</option>
+                                <option>Part-time</option>
+                                <option>Contract</option>
+                                <option>Internship</option>
+                                <option>Freelance</option>
+                            </select>
+                            <span>Employment Type</span>
+                        </label>
+                        <label class="career-field"><input name="linkedin" type="url" placeholder=" "><span>LinkedIn Profile</span></label>
+                        <label class="career-field"><input name="portfolio" type="url" placeholder=" "><span>Portfolio Website (Optional)</span></label>
+                        <label class="career-upload-field">Upload Resume (PDF)<input name="resume" type="file" accept=".pdf,application/pdf" required></label>
+                        <label class="career-upload-field">Upload Portfolio (Optional)<input name="portfolioFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
+                    </fieldset>
+                    <label class="career-field career-textarea-field"><textarea name="coverLetter" rows="7" minlength="40" required placeholder=" "></textarea><span>Cover Letter</span></label>
+                    <label class="career-consent"><input name="consent" type="checkbox" required><span>I agree to the Privacy Policy and Terms.</span></label>
+                    <button class="primary-button" type="submit">Submit Application</button>
                 </form>
             </section>
 
-            <section class="work-section values-section" aria-labelledby="whyTitle">
-                <div class="work-section-heading">
-                    <span>Why Work With OMANUTRO</span>
-                    <h2 id="whyTitle">A premium brand culture with room to grow.</h2>
-                </div>
-                <div class="values-grid">
-                    <article><strong>Craft First</strong><p>We care about fit, finish, visuals, and the details customers feel immediately.</p></article>
-                    <article><strong>Creative Ownership</strong><p>Team members are trusted to bring ideas, test fast, and improve the brand in visible ways.</p></article>
-                    <article><strong>Modern Commerce</strong><p>Work across fashion, content, customer experience, and digital retail in one connected system.</p></article>
-                    <article><strong>Respectful Pace</strong><p>Clear briefs, honest feedback, and organized launches help creative work stay sharp.</p></article>
-                </div>
-            </section>
-
-            <section class="work-section faq-section" aria-labelledby="faqTitle">
-                <div class="work-section-heading">
-                    <span>FAQ</span>
+            <section class="career-section" aria-labelledby="faqTitle">
+                <div class="career-section-heading reveal-on-scroll">
+                    <span class="career-kicker">FAQ</span>
                     <h2 id="faqTitle">Applicant questions.</h2>
                 </div>
-                <div class="faq-list">
-                    <details open>
-                        <summary>Do I need professional experience?</summary>
-                        <p>Experience helps, but strong taste, reliability, and a clear portfolio can matter just as much for creative roles.</p>
-                    </details>
-                    <details>
-                        <summary>Can I apply for more than one role?</summary>
-                        <p>Yes. Choose the closest position in the form and mention the other areas you can support in your cover letter.</p>
-                    </details>
-                    <details>
-                        <summary>What should I include in my portfolio?</summary>
-                        <p>Send work that shows your current level clearly: campaigns, designs, shoots, videos, social posts, customer work, or relevant case studies.</p>
-                    </details>
-                    <details>
-                        <summary>Are remote applicants considered?</summary>
-                        <p>Some creative and marketing roles can be remote or hybrid. Production, modeling, and shoot-based roles may require local availability.</p>
-                    </details>
-                    <details>
-                        <summary>When will I hear back?</summary>
-                        <p>Shortlisted applicants are contacted after the team reviews fit, portfolio strength, and current role priorities.</p>
-                    </details>
+                <div class="career-faq" id="faqAccordion"></div>
+            </section>
+
+            <section class="career-final-cta reveal-on-scroll" aria-labelledby="finalCtaTitle">
+                <h2 id="finalCtaTitle">Ready to Shape the Future of Streetwear?</h2>
+                <p>Join Omanutro and help us create exceptional fashion, memorable customer experiences, and a brand that inspires confidence and creativity.</p>
+                <div class="career-actions">
+                    <a class="primary-button" href="#openPositions">Explore Open Positions</a>
+                    <a class="secondary-button" href="/contact">Contact Recruitment</a>
                 </div>
             </section>
         </main>
 
-        <div class="toast" id="toast" role="status"></div>
-        <script>
-            const workRoot = document.documentElement;
-            const workSavedTheme = localStorage.getItem("commerce-theme");
-            const workPreferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            let workCurrentTheme = workSavedTheme || workPreferredTheme;
-            const message = document.getElementById("applicationMessage");
-            const toast = document.getElementById("toast");
-            const form = document.getElementById("applicationForm");
+        <div class="career-modal hidden" id="successModal" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+            <div class="career-modal-card">
+                <button class="icon-button" type="button" id="closeSuccessModal" aria-label="Close confirmation" title="Close">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg>
+                </button>
+                <span class="career-modal-icon" aria-hidden="true">&#10003;</span>
+                <h2 id="successTitle">Application Submitted</h2>
+                <p>Thank you for your interest in Omanutro. Our team will review your application and contact shortlisted candidates with next steps.</p>
+                <button class="primary-button" type="button" id="successDoneButton">Done</button>
+            </div>
+        </div>
 
-            function applyTheme(theme) {
-                workCurrentTheme = theme === "light" ? "light" : "dark";
-                workRoot.dataset.theme = workCurrentTheme;
-                localStorage.setItem("commerce-theme", workCurrentTheme);
-                const button = document.getElementById("themeToggleButton");
-                if (!button) return;
-                const nextTheme = workCurrentTheme === "light" ? "dark" : "light";
-                button.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
-                button.setAttribute("aria-checked", String(workCurrentTheme === "dark"));
-                button.setAttribute("title", `Switch to ${nextTheme} theme`);
+        <div class="toast" id="toast" role="status"></div>
+
+        <script>
+            const careerRoot = document.documentElement;
+            const careerThemeButton = document.getElementById("themeToggleButton");
+            let careerCurrentTheme = careerRoot.dataset.theme === "light" ? "light" : "dark";
+
+            function applyCareerTheme(theme) {
+                careerCurrentTheme = theme === "light" ? "light" : "dark";
+                careerRoot.dataset.theme = careerCurrentTheme;
+                localStorage.setItem("commerce-theme", careerCurrentTheme);
+                const nextTheme = careerCurrentTheme === "light" ? "dark" : "light";
+                careerThemeButton?.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+                careerThemeButton?.setAttribute("aria-checked", String(careerCurrentTheme === "dark"));
+                careerThemeButton?.setAttribute("title", `Switch to ${nextTheme} theme`);
             }
 
-            applyTheme(workCurrentTheme);
-            document.getElementById("themeToggleButton")?.addEventListener("click", () => {
-                applyTheme(workCurrentTheme === "light" ? "dark" : "light");
-            });
+            const roleSections = [
+                {
+                    department: "Business",
+                    roles: [
+                        ["Sales & Partnerships Executive", "Develop relationships with retail partners, collaborators, and wholesale clients while identifying new business opportunities.", "Full-time", "Hybrid", "Mid Level"],
+                        ["Administrative Assistant", "Support daily business operations, scheduling, documentation, and internal coordination.", "Full-time", "On-site", "Entry Level"],
+                        ["Business Development Associate", "Research growth opportunities, partnerships, and new markets to expand the Omanutro brand.", "Full-time", "Hybrid", "Associate"]
+                    ]
+                },
+                {
+                    department: "Marketing",
+                    roles: [
+                        ["Social Media Manager", "Plan and manage engaging content across Instagram, TikTok, Facebook, and emerging platforms.", "Full-time", "Hybrid", "Mid Level"],
+                        ["Digital Marketing Specialist", "Manage advertising campaigns, SEO, email marketing, promotions, and website traffic growth.", "Full-time", "Remote / Hybrid", "Mid Level"],
+                        ["Content Creator", "Produce engaging videos, photography, reels, and behind-the-scenes content for Omanutro.", "Contract", "Hybrid", "Associate"],
+                        ["Brand Partnerships Coordinator", "Build relationships with influencers, creators, photographers, and brand ambassadors.", "Full-time", "Hybrid", "Associate"]
+                    ]
+                },
+                {
+                    department: "Fashion & Creative",
+                    roles: [
+                        ["Apparel Designer", "Design original streetwear collections that reflect Omanutro's identity and vision.", "Full-time", "Hybrid", "Mid Level"],
+                        ["Graphic Designer", "Create promotional graphics, website banners, campaign visuals, and packaging assets.", "Full-time", "Remote / Hybrid", "Associate"],
+                        ["Photographer / Videographer", "Capture product photography, lookbooks, lifestyle shoots, and promotional videos.", "Contract", "On-site", "Mid Level"],
+                        ["Product Stylist", "Style clothing for product shoots, campaigns, and seasonal collections.", "Contract", "On-site", "Associate"]
+                    ]
+                },
+                {
+                    department: "Operations",
+                    roles: [
+                        ["E-commerce Operations Coordinator", "Maintain product listings, pricing, promotions, collections, and website merchandising.", "Full-time", "Hybrid", "Associate"],
+                        ["Customer Support Representative", "Provide exceptional customer service regarding orders, sizing, returns, exchanges, and product inquiries.", "Full-time", "Remote / Hybrid", "Entry Level"],
+                        ["Order Fulfillment Associate", "Accurately pick, pack, and prepare customer orders for shipment.", "Full-time", "On-site", "Entry Level"],
+                        ["Inventory Assistant", "Maintain inventory accuracy, organize stock, and assist with restocking.", "Full-time", "On-site", "Entry Level"],
+                        ["Shipping & Logistics Coordinator", "Coordinate deliveries, monitor shipments, and ensure timely order fulfillment.", "Full-time", "On-site", "Associate"]
+                    ]
+                }
+            ];
 
-            function showApplicationMessage(text, type) {
-                message.textContent = text;
-                message.className = `form-alert ${type}`;
+            const responsibilityTemplates = [
+                "Own weekly priorities and report progress with clarity.",
+                "Collaborate across creative, commercial, and operations teams.",
+                "Maintain premium standards across customer-facing work.",
+                "Spot opportunities to improve speed, quality, and consistency.",
+                "Support launches, campaigns, and seasonal brand moments."
+            ];
+            const requirementTemplates = [
+                "Strong communication and reliable follow-through.",
+                "A portfolio, resume, or examples relevant to the role.",
+                "Comfort working in a fast-moving fashion environment.",
+                "Good judgment, organization, and attention to detail.",
+                "Passion for modern streetwear and customer experience."
+            ];
+            const benefits = ["Staff Discounts", "Career Development", "Flexible Work", "Paid Leave", "Collaborative Team", "Learning Opportunities"];
+            const benefitCards = ["Competitive Pay", "Staff Clothing Discounts", "Flexible Working", "Career Growth", "Creative Environment", "Team Events", "Learning Opportunities", "Performance Recognition", "Paid Leave", "Modern Work Tools"];
+            const faqs = [
+                ["Do you offer remote positions?", "Some marketing, creative, customer experience, and e-commerce roles may be remote or hybrid. Shoot, fulfillment, and inventory roles may require on-site availability."],
+                ["How long does the hiring process take?", "Most processes take two to four weeks depending on role complexity, interview availability, and whether a skills assessment is needed."],
+                ["Can I apply for multiple roles?", "Yes. Apply for the closest fit and mention the other roles you are interested in inside your cover letter."],
+                ["Do you hire internationally?", "We welcome international applicants for roles that can be performed remotely or with suitable working arrangements."],
+                ["Are internships paid?", "Internship terms may vary by department, duration, and location. Details are shared during the application review."],
+                ["What should I include in my portfolio?", "Include your strongest recent work, context for your role in each project, and examples that match the department you want to join."],
+                ["Will I receive updates after applying?", "Shortlisted applicants receive updates as the process moves forward. We keep applications on file for future opportunities."],
+                ["Can I submit a general application?", "Yes. Use the general application option if your ideal role is not currently listed."]
+            ];
+
+            const iconSvg = {
+                briefcase: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7V5h6v2M4 8h16v11H4V8Zm0 5h16"/></svg>',
+                bookmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-3-6 3V4Z"/></svg>',
+                plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+            };
+
+            function safeId(value) {
+                return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+            }
+
+            function createList(items) {
+                return `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+            }
+
+            function renderJobCard(role, department, index) {
+                const [title, description, type, location, level] = role;
+                const delay = index * 65;
+                return `
+                    <article class="career-job-card" style="--card-delay: ${delay}ms">
+                        <div class="career-job-head">
+                            <div>
+                                <h3>${title}</h3>
+                                <p>${description}</p>
+                            </div>
+                            <div class="career-job-actions">
+                                <a class="primary-button" href="#applicationForm" data-position-link="${title}">${iconSvg.briefcase}Apply Now</a>
+                                <button class="secondary-button" type="button" data-save-position="${title}">${iconSvg.bookmark}Save Position</button>
+                            </div>
+                        </div>
+                        <div class="career-badges" aria-label="${title} role details">
+                            <span>${type}</span>
+                            <span>${location}</span>
+                            <span>${level}</span>
+                            <span>${department}</span>
+                        </div>
+                        <details class="career-job-details">
+                            <summary>Role details</summary>
+                            <div class="career-job-detail-grid">
+                                <section><h4>Responsibilities</h4>${createList(responsibilityTemplates)}</section>
+                                <section><h4>Requirements</h4>${createList(requirementTemplates)}</section>
+                                <section><h4>Benefits</h4>${createList(benefits)}</section>
+                            </div>
+                        </details>
+                    </article>
+                `;
+            }
+
+            function renderPositions() {
+                const accordion = document.getElementById("positionsAccordion");
+                accordion.innerHTML = roleSections.map((section, index) => {
+                    const id = safeId(section.department);
+                    return `
+                        <article class="career-accordion-card reveal-on-scroll ${index === 0 ? "is-open" : ""}">
+                            <button class="career-accordion-trigger" type="button" aria-expanded="${index === 0}" aria-controls="panel-${id}">
+                                <span>${section.department}</span>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+                            </button>
+                            <div class="career-accordion-panel" id="panel-${id}">
+                                <div class="career-jobs">
+                                    ${section.roles.map((role, roleIndex) => renderJobCard(role, section.department, roleIndex)).join("")}
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                }).join("");
+            }
+
+            function renderBenefits() {
+                document.getElementById("benefitsGrid").innerHTML = benefitCards.map((benefit, index) => `
+                    <article class="career-benefit-card reveal-on-scroll" style="--reveal-delay: ${index * 45}ms">
+                        <span aria-hidden="true">${["$", "%", "&#8596;", "&#8599;", "&#10022;", "&#9678;", "+", "&#9733;", "&#10003;", "&#9635;"][index]}</span>
+                        <strong>${benefit}</strong>
+                    </article>
+                `).join("");
+            }
+
+            function renderFaqs() {
+                document.getElementById("faqAccordion").innerHTML = faqs.map(([question, answer], index) => `
+                    <article class="career-faq-card reveal-on-scroll ${index === 0 ? "is-open" : ""}">
+                        <button type="button" class="career-faq-trigger" aria-expanded="${index === 0}">
+                            <span>${question}</span>
+                            ${iconSvg.plus}
+                        </button>
+                        <div class="career-faq-panel"><p>${answer}</p></div>
+                    </article>
+                `).join("");
+            }
+
+            function populatePositionSelect() {
+                const select = document.getElementById("positionSelect");
+                const roles = roleSections.flatMap((section) => section.roles.map((role) => role[0]));
+                ["General Application", "Internship Program", ...roles].forEach((role) => {
+                    const option = document.createElement("option");
+                    option.textContent = role;
+                    option.value = role;
+                    select.append(option);
+                });
+            }
+
+            function setupSingleOpen(containerSelector, cardSelector, triggerSelector) {
+                const container = document.querySelector(containerSelector);
+                if (!container) return;
+                container.addEventListener("click", (event) => {
+                    const trigger = event.target.closest(triggerSelector);
+                    if (!trigger) return;
+                    const card = trigger.closest(cardSelector);
+                    const willOpen = !card.classList.contains("is-open");
+                    container.querySelectorAll(cardSelector).forEach((entry) => {
+                        const isTarget = entry === card && willOpen;
+                        entry.classList.toggle("is-open", isTarget);
+                        entry.querySelector(triggerSelector)?.setAttribute("aria-expanded", String(isTarget));
+                    });
+                });
+            }
+
+            function setupPositionLinks() {
+                document.addEventListener("click", (event) => {
+                    const link = event.target.closest("[data-position-link]");
+                    if (!link) return;
+                    const select = document.getElementById("positionSelect");
+                    if (select) select.value = link.dataset.positionLink;
+                });
+            }
+
+            function setupSaves() {
+                document.addEventListener("click", (event) => {
+                    const button = event.target.closest("[data-save-position]");
+                    if (!button) return;
+                    button.classList.toggle("is-saved");
+                    button.innerHTML = `${iconSvg.bookmark}${button.classList.contains("is-saved") ? "Saved" : "Save Position"}`;
+                    showToast(button.classList.contains("is-saved") ? "Position saved." : "Position removed from saved roles.");
+                });
+            }
+
+            function setupReveals() {
+                const nodes = [...document.querySelectorAll(".reveal-on-scroll")];
+                if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                    nodes.forEach((node) => node.classList.add("is-visible"));
+                    return;
+                }
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) return;
+                        entry.target.classList.add("is-visible");
+                        observer.unobserve(entry.target);
+                    });
+                }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
+                nodes.forEach((node, index) => {
+                    if (!node.style.getPropertyValue("--reveal-delay")) node.style.setProperty("--reveal-delay", `${Math.min(index, 10) * 35}ms`);
+                    observer.observe(node);
+                });
+            }
+
+            function showToast(text) {
+                const toast = document.getElementById("toast");
                 toast.textContent = text;
                 toast.classList.add("show");
                 clearTimeout(toast.timeout);
-                toast.timeout = setTimeout(() => toast.classList.remove("show"), 3200);
+                toast.timeout = setTimeout(() => toast.classList.remove("show"), 2600);
             }
 
-            form.addEventListener("submit", (event) => {
-                event.preventDefault();
-                const invalidField = [...form.elements].find((field) => field.willValidate && !field.checkValidity());
-                if (invalidField) {
-                    invalidField.reportValidity();
-                    showApplicationMessage("Please complete the required fields before submitting.", "error");
-                    return;
-                }
-                form.reset();
-                showApplicationMessage("Application received. Thank you for your interest in OMANUTRO.", "success");
+            function openSuccessModal() {
+                document.getElementById("successModal").classList.remove("hidden");
+                document.getElementById("successDoneButton").focus();
+            }
+
+            function closeSuccessModal() {
+                document.getElementById("successModal").classList.add("hidden");
+            }
+
+            function setupForm() {
+                const form = document.getElementById("applicationForm");
+                form.addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    const invalidField = [...form.elements].find((field) => field.willValidate && !field.checkValidity());
+                    if (invalidField) {
+                        invalidField.reportValidity();
+                        showToast("Please complete the required fields.");
+                        return;
+                    }
+                    form.reset();
+                    openSuccessModal();
+                });
+            }
+
+            renderPositions();
+            renderBenefits();
+            renderFaqs();
+            populatePositionSelect();
+            setupSingleOpen("#positionsAccordion", ".career-accordion-card", ".career-accordion-trigger");
+            setupSingleOpen("#faqAccordion", ".career-faq-card", ".career-faq-trigger");
+            setupPositionLinks();
+            setupSaves();
+            setupForm();
+            setupReveals();
+            applyCareerTheme(careerCurrentTheme);
+            careerThemeButton?.addEventListener("click", () => applyCareerTheme(careerCurrentTheme === "light" ? "dark" : "light"));
+            document.getElementById("closeSuccessModal")?.addEventListener("click", closeSuccessModal);
+            document.getElementById("successDoneButton")?.addEventListener("click", closeSuccessModal);
+            document.getElementById("successModal")?.addEventListener("click", (event) => {
+                if (event.target.id === "successModal") closeSuccessModal();
+            });
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") closeSuccessModal();
             });
         </script>
         <script src="/js/navigation.js"></script>
         <script defer src="/_vercel/insights/script.js"></script>
         <script defer src="/_vercel/speed-insights/script.js"></script>
+        <script type="module" src="js/firebase.js"></script>
+        <script type="module" src="js/auth.js"></script>        
+        <script src="js/app.js"></script>
     </body>
 </html>
-

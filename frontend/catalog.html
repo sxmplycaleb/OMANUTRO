@@ -315,6 +315,7 @@
                 <label>Password<input id="authPassword" type="password" autocomplete="current-password" required></label>
 
                 <button class="primary-button" type="submit" id="authSubmit">Login</button>
+                <button id="googleLogin">Continue with Google</button>
                 <button class="link-button auth-signup-link" type="button" id="toggleAuthMode">Sign Up</button>
                 <button class="link-button" type="button" id="forgotPasswordButton">Forgot Password</button>                   
             </form>
@@ -391,9 +392,11 @@
     <script src="/js/checkout.js"></script>
     <script src="/js/admin.js"></script>
     <script src="/js/navigation.js"></script>
-    <script src="/app.js"></script>
+    <script src="js/app.js"></script>
     <script defer src="/_vercel/insights/script.js"></script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
 
 </body>
 </html>

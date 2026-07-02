@@ -558,7 +558,7 @@ function updatePriceSelectLabels() {
 }
 
 function updateTopbarState() {
-  document.body.classList.toggle("topbar-scrolled", window.scrollY > 18);
+  document.body.classList.toggle("topbar-scrolled", window.scrollY > 2);
 }
 function openProductDetail(productId) {
   const product = state.products.find((entry) => entry.id === productId);
@@ -1469,6 +1469,7 @@ function bindEvents() {
 
 async function init() {
   bindEvents();
+  setupGoogleLogin();
   setupFaqAccordion();
   setupScrollAnimations();
   applyTheme(state.theme);
@@ -1496,6 +1497,18 @@ window.showHeroProduct = showHeroProduct;
 window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;
 window.updateOrderStatus = updateOrderStatus;
+
+function setupGoogleLogin() {
+
+  const googleBtn = document.getElementById("googleLogin");
+
+  if (!googleBtn) return;
+
+  googleBtn.addEventListener("click", () => {
+    window.FirebaseAuth.signInGoogle();
+  });
+
+}
 
 init().catch((error) => toast(error.message));
 
