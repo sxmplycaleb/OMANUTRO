@@ -15,13 +15,24 @@ function toUser(row) {
     bio: row.bio,
     phoneVerifiedAt: row.phone_verified_at,
     emailVerifiedAt: row.email_verified_at,
+    firebaseUid: row.firebase_uid,
+    avatarUrl: row.avatar_url,
     passwordReset: parseJson(row.password_reset_json, null),
     createdAt: row.created_at
   };
 }
 
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function displayNameFromFirebase(decodedToken) {
+  const email = normalizeEmail(decodedToken.email);
+  return String(decodedToken.name || decodedToken.displayName || email.split("@")[0] || "Customer").trim();
+}
+
 function byIdentifier(identifier, normalizePhone) {
-  const value = String(identifier || "").trim().toLowerCase();
+  const value = normalizeEmail(identifier);
   const phone = normalizePhone(identifier);
   return toUser(db.prepare(`
     SELECT * FROM users
@@ -36,7 +47,15 @@ function findById(id) {
 }
 
 function findByEmail(email) {
-  return toUser(db.prepare("SELECT * FROM users WHERE lower(email) = lower(?)").get(email));
+  const rows = db.prepare("SELECT * FROM users WHERE lower(email) = ?").all(normalizeEmail(email));
+  if (rows.length > 1) {
+    throw new Error("Duplicate user accounts found for this email. Resolve the conflict before linking Firebase.");
+  }
+  return toUser(rows[0]);
+}
+
+function findByFirebaseUid(uid) {
+  return toUser(db.prepare("SELECT * FROM users WHERE firebase_uid = ?").get(uid));
 }
 
 function all() {
@@ -47,13 +66,16 @@ function create(user) {
   db.prepare(`
     INSERT INTO users (
       id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
-      phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at, created_at
+      phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
+      firebase_uid, avatar_url, created_at
     ) VALUES (
       @id, @email, @name, @phone, @phoneNormalized, @role, @passwordHash, @dob, @gender, @username, @bio,
-      @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt, @createdAt
+      @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt,
+      @firebaseUid, @avatarUrl, @createdAt
     )
   `).run({
     ...user,
+    email: normalizeEmail(user.email),
     phone: user.phone || null,
     phoneNormalized: user.phoneNormalized || user.phone || null,
     dob: user.dob || null,
@@ -65,9 +87,71 @@ function create(user) {
     passwordResetJson: json(user.passwordReset),
     resetTokenHash: user.passwordReset?.resetTokenHash || null,
     resetExpiresAt: user.passwordReset?.expiresAt || null,
+    firebaseUid: user.firebaseUid || null,
+    avatarUrl: user.avatarUrl || null,
     createdAt: user.createdAt || new Date().toISOString()
   });
   return findById(user.id);
+}
+
+function createFromFirebase(decodedToken) {
+  const uid = String(decodedToken.uid || "").trim();
+  const email = normalizeEmail(decodedToken.email);
+
+  if (!uid) {
+    throw new Error("Firebase UID is required.");
+  }
+
+  if (!email) {
+    throw new Error("Firebase email is required.");
+  }
+
+  const existingByUid = findByFirebaseUid(uid);
+  if (existingByUid) return existingByUid;
+
+  const existingByEmail = findByEmail(email);
+  if (existingByEmail) {
+    const linked = linkFirebaseUid(existingByEmail.id, uid);
+    return decodedToken.picture ? updateAvatar(linked.id, decodedToken.picture) : linked;
+  }
+
+  return create({
+    id: `firebase_${uid}`,
+    email,
+    name: displayNameFromFirebase(decodedToken),
+    role: "customer",
+    passwordHash: "",
+    firebaseUid: uid,
+    avatarUrl: decodedToken.picture || null,
+    emailVerifiedAt: decodedToken.email_verified ? new Date().toISOString() : null,
+    createdAt: new Date().toISOString()
+  });
+}
+
+function linkFirebaseUid(userId, uid) {
+  const existing = findByFirebaseUid(uid);
+  if (existing && existing.id !== userId) {
+    throw new Error("Firebase UID is already linked to another account.");
+  }
+
+  db.prepare(`
+    UPDATE users
+    SET firebase_uid = ?
+    WHERE id = ?
+      AND (firebase_uid IS NULL OR firebase_uid = ?)
+  `).run(uid, userId, uid);
+
+  const user = findById(userId);
+  if (!user || user.firebaseUid !== uid) {
+    throw new Error("Unable to link Firebase account without overwriting an existing link.");
+  }
+
+  return user;
+}
+
+function updateAvatar(userId, avatarUrl) {
+  db.prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(avatarUrl || null, userId);
+  return findById(userId);
 }
 
 function updateProfile(userId, profile) {
@@ -124,7 +208,11 @@ module.exports = {
   byIdentifier,
   findById,
   findByEmail,
+  findByFirebaseUid,
   create,
+  createFromFirebase,
+  linkFirebaseUid,
+  updateAvatar,
   updateProfile,
   setPasswordReset,
   clearPasswordResetAndUpdatePassword,

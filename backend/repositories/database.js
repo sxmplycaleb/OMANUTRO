@@ -52,6 +52,8 @@ function createSchema() {
       password_reset_json TEXT,
       reset_token_hash TEXT,
       reset_expires_at TEXT,
+      firebase_uid TEXT,
+      avatar_url TEXT,
       created_at TEXT NOT NULL
     );
 
@@ -160,6 +162,30 @@ function migrateUserLookupColumns() {
   }
 }
 
+function duplicateEmails() {
+  return db.prepare(`
+    SELECT lower(email) AS email_key, COUNT(*) AS count, group_concat(id) AS user_ids
+    FROM users
+    GROUP BY lower(email)
+    HAVING COUNT(*) > 1
+  `).all();
+}
+
+function migrateFirebaseUserColumns() {
+  addColumnIfMissing("users", "firebase_uid TEXT");
+  addColumnIfMissing("users", "avatar_url TEXT");
+
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid) WHERE firebase_uid IS NOT NULL");
+
+  const duplicateEmailRows = duplicateEmails();
+  if (duplicateEmailRows.length) {
+    console.warn("Duplicate user emails detected. Resolve these before enabling case-insensitive email uniqueness.", duplicateEmailRows);
+    return;
+  }
+
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))");
+}
+
 const MIGRATIONS = [
   {
     version: 1,
@@ -182,6 +208,11 @@ const MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_orders_mpesa_checkout ON orders(mpesa_checkout_request_id);
       `);
     }
+  },
+  {
+    version: 3,
+    name: "add_firebase_user_columns",
+    up: migrateFirebaseUserColumns
   }
 ];
 
@@ -212,10 +243,12 @@ function seedFromJson() {
   const insertUser = db.prepare(`
     INSERT INTO users (
       id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
-      phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at, created_at
+      phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
+      firebase_uid, avatar_url, created_at
     ) VALUES (
       @id, @email, @name, @phone, @phoneNormalized, @role, @passwordHash, @dob, @gender, @username, @bio,
-      @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt, @createdAt
+      @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt,
+      @firebaseUid, @avatarUrl, @createdAt
     )
   `);
   const insertProduct = db.prepare(`
@@ -264,6 +297,8 @@ function seedFromJson() {
         passwordResetJson: json(passwordReset),
         resetTokenHash: passwordReset?.resetTokenHash || null,
         resetExpiresAt: passwordReset?.expiresAt || null,
+        firebaseUid: user.firebaseUid || null,
+        avatarUrl: user.avatarUrl || null,
         createdAt: user.createdAt || new Date().toISOString()
       });
     }

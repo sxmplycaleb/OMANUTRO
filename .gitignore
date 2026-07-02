@@ -1,6 +1,8 @@
 node_modules
 .env
 backend/.env
+backend/firebase-service-account.json
+backend/services/firebase-service-account.json
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
