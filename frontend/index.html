@@ -6,13 +6,16 @@
         <title>OMANUTRO</title>
         <meta name="description" content="OMANUTRO: Modern street fashion wear, curated drops, and smooth checkout.">
         <link rel="icon" href="https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8yDVcyQJzaKjUe9vH8TXdxR3ynPCQW5BhGcz4t">
+        <link rel="preload" as="image" href="https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8ynac7i2RMD7fJSrOIdBgK3Ruz8wocQHsWb9Gi" fetchpriority="high">
         <link rel="preconnect" href="https://www.pexels.com">
+        <link rel="preconnect" href="https://3z8qdlgzk1.ufs.sh" crossorigin>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <script>
             const savedTheme = localStorage.getItem("commerce-theme");
             const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";    
             document.documentElement.dataset.theme = savedTheme || preferredTheme;
+            document.documentElement.classList.add("session-splash-pending");
         </script>
         <link rel="stylesheet" href="/style.css">
     </head>
@@ -628,6 +631,7 @@
         <script src="/js/catalog.js"></script>
         <script src="/js/checkout.js"></script>
         <script src="/js/admin.js"></script>
+        <script src="/js/session-splash.js"></script>
         <script src="/app.js"></script>
         <script defer src="/_vercel/insights/script.js"></script>
         <script defer src="/_vercel/speed-insights/script.js"></script>
