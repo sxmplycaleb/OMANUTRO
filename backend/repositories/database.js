@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
 const config = require("../config");
+const { hashPassword } = require("../services/store");
 
 const SEED_FILE = path.join(config.rootDir, "db.json");
 const DB_FILE = config.sqliteFile;
@@ -54,6 +55,7 @@ function createSchema() {
       reset_expires_at TEXT,
       firebase_uid TEXT,
       avatar_url TEXT,
+      avatar_key TEXT,
       created_at TEXT NOT NULL
     );
 
@@ -70,6 +72,7 @@ function createSchema() {
       rating REAL NOT NULL DEFAULT 0,
       tags_json TEXT NOT NULL DEFAULT '[]',
       image TEXT,
+      image_key TEXT,
       reviews_json TEXT NOT NULL DEFAULT '[]',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -293,6 +296,7 @@ function duplicateEmails() {
 function migrateFirebaseUserColumns() {
   addColumnIfMissing("users", "firebase_uid TEXT");
   addColumnIfMissing("users", "avatar_url TEXT");
+  addColumnIfMissing("users", "avatar_key TEXT");
 
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid) WHERE firebase_uid IS NOT NULL");
 
@@ -303,6 +307,11 @@ function migrateFirebaseUserColumns() {
   }
 
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))");
+}
+
+function migrateUploadThingKeys() {
+  addColumnIfMissing("users", "avatar_key TEXT");
+  addColumnIfMissing("products", "image_key TEXT");
 }
 
 function migrateCartItems() {
@@ -560,6 +569,11 @@ const MIGRATIONS = [
     version: 8,
     name: "add_saved_jobs_table",
     up: migrateSavedJobsTable
+  },
+  {
+    version: 9,
+    name: "add_uploadthing_file_keys",
+    up: migrateUploadThingKeys
   }
 ];
 
@@ -591,19 +605,19 @@ function seedFromJson() {
     INSERT INTO users (
       id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
       phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
-      firebase_uid, avatar_url, created_at
+      firebase_uid, avatar_url, avatar_key, created_at
     ) VALUES (
       @id, @email, @name, @phone, @phoneNormalized, @role, @passwordHash, @dob, @gender, @username, @bio,
       @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt,
-      @firebaseUid, @avatarUrl, @createdAt
+      @firebaseUid, @avatarUrl, @avatarKey, @createdAt
     )
   `);
   const insertProduct = db.prepare(`
     INSERT OR IGNORE INTO products (
-      id, name, category, description, price, stock, rating, tags_json, image,
+      id, name, category, description, price, stock, rating, tags_json, image, image_key,
       reviews_json, created_at, updated_at
     ) VALUES (
-      @id, @name, @category, @description, @price, @stock, @rating, @tagsJson, @image,
+      @id, @name, @category, @description, @price, @stock, @rating, @tagsJson, @image, @imageKey,
       @reviewsJson, @createdAt, @updatedAt
     )
   `);
@@ -648,6 +662,7 @@ function seedFromJson() {
         resetExpiresAt: passwordReset?.expiresAt || null,
         firebaseUid: user.firebaseUid || null,
         avatarUrl: user.avatarUrl || null,
+        avatarKey: user.avatarKey || null,
         createdAt: user.createdAt || new Date().toISOString()
       });
     }
@@ -662,6 +677,7 @@ function seedFromJson() {
         tagsJson: json(Array.isArray(product.tags) ? product.tags : String(product.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean), []),
         reviewsJson: json(product.reviews || [], []),
         image: product.image || "",
+        imageKey: product.imageKey || "",
         createdAt: product.createdAt || new Date().toISOString(),
         updatedAt: product.updatedAt || product.createdAt || new Date().toISOString()
       });
@@ -701,9 +717,53 @@ function seedFromJson() {
   })();
 }
 
+function ensureRequiredAdminUser() {
+  const now = new Date().toISOString();
+  const adminEmail = "business.omanutro@gmail.com";
+  const adminPasswordHash = hashPassword("Admin123!");
+  const existing = db.prepare("SELECT id FROM users WHERE lower(email) = ?").get(adminEmail);
+  const userId = existing?.id || "admin_business_omanutro";
+
+  db.transaction(() => {
+    if (existing) {
+      db.prepare(`
+        UPDATE users
+        SET name = ?,
+            role = ?,
+            email_verified_at = COALESCE(email_verified_at, ?)
+        WHERE id = ?
+      `).run("Omanutro Administrator", "super_admin", now, userId);
+    } else {
+      db.prepare(`
+        INSERT INTO users (
+          id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
+          phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
+          firebase_uid, avatar_url, avatar_key, created_at
+        ) VALUES (
+          @id, @email, @name, NULL, NULL, @role, @passwordHash, NULL, NULL, NULL, NULL,
+          NULL, @emailVerifiedAt, NULL, NULL, NULL,
+          NULL, NULL, NULL, @createdAt
+        )
+      `).run({
+        id: userId,
+        email: adminEmail,
+        name: "Omanutro Administrator",
+        role: "super_admin",
+        passwordHash: adminPasswordHash,
+        emailVerifiedAt: now,
+        createdAt: now
+      });
+    }
+
+    db.prepare("INSERT OR IGNORE INTO user_roles (user_id, role_id, assigned_at) VALUES (?, ?, ?)")
+      .run(userId, "super_admin", now);
+  })();
+}
+
 createSchema();
 runMigrations();
 seedFromJson();
+ensureRequiredAdminUser();
 
 module.exports = {
   db,

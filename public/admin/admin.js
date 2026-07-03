@@ -126,7 +126,14 @@
   async function handleLogin(event) {
     event.preventDefault();
     const error = document.getElementById("loginError");
+    const form = event.currentTarget;
+    const submit = form?.querySelector("button[type='submit']");
     if (error) error.textContent = "";
+    if (submit) {
+      submit.disabled = true;
+      submit.setAttribute("aria-busy", "true");
+      submit.textContent = "Signing in...";
+    }
     try {
       const data = await api("/api/auth/login", {
         method: "POST",
@@ -138,7 +145,14 @@
       localStorage.setItem(tokenKey, data.token);
       window.location.href = dashboardPathForRole(data.user);
     } catch (err) {
-      if (error) error.textContent = err.message;
+      if (error) error.textContent = err.message || "Sign in failed. Check your email and password.";
+      document.getElementById("email")?.focus();
+    } finally {
+      if (submit) {
+        submit.disabled = false;
+        submit.removeAttribute("aria-busy");
+        submit.textContent = "Sign In";
+      }
     }
   }
 
@@ -336,18 +350,22 @@
       <section class="grid two">
         <article class="panel">
           <h2>Personal Information</h2>
-          <div class="form-grid">
+          <form class="form-grid" id="adminProfileForm">
             <label>Name<input value="${escapeHtml(user.name || "")}"></label>
             <label>Email<input type="email" value="${escapeHtml(user.email || "")}"></label>
             <label>Phone<input value="${escapeHtml(user.phone || "")}"></label>
             <label>Username<input value="${escapeHtml(user.username || "")}"></label>
-          </div>
+            <input type="hidden" id="adminProfileAvatarUrl" value="${escapeHtml(user.avatarUrl || "")}">
+            <input type="hidden" id="adminProfileAvatarKey" value="${escapeHtml(user.avatarKey || "")}">
+            <input type="file" id="adminProfileAvatarUpload" accept="image/*" data-upload-endpoint="profileImage" data-upload-label="Profile picture" data-url-field="#adminProfileAvatarUrl" data-key-field="#adminProfileAvatarKey">
+            <button class="primary-button" type="submit">Save Profile</button>
+          </form>
         </article>
         <article class="panel">
           <h2>Security</h2>
           <div class="setting-row"><span>Change password</span><button class="secondary-button" data-action="password">Update</button></div>
           <div class="setting-row"><span>Two-factor authentication</span><label class="switch"><input type="checkbox"><i></i></label></div>
-          <div class="setting-row"><span>Profile picture</span><button class="secondary-button" data-action="upload-avatar">Upload</button></div>
+          <div class="setting-row"><span>Profile picture</span><span>${user.avatarKey ? "Stored with UploadThing key" : "No uploaded file key yet"}</span></div>
         </article>
       </section>
       <section class="panel"><h2>Account Activity</h2>${activityList([{ label: "Current admin session verified", at: new Date().toISOString() }])}</section>
@@ -539,6 +557,8 @@
       renderView();
     });
     bindRoleEditor();
+    bindAdminProfileForm();
+    window.UploadThingUploader?.init?.(view);
   }
 
   async function ensureRbacLoaded() {
@@ -581,6 +601,32 @@
         }
       });
     }
+  }
+
+  function bindAdminProfileForm() {
+    const form = document.getElementById("adminProfileForm");
+    if (!form) return;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const [name, email, phone, username] = form.querySelectorAll("input:not([type='hidden']):not([type='file'])");
+      try {
+        const data = await api("/api/account", {
+          method: "PUT",
+          body: {
+            name: name.value,
+            phone: phone.value,
+            username: username.value,
+            avatarUrl: document.getElementById("adminProfileAvatarUrl")?.value || "",
+            avatarKey: document.getElementById("adminProfileAvatarKey")?.value || ""
+          }
+        });
+        state.user = { ...state.user, ...data.user, email: email.value };
+        toast("Profile saved.");
+        renderView();
+      } catch (error) {
+        toast(error.message);
+      }
+    });
   }
 
   function setRoute() {

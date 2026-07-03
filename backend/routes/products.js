@@ -2,6 +2,7 @@ const express = require("express");
 const productsService = require("../application/products-service");
 const { authenticate, requirePermission } = require("../middleware/auth");
 const rbac = require("../repositories/rbac");
+const asyncHandler = require("../http/async-handler");
 
 const router = express.Router();
 
@@ -19,16 +20,16 @@ router.post("/", authenticate, requirePermission("products:manage"), (req, res) 
   res.status(201).json({ product });
 });
 
-router.put("/:productId", authenticate, requirePermission("products:manage"), (req, res) => {
-  const product = productsService.updateProduct(req.params.productId, req.body);
+router.put("/:productId", authenticate, requirePermission("products:manage"), asyncHandler(async (req, res) => {
+  const product = await productsService.updateProduct(req.params.productId, req.body);
   rbac.log(req.user.id, "product.updated", "product", product.id);
   res.json({ product });
-});
+}));
 
-router.delete("/:productId", authenticate, requirePermission("products:manage"), (req, res) => {
-  const result = productsService.deleteProduct(req.params.productId);
+router.delete("/:productId", authenticate, requirePermission("products:manage"), asyncHandler(async (req, res) => {
+  const result = await productsService.deleteProduct(req.params.productId);
   rbac.log(req.user.id, "product.deleted", "product", req.params.productId);
   res.json(result);
-});
+}));
 
 module.exports = router;

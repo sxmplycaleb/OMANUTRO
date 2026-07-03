@@ -13,6 +13,7 @@ function toProduct(row) {
     rating: row.rating,
     tags: parseJson(row.tags_json, []),
     image: row.image,
+    imageKey: row.image_key,
     reviews: parseJson(row.reviews_json, []),
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -148,10 +149,10 @@ function create(product) {
   db.prepare(`
     INSERT INTO products (
       id, name, category, description, price, stock, rating, tags_json,
-      image, reviews_json, created_at, updated_at
+      image, image_key, reviews_json, created_at, updated_at
     ) VALUES (
       @id, @name, @category, @description, @price, @stock, @rating, @tagsJson,
-      @image, @reviewsJson, @createdAt, @updatedAt
+      @image, @imageKey, @reviewsJson, @createdAt, @updatedAt
     )
   `).run({
     ...product,
@@ -177,6 +178,7 @@ function update(id, patch) {
         rating = @rating,
         tags_json = @tagsJson,
         image = @image,
+        image_key = @imageKey,
         reviews_json = @reviewsJson,
         updated_at = @updatedAt
     WHERE id = @id

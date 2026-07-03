@@ -11,6 +11,7 @@ const {
 } = require("../services/store");
 const { normalizePhone, sendSignupCode, sendResetCode } = require("../services/whatsapp");
 const { badRequest, notFound, unauthorized } = require("../http/errors");
+const { deleteUploadThingFile, uploadChanged } = require("../lib/uploadthing/files");
 
 function isValidTimedSecret(record) {
   return Boolean(record?.expiresAt && new Date(record.expiresAt).getTime() > Date.now());
@@ -27,16 +28,16 @@ function sessionFor(user) {
 
 function currentUser(user, firebaseUser) {
   if (firebaseUser?.picture && firebaseUser.picture !== user.avatarUrl && users.updateAvatar) {
-    return publicUser(withAccess(users.updateAvatar(user.id, firebaseUser.picture)));
+    return publicUser(withAccess(users.updateAvatar(user.id, firebaseUser.picture, user.avatarKey)));
   }
 
   return publicUser(withAccess(user));
 }
 
-function updateProfile(user, body) {
+async function updateProfile(user, body) {
   const name = String(body.name || user.name || "").trim();
   const phone = body.phone || user.phone;
-  return publicUser(users.updateProfile(user.id, {
+  const updated = users.updateProfile(user.id, {
     name,
     phone,
     phoneNormalized: normalizePhone(phone) || null,
@@ -44,7 +45,16 @@ function updateProfile(user, body) {
     gender: body.gender || "",
     username: body.username || "",
     bio: body.bio || ""
-  }));
+  });
+
+  if ((body.avatarUrl !== undefined || body.avatarKey !== undefined) && users.updateAvatar) {
+    if (uploadChanged(user.avatarKey, body.avatarKey)) {
+      await deleteUploadThingFile(user.avatarKey);
+    }
+    return publicUser(users.updateAvatar(updated.id, body.avatarUrl, body.avatarKey));
+  }
+
+  return publicUser(updated);
 }
 
 function login(body) {

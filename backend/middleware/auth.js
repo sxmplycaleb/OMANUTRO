@@ -9,6 +9,11 @@ function authTokenFromHeader(req) {
   return authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 }
 
+function authTokenFromHeaders(headers) {
+  const authHeader = headers?.get?.("authorization") || headers?.authorization || "";
+  return authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+}
+
 function createFirebaseUser({ uid, email, name }) {
   return users.create({
     id: `firebase_${uid}`,
@@ -87,6 +92,21 @@ async function authenticate(req, res, next) {
   }
 }
 
+async function userFromToken(token) {
+  if (!token) return null;
+  let session = null;
+  try {
+    session = userForLegacyToken(token);
+  } catch {
+    session = await userForFirebaseToken(token);
+  }
+  return session?.user ? attachAccess(session.user) : null;
+}
+
+async function authenticateHeaders(headers) {
+  return userFromToken(authTokenFromHeaders(headers));
+}
+
 function requireAuth(req, res, next) {
   return authenticate(req, res, next);
 }
@@ -134,5 +154,7 @@ module.exports = {
   requireRole,
   requireAnyRole,
   requirePermission,
-  requireAdmin
+  requireAdmin,
+  authenticateHeaders,
+  userFromToken
 };

@@ -1,8 +1,10 @@
-import { getAnalytics } from "firebase/analytics";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
 import {
     getAuth,
-    GoogleAuthProvider
+    GoogleAuthProvider,
+    browserLocalPersistence,
+    setPersistence
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 import {
@@ -25,6 +27,9 @@ const app = initializeApp(firebaseConfig);
 
 // Authentication
 const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.warn("Firebase persistence could not be initialized.", error);
+});
 
 // Google Provider
 const provider = new GoogleAuthProvider();
@@ -37,4 +42,8 @@ export {
     provider,
     db
 };
-const analytics = getAnalytics(app);
+analyticsIsSupported()
+    .then((supported) => {
+        if (supported) getAnalytics(app);
+    })
+    .catch(() => {});

@@ -226,11 +226,8 @@
                 </div>
                 
                 <label>Image URL<input type="url" id="productImage" required placeholder="https://example.com/image.jpg"></label>
-
-                <label class="upload-drop">
-                    Upload Image
-                    <input type="file" id="imageUpload" accept="image/*">
-                </label>
+                <input type="hidden" id="productImageKey">
+                <input type="file" id="imageUpload" accept="image/*" data-upload-endpoint="productImages" data-max-files="1" data-upload-label="Product image" data-url-field="#productImage" data-key-field="#productImageKey">
 
                 <button class="primary-button" type="submit" id="saveProductButton">Save Product</button>
             </form>
@@ -314,15 +311,14 @@
                     <button class="auth-choice-button is-active" type="button" data-signup-method="email">Continue with Email</button>
                     <button class="auth-choice-button" type="button" data-signup-method="phone">Continue with Phone</button>
                 </div>
-                <label class="auth-field register-only hidden">Full name<input id="authName" autocomplete="name" placeholder="Jane Amani"><span class="field-feedback" data-feedback-for="authName"></span></label>
-                <label class="auth-field auth-email-field">Email or phone<input id="authEmail" autocomplete="username" required placeholder="customer@example.com or +254712345678"><span class="field-feedback" data-feedback-for="authEmail"></span></label>
-                <label class="auth-field auth-phone-field register-only hidden">Phone number<div class="phone-control"><select id="authCountryCode" aria-label="Country code"><option value="+254" data-country="KE">KE +254</option><option value="+1" data-country="US">US +1</option><option value="+44" data-country="GB">GB +44</option><option value="+971" data-country="AE">AE +971</option><option value="+234" data-country="NG">NG +234</option></select><input id="authPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="712345678"></div><span class="field-feedback" data-feedback-for="authPhone"></span></label>
-                <label class="auth-field signup-code-field hidden">Verification code<input id="authSignupCode" class="otp-source" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"><div class="otp-grid" data-otp-target="authSignupCode" aria-label="Six digit verification code"></div><span class="otp-timer" data-otp-timer>Resend available in 60s</span></label>
+                <label class="auth-field register-only hidden">Full Name<input id="authName" autocomplete="name" placeholder="Jane Amani"><span class="field-feedback" data-feedback-for="authName"></span></label>
+                <label class="auth-field auth-email-field">Email<input id="authEmail" autocomplete="username" required placeholder="customer@example.com"><span class="field-feedback" data-feedback-for="authEmail"></span></label>
+                <label class="auth-field auth-phone-field register-only hidden">Phone Number<div class="phone-control"><select id="authCountryCode" aria-label="Country code"><option value="+254" data-country="KE">KE +254</option><option value="+1" data-country="US">US +1</option><option value="+44" data-country="GB">GB +44</option><option value="+971" data-country="AE">AE +971</option><option value="+234" data-country="NG">NG +234</option></select><input id="authPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="712345678"></div><span class="field-feedback" data-feedback-for="authPhone"></span></label>
+                <label class="auth-field signup-code-field hidden">Verification Code<input id="authSignupCode" class="otp-source" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"><div class="otp-grid" data-otp-target="authSignupCode" aria-label="Six digit verification code"></div><span class="otp-timer" data-otp-timer>Resend available in 60s</span></label>
                 <label class="auth-field password-field">Password<div class="password-control"><input id="authPassword" type="password" autocomplete="current-password" required placeholder="Enter your password"><button class="password-toggle" type="button" data-toggle-password="authPassword" aria-label="Show password">Show</button></div><span class="caps-warning" data-caps-for="authPassword">Caps Lock is on</span><span class="field-feedback" data-feedback-for="authPassword"></span></label>
-                <label class="auth-field password-field register-only hidden">Confirm password<div class="password-control"><input id="authPasswordConfirm" type="password" autocomplete="new-password" placeholder="Re-enter your password"><button class="password-toggle" type="button" data-toggle-password="authPasswordConfirm" aria-label="Show password">Show</button></div><span class="field-feedback" data-feedback-for="authPasswordConfirm"></span></label>
+                <label class="auth-field password-field register-only hidden">Confirm Password<div class="password-control"><input id="authPasswordConfirm" type="password" autocomplete="new-password" placeholder="Re-enter your password"><button class="password-toggle" type="button" data-toggle-password="authPasswordConfirm" aria-label="Show password">Show</button></div><span class="field-feedback" data-feedback-for="authPasswordConfirm"></span></label>
                 <div class="password-strength register-only hidden" aria-live="polite"><span></span><i></i></div>
                 <div class="auth-form-row login-only">
-                    <label class="remember-control"><input id="authRemember" type="checkbox" checked>Remember me</label>
                     <button class="link-button" type="button" id="forgotPasswordButton">Forgot password?</button>
                 </div>
                 <button class="primary-button auth-submit" type="submit" id="authSubmit"><span>Sign in</span></button>
@@ -343,9 +339,9 @@
                     <h2 id="resetTitle">Forgot password</h2>
                     <p id="resetHelp">Enter your account email or phone and we will send a reset code.</p>
                 </div>
-                <label class="auth-field">Email or phone<input id="resetIdentifier" autocomplete="username" required placeholder="customer@example.com or +254712345678"><span class="field-feedback" data-feedback-for="resetIdentifier"></span></label>
-                <label class="auth-field reset-code-field hidden">Reset code<input id="resetCode" class="otp-source" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"><div class="otp-grid" data-otp-target="resetCode" aria-label="Six digit reset code"></div><span class="otp-timer" data-otp-timer>Resend available in 60s</span></label>
-                <label class="auth-field reset-password-field hidden">New password<div class="password-control"><input id="resetPassword" type="password" autocomplete="new-password" placeholder="Enter a new password"><button class="password-toggle" type="button" data-toggle-password="resetPassword" aria-label="Show password">Show</button></div><span class="caps-warning" data-caps-for="resetPassword">Caps Lock is on</span><span class="field-feedback" data-feedback-for="resetPassword"></span></label>
+                <label class="auth-field">Email<input id="resetIdentifier" autocomplete="username" required placeholder="customer@example.com"><span class="field-feedback" data-feedback-for="resetIdentifier"></span></label>
+                <label class="auth-field reset-code-field hidden">Reset Code<input id="resetCode" class="otp-source" inputmode="numeric" autocomplete="one-time-code" placeholder="123456"><div class="otp-grid" data-otp-target="resetCode" aria-label="Six digit reset code"></div><span class="otp-timer" data-otp-timer>Resend available in 60s</span></label>
+                <label class="auth-field reset-password-field hidden">New Password<div class="password-control"><input id="resetPassword" type="password" autocomplete="new-password" placeholder="Enter a new password"><button class="password-toggle" type="button" data-toggle-password="resetPassword" aria-label="Show password">Show</button></div><span class="caps-warning" data-caps-for="resetPassword">Caps Lock is on</span><span class="field-feedback" data-feedback-for="resetPassword"></span></label>
                 <button class="primary-button auth-submit" type="submit" id="resetSubmit"><span>Send code</span></button>
             </form>
         </div>
@@ -402,6 +398,7 @@
     <script src="/scripts/core/api.js"></script>
     <script src="/scripts/core/auth.js"></script>
     <script src="/scripts/core/cart.js"></script>
+    <script src="/scripts/shared/uploadthing-upload.js"></script>
     <script src="/scripts/features/catalog/catalog.js"></script>
     <script src="/scripts/features/checkout/checkout.js"></script>
     <script src="/scripts/shared/admin.js"></script>

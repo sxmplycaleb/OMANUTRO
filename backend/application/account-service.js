@@ -6,6 +6,7 @@ const wishlist = require("../repositories/wishlist");
 const savedJobs = require("../repositories/saved-jobs");
 const { publicUser } = require("../services/store");
 const { normalizePhone } = require("../services/whatsapp");
+const { deleteUploadThingFile, uploadChanged } = require("../lib/uploadthing/files");
 
 function orderStats(userOrders) {
   return {
@@ -36,7 +37,7 @@ function dashboard(user) {
   };
 }
 
-function updateProfile(user, body) {
+async function updateProfile(user, body) {
   const name = String(body.name || user.name || "").trim();
   const phone = body.phone || user.phone;
   const updated = users.updateProfile(user.id, {
@@ -49,8 +50,11 @@ function updateProfile(user, body) {
     bio: body.bio || user.bio || ""
   });
 
-  if (body.avatarUrl && users.updateAvatar) {
-    return publicUser(users.updateAvatar(updated.id, body.avatarUrl));
+  if ((body.avatarUrl !== undefined || body.avatarKey !== undefined) && users.updateAvatar) {
+    if (uploadChanged(user.avatarKey, body.avatarKey)) {
+      await deleteUploadThingFile(user.avatarKey);
+    }
+    return publicUser(users.updateAvatar(updated.id, body.avatarUrl, body.avatarKey));
   }
 
   return publicUser(updated);

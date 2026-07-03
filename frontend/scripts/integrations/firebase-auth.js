@@ -1,49 +1,68 @@
 import { auth, provider } from "./firebase.js";
 
 import {
+    getRedirectResult,
     signInWithPopup,
+    signInWithRedirect,
     signOut,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
+const friendlyAuthErrors = {
+    "auth/account-exists-with-different-credential": "An account already exists with this email. Sign in with your original method, then connect Google from your account.",
+    "auth/cancelled-popup-request": "Google sign-in was cancelled before it finished.",
+    "auth/network-request-failed": "We could not reach Google. Check your connection and try again.",
+    "auth/popup-closed-by-user": "Google sign-in was closed before it finished.",
+    "auth/popup-blocked": "Your browser blocked the Google window. Redirecting to Google instead.",
+    "auth/unauthorized-domain": "This domain is not authorized for Google sign-in. Add it in Firebase Authentication settings.",
+    "auth/user-disabled": "This account is disabled. Contact support for help."
+};
+
+function authMessage(error) {
+    return friendlyAuthErrors[error?.code] || "Google sign-in could not be completed. Please try again.";
+}
+
+function setGoogleButtonLoading(isLoading, label = "Continue with Google") {
+    const button = document.getElementById("googleLogin");
+    if (!button) return;
+    button.disabled = isLoading;
+    button.classList.toggle("is-loading", isLoading);
+    button.setAttribute("aria-busy", String(isLoading));
+    const text = button.querySelector("span:last-child");
+    if (text) text.textContent = isLoading ? label : "Continue with Google";
+}
+
+async function establishGoogleSession(user) {
+    if (!user) return null;
+    const token = await user.getIdToken();
+    window.CommerceApi?.setToken(token);
+    const session = await window.CommerceApi?.request?.("/api/auth/me").catch(() => null);
+    window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
+    return session?.user || user;
+}
+
+function dispatchFeedback(type, message) {
+    window.dispatchEvent(new CustomEvent("commerce-auth-feedback", { detail: { type, message } }));
+}
+
 // Google Sign In
 async function signInGoogle() {
-    const button = document.getElementById("googleLogin");
-    const originalText = button?.textContent;
-
     try {
-        if (button) {
-            button.disabled = true;
-            button.classList.add("is-loading");
-            button.setAttribute("aria-busy", "true");
-            button.querySelector("span:last-child").textContent = "Connecting...";
-        }
-
+        setGoogleButtonLoading(true, "Connecting...");
         const result = await signInWithPopup(auth, provider);
-
-        const user = result.user;
-
-        const token = await user.getIdToken();
-
-        // Store token using your existing API helper
-        window.CommerceApi.setToken(token);
-        window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
-
-        console.log("Logged in:", user);
-        window.dispatchEvent(new CustomEvent("commerce-auth-feedback", { detail: { type: "success", message: "Signed in with Google." } }));
+        await establishGoogleSession(result.user);
+        dispatchFeedback("success", "Signed in with Google.");
 
     } catch (err) {
-
         console.error(err);
-        window.dispatchEvent(new CustomEvent("commerce-auth-feedback", { detail: { type: "error", message: err.message || "Google sign-in failed." } }));
-
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.classList.remove("is-loading");
-            button.removeAttribute("aria-busy");
-            button.querySelector("span:last-child").textContent = originalText || "Continue with Google";
+        if (err?.code === "auth/popup-blocked" || err?.code === "auth/cancelled-popup-request") {
+            dispatchFeedback("info", friendlyAuthErrors[err.code]);
+            await signInWithRedirect(auth, provider);
+            return;
         }
+        dispatchFeedback("error", authMessage(err));
+    } finally {
+        setGoogleButtonLoading(false);
     }
 
 }
@@ -58,22 +77,26 @@ async function logoutGoogle(options = {}) {
 
 }
 
+getRedirectResult(auth)
+    .then(async (result) => {
+        if (!result?.user) return;
+        await establishGoogleSession(result.user);
+        dispatchFeedback("success", "Signed in with Google.");
+    })
+    .catch((error) => dispatchFeedback("error", authMessage(error)))
+    .finally(() => setGoogleButtonLoading(false));
+
 // Check login on every page load
 onAuthStateChanged(auth, async (user) => {
 
     if (user) {
-
-        const token = await user.getIdToken();
-
-        window.CommerceApi.setToken(token);
-        window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
-
-        console.log("Welcome", user.displayName);
+        await establishGoogleSession(user).catch((error) => {
+            console.error(error);
+            dispatchFeedback("error", "Your Google session could not be refreshed. Please sign in again.");
+        });
 
     } else {
-
-        window.CommerceApi.clearToken();
-        window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
+        setGoogleButtonLoading(false);
 
     }
 

@@ -174,7 +174,7 @@
                         <fieldset>
                             <legend>Personal Information</legend>
                             <label class="career-field"><input name="fullName" autocomplete="name" required placeholder="Jane Amani"><span>Full Name</span></label>
-                            <label class="career-field"><input name="email" type="email" autocomplete="email" required placeholder="jane@example.com"><span>Email Address</span></label>
+                            <label class="career-field"><input name="email" type="email" autocomplete="email" required placeholder="jane@example.com"><span>Email</span></label>
                             <label class="career-field"><input name="phone" type="tel" autocomplete="tel" required placeholder="0747690999"><span>Phone Number</span></label>
                             <label class="career-field"><input name="country" autocomplete="country-name" required placeholder="Kenya"><span>Country</span></label>
                             <label class="career-field"><input name="city" autocomplete="address-level2" required placeholder="Nairobi"><span>City</span></label>
@@ -200,9 +200,12 @@
                             </label>
                             <label class="career-field"><input name="linkedin" type="url" placeholder="https://linkedin.com/in/jane"><span>LinkedIn Profile</span></label>
                             <label class="career-field"><input name="portfolio" type="url" placeholder="https://yourportfolio.com"><span>Portfolio Website (Optional)</span></label>
-                            <label class="career-upload-field">Upload Resume (PDF)<input name="resume" type="file" accept=".pdf,application/pdf" required></label>
-                            <label class="career-upload-field">Upload Portfolio (Optional)<input name="portfolioFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
-                            <label class="career-upload-field">Upload Cover Letter (PDF, DOC, DOCX)<input name="coverLetter" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required></label>
+                            <input type="hidden" name="resumeUrl" id="resumeUrl"><input type="hidden" name="resumeKey" id="resumeKey">
+                            <label class="career-upload-field">Upload Resume (PDF)<input name="resume" type="file" accept=".pdf,application/pdf" required data-upload-endpoint="resumes" data-upload-label="Resume" data-url-field="#resumeUrl" data-key-field="#resumeKey"></label>
+                            <input type="hidden" name="portfolioFileUrl" id="portfolioFileUrl"><input type="hidden" name="portfolioFileKey" id="portfolioFileKey">
+                            <label class="career-upload-field">Upload Portfolio (Optional)<input name="portfolioFile" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" data-upload-endpoint="documents" data-upload-label="Portfolio document" data-url-field="#portfolioFileUrl" data-key-field="#portfolioFileKey"></label>
+                            <input type="hidden" name="coverLetterUrl" id="coverLetterUrl"><input type="hidden" name="coverLetterKey" id="coverLetterKey">
+                            <label class="career-upload-field">Upload Cover Letter (PDF, DOC, DOCX)<input name="coverLetter" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required data-upload-endpoint="documents" data-upload-label="Cover letter" data-url-field="#coverLetterUrl" data-key-field="#coverLetterKey"></label>
                         </fieldset>
                         <fieldset class="application-questions">
                             <legend>Application Questions</legend>
@@ -769,9 +772,12 @@
                         data.get("portfolio") || data.get("linkedin") || "Not provided",
                         "",
                         "Uploaded Files:",
-                        `Resume: ${data.get("resume")?.name || "Not provided"}`,
-                        `Cover Letter: ${data.get("coverLetter")?.name || "Not provided"}`,
-                        `Portfolio File: ${data.get("portfolioFile")?.name || "Not provided"}`,
+                        `Resume: ${data.get("resumeUrl") || data.get("resume")?.name || "Not provided"}`,
+                        `Resume Key: ${data.get("resumeKey") || "Not provided"}`,
+                        `Cover Letter: ${data.get("coverLetterUrl") || data.get("coverLetter")?.name || "Not provided"}`,
+                        `Cover Letter Key: ${data.get("coverLetterKey") || "Not provided"}`,
+                        `Portfolio File: ${data.get("portfolioFileUrl") || data.get("portfolioFile")?.name || "Not provided"}`,
+                        `Portfolio File Key: ${data.get("portfolioFileKey") || "Not provided"}`,
                         "",
                         "Answers:",
                         answers,
@@ -836,6 +842,8 @@
             });
         </script>
         <script src="/scripts/shared/navigation.js"></script>
+        <script src="/scripts/core/api.js"></script>
+        <script src="/scripts/shared/uploadthing-upload.js"></script>
         <script type="module" src="/scripts/integrations/firebase.js"></script>
         <script src="/scripts/core/auth.js"></script>        
         <script src="/scripts/features/catalog/app.js"></script>

@@ -14,7 +14,6 @@ const savedJobRoutes = require("./routes/saved-jobs");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/cart");
-const uploadRoutes = require("./routes/uploads");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
 const ADMIN_DIR = path.join(__dirname, "..", "public", "admin");
@@ -72,13 +71,14 @@ function createApp() {
   app.use("/api/products", productRoutes);
   app.use("/api/cart", cartRoutes);
   app.use("/api/orders", orderRoutes);
-  app.use("/api/uploads", uploadRoutes);
   app.post("/api/mpesa/callback", orderRoutes.mpesaCallback);
   app.use(
     "/api/uploadthing",
     createUploadthingExpressHandler({
       router: ourFileRouter,
-      config: { token: process.env.UPLOADTHING_TOKEN }
+      config: {
+        uploadthingSecret: process.env.UPLOADTHING_SECRET || process.env.UPLOADTHING_TOKEN
+      }
     })
   );
 

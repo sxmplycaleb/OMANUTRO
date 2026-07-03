@@ -1042,6 +1042,8 @@ function editProduct(productId) {
   $("#productRating").value = product.rating;
   $("#productTags").value = productTags(product).join(", ");
   $("#productImage").value = product.image;
+  $("#productImageKey").value = product.imageKey || "";
+  window.UploadThingUploader?.init?.($("#productForm"));
   setAdminPanel("edit-product");
 }
 
@@ -1050,6 +1052,7 @@ function resetProductForm() {
   $("#formTitle").textContent = "Add Product";
   $("#productForm").reset();
   $("#productId").value = "";
+  if ($("#productImageKey")) $("#productImageKey").value = "";
   $("#productRating").value = "4.5";
   setAdminPanel("add-product");
 }
@@ -1064,7 +1067,8 @@ async function saveProduct(event) {
     stock: Number($("#productStock").value),
     rating: $("#productRating").value,
     tags: $("#productTags").value,
-    image: $("#productImage").value
+    image: $("#productImage").value,
+    imageKey: $("#productImageKey")?.value || ""
   };
   const path = state.editingProductId ? `/api/products/${state.editingProductId}` : "/api/products";
   const method = state.editingProductId ? "PUT" : "POST";
@@ -1083,19 +1087,7 @@ async function deleteProduct(productId) {
   renderAdminProducts();
 }
 
-async function uploadProductImage(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-  const data = await api("/api/uploads", { method: "POST", body: { dataUrl } });
-  $("#productImage").value = data.url;
-  toast("Image uploaded.");
-}
+async function uploadProductImage() {}
 
 function setButtonLabel(button, label) {
   if (!button) return;
@@ -1164,6 +1156,16 @@ function setFieldFeedback(id, message, ok = false) {
   node.classList.toggle("is-invalid", Boolean(message && !ok));
 }
 
+function setLabelText(label, text) {
+  if (!label) return;
+  const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+  if (textNode) {
+    textNode.textContent = text;
+    return;
+  }
+  label.insertBefore(document.createTextNode(text), label.firstChild);
+}
+
 function syncAuthValidation() {
   const authEmail = $("#authEmail")?.value.trim() || "";
   const password = $("#authPassword")?.value || "";
@@ -1215,7 +1217,7 @@ function setSignupMethod(method) {
   if (state.authMode === "register") {
     emailLabel?.classList.remove("hidden");
     phoneLabel?.classList.remove("hidden");
-    emailLabel?.firstChild && (emailLabel.firstChild.textContent = method === "phone" ? "Email for receipts" : "Email address");
+    setLabelText(emailLabel, "Email");
   }
 }
 
@@ -1564,8 +1566,11 @@ function renderProfileForm() {
   $("#profileLastName").value = names.slice(1).join(" ");
   $("#profileEmail").value = state.user.email || "";
   $("#profilePhone").value = state.user.phone || "";
+  if ($("#profileAvatarUrl")) $("#profileAvatarUrl").value = state.user.avatarUrl || "";
+  if ($("#profileAvatarKey")) $("#profileAvatarKey").value = state.user.avatarKey || "";
   $("#profileDisplayName").textContent = state.user.name || "My Profile";
   $("#profileEmailText").textContent = state.user.email || "";
+  window.UploadThingUploader?.init?.($("#profileForm"));
 }
 
 function previewProfileAvatar(event) {
@@ -1588,7 +1593,9 @@ async function saveProfile(event) {
     dob: $("#profileDob").value,
     gender: $("#profileGender").value,
     username: $("#profileUsername").value,
-    bio: $("#profileBio").value
+    bio: $("#profileBio").value,
+    avatarUrl: $("#profileAvatarUrl")?.value || state.user.avatarUrl || "",
+    avatarKey: $("#profileAvatarKey")?.value || state.user.avatarKey || ""
   };
 
   const data = await api("/api/auth/profile", {
@@ -1915,7 +1922,8 @@ function bindEvents() {
   $$("[data-admin-panel]").forEach((button) => {
     button.addEventListener("click", () => setAdminPanel(button.dataset.adminPanel));
   });
-  $("#imageUpload")?.addEventListener("change", (event) => uploadProductImage(event).catch((error) => toast(error.message)));
+  $("#imageUpload")?.addEventListener("uploadthing:uploaded", () => toast("Image uploaded."));
+  $("#profileAvatar")?.addEventListener("uploadthing:uploaded", () => toast("Profile picture uploaded."));
 }
 
 async function init() {
@@ -1965,6 +1973,10 @@ function setupGoogleLogin() {
   if (!googleBtn) return;
 
   googleBtn.addEventListener("click", () => {
+    if (!window.FirebaseAuth?.signInGoogle) {
+      toast("Google sign-in is still loading. Try again in a moment.");
+      return;
+    }
     window.FirebaseAuth.signInGoogle();
   });
 

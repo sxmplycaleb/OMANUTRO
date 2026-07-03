@@ -108,6 +108,7 @@
     $("#profileEmail").value = user.email || "";
     $("#profilePhone").value = user.phone || "";
     $("#profileAvatarUrl").value = user.avatarUrl || "";
+    $("#profileAvatarKey").value = user.avatarKey || "";
   }
 
   function renderOverview() {
@@ -241,7 +242,8 @@
       body: {
         name: $("#profileName").value,
         phone: $("#profilePhone").value,
-        avatarUrl: $("#profileAvatarUrl").value
+        avatarUrl: $("#profileAvatarUrl").value,
+        avatarKey: $("#profileAvatarKey").value
       }
     });
     state.account.user = data.user;

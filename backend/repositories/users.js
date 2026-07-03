@@ -17,6 +17,7 @@ function toUser(row) {
     emailVerifiedAt: row.email_verified_at,
     firebaseUid: row.firebase_uid,
     avatarUrl: row.avatar_url,
+    avatarKey: row.avatar_key,
     passwordReset: parseJson(row.password_reset_json, null),
     createdAt: row.created_at
   };
@@ -67,11 +68,11 @@ function create(user) {
     INSERT INTO users (
       id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
       phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
-      firebase_uid, avatar_url, created_at
+      firebase_uid, avatar_url, avatar_key, created_at
     ) VALUES (
       @id, @email, @name, @phone, @phoneNormalized, @role, @passwordHash, @dob, @gender, @username, @bio,
       @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt,
-      @firebaseUid, @avatarUrl, @createdAt
+      @firebaseUid, @avatarUrl, @avatarKey, @createdAt
     )
   `).run({
     ...user,
@@ -89,6 +90,7 @@ function create(user) {
     resetExpiresAt: user.passwordReset?.expiresAt || null,
     firebaseUid: user.firebaseUid || null,
     avatarUrl: user.avatarUrl || null,
+    avatarKey: user.avatarKey || null,
     createdAt: user.createdAt || new Date().toISOString()
   });
   return findById(user.id);
@@ -149,8 +151,8 @@ function linkFirebaseUid(userId, uid) {
   return user;
 }
 
-function updateAvatar(userId, avatarUrl) {
-  db.prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(avatarUrl || null, userId);
+function updateAvatar(userId, avatarUrl, avatarKey) {
+  db.prepare("UPDATE users SET avatar_url = ?, avatar_key = ? WHERE id = ?").run(avatarUrl || null, avatarKey || null, userId);
   return findById(userId);
 }
 

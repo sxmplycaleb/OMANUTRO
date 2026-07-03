@@ -53,6 +53,7 @@ function publicUser(user) {
     username: user.username,
     bio: user.bio,
     avatarUrl: user.avatarUrl,
+    avatarKey: user.avatarKey,
     phoneVerifiedAt: user.phoneVerifiedAt,
     emailVerifiedAt: user.emailVerifiedAt,
     createdAt: user.createdAt

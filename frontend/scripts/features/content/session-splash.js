@@ -2,8 +2,8 @@
   "use strict";
 
   const SPLASH_IMAGE_URL = "https://3z8qdlgzk1.ufs.sh/f/ryTwMvEKto8yWUEcNazPVjgpf1LJ95aFliKEU3kwNuBomy2G";
-  const HOLD_DURATION = 2600;
-  const EXIT_DURATION = 650;
+  const HOLD_DURATION = 1700;
+  const EXIT_DURATION = 520;
 
   class SessionSplash {
     constructor({ imageUrl, holdDuration, exitDuration }) {

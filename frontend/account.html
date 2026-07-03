@@ -99,6 +99,8 @@
           <label>Email<input id="profileEmail" readonly placeholder="jane@example.com"></label>
           <label>Phone<input id="profilePhone" type="tel" placeholder="0747690999"></label>
           <label>Profile Picture URL<input id="profileAvatarUrl" type="url" placeholder="https://example.com/photo.jpg"></label>
+          <input type="hidden" id="profileAvatarKey">
+          <input type="file" id="profileAvatarUpload" accept="image/*" data-upload-endpoint="profileImage" data-upload-label="Profile picture" data-url-field="#profileAvatarUrl" data-key-field="#profileAvatarKey">
           <button class="primary-button" type="submit">Save Profile</button>
         </form>
       </section>
@@ -121,6 +123,7 @@
   <script src="/scripts/core/api.js"></script>
   <script src="/scripts/core/auth.js"></script>
   <script src="/scripts/core/cart.js"></script>
+  <script src="/scripts/shared/uploadthing-upload.js"></script>
   <script src="/scripts/features/account/account-dashboard.js"></script>
   <script type="module" src="/scripts/integrations/firebase-auth.js"></script>
 </body>
