@@ -27,8 +27,15 @@ Then open [http://localhost:3000](http://localhost:3000).
 ## Project Structure
 
 ```text
-backend/   Node/Express server, routes, API helpers, and backend scripts
-frontend/  Static HTML, CSS, and browser JavaScript
+backend/             Node/Express server, routes, API helpers, and backend scripts
+backend/application  Business workflows used by API routes
+backend/repositories SQLite-backed persistence helpers
+backend/services     External integrations and shared backend services
+frontend/            Static storefront HTML served by Express
+frontend/assets/     Storefront images, logos, icons, and flags
+frontend/scripts/    Browser JavaScript grouped by core, shared, feature, and integration code
+frontend/styles/     Storefront CSS
+public/admin/        Static admin dashboard served from /admin
 ```
 
 The storefront starts without demo products, orders, categories, reviews, or placeholder inventory.

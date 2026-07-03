@@ -6,6 +6,8 @@
   const state = {
     user: null,
     dashboard: null,
+    rbac: null,
+    roleEditorUserId: "",
     route: "overview",
     loading: true,
     loadError: "",
@@ -222,6 +224,14 @@
     return `<span class="pill ${key}">${escapeHtml(value || "Unknown")}</span>`;
   }
 
+  function roleLabel(roleId) {
+    return String(roleId || "")
+      .split("_")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ") || "Unknown";
+  }
+
   function card(label, value, hint) {
     return `<article class="stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong><small>${escapeHtml(hint || "")}</small></article>`;
   }
@@ -387,13 +397,51 @@
 
   function renderUsers() {
     const users = filtered(state.dashboard.users || [], ["name", "email", "role"]);
-    const roles = ["Super Admin", "Admin", "Finance", "Customer Support", "Inventory Manager", "Sales Manager", "Customer"];
+    const roles = state.rbac?.roles || [];
+    const selectedUser = users.find((user) => user.id === state.roleEditorUserId) || users[0] || null;
+    if (!state.roleEditorUserId && selectedUser) state.roleEditorUserId = selectedUser.id;
+    const selectedRoles = new Set(selectedUser?.roles?.length ? selectedUser.roles : [selectedUser?.role].filter(Boolean));
     return `
       ${filtersMarkup(["Role", "Status", "Last active"])}
+      ${hasPermission("staff:manage") ? `
+        <section class="panel role-editor-panel" aria-labelledby="roleEditorTitle">
+          <div class="panel-title">
+            <div>
+              <h2 id="roleEditorTitle">Assign Roles by Email</h2>
+              <small>Choose a user email, select one or more roles, then save access.</small>
+            </div>
+          </div>
+          ${roles.length && selectedUser ? `
+            <form class="role-editor-form" id="roleEditorForm">
+              <label>Email
+                <select id="roleUserSelect" name="userId">
+                  ${users.map((user) => `<option value="${escapeHtml(user.id)}" ${user.id === selectedUser.id ? "selected" : ""}>${escapeHtml(user.email)}${user.name ? ` - ${escapeHtml(user.name)}` : ""}</option>`).join("")}
+                </select>
+              </label>
+              <fieldset class="role-checkbox-grid">
+                <legend>Roles</legend>
+                ${roles.map((role) => `
+                  <label class="role-checkbox">
+                    <input type="checkbox" name="roleIds" value="${escapeHtml(role.id)}" ${selectedRoles.has(role.id) || selectedRoles.has(role.name) ? "checked" : ""}>
+                    <span>
+                      <strong>${escapeHtml(roleLabel(role.id))}</strong>
+                      <small>${escapeHtml(role.description || `${role.permissions?.length || 0} permissions`)}</small>
+                    </span>
+                  </label>
+                `).join("")}
+              </fieldset>
+              <div class="role-editor-actions">
+                <button class="primary-button" type="submit">${icons.shield}Save Roles</button>
+                <span id="roleEditorStatus" role="status" aria-live="polite"></span>
+              </div>
+            </form>
+          ` : emptyState("Role editor unavailable", roles.length ? "No users match the current search." : "Your account needs staff:manage access to load role definitions.")}
+        </section>
+      ` : ""}
       <section class="panel"><h2>All Users</h2>${table(["Name", "Email", "Role", "Last Active", "Actions"], users.map((user) => `
-        <tr><td>${escapeHtml(user.name || "Unnamed")}</td><td>${escapeHtml(user.email)}</td><td>${statusPill(user.role)}</td><td>${formatDate(user.createdAt)}</td><td><button class="table-action" data-action="edit-user">Edit</button></td></tr>
+        <tr><td>${escapeHtml(user.name || "Unnamed")}</td><td>${escapeHtml(user.email)}</td><td>${(user.roles?.length ? user.roles : [user.role]).map(statusPill).join(" ")}</td><td>${formatDate(user.createdAt)}</td><td><button class="table-action" data-action="edit-user" data-user-id="${escapeHtml(user.id)}">Edit Roles</button></td></tr>
       `), "No users match the current search.")}</section>
-      <section class="panel"><h2>Role Permissions</h2><div class="permission-grid">${roles.map((role) => `<div class="permission-card"><strong>${escapeHtml(role)}</strong><p>RBAC-ready role with expandable permissions for future modules.</p></div>`).join("")}</div></section>
+      <section class="panel"><h2>Role Permissions</h2><div class="permission-grid">${roles.map((role) => `<div class="permission-card"><strong>${escapeHtml(roleLabel(role.id))}</strong><p>${escapeHtml(role.description || "")}</p><small>${escapeHtml((role.permissions || []).join(", "))}</small></div>`).join("")}</div></section>
     `;
   }
 
@@ -490,6 +538,49 @@
       state.tableFilter = event.target.value;
       renderView();
     });
+    bindRoleEditor();
+  }
+
+  async function ensureRbacLoaded() {
+    if (state.rbac || !hasPermission("staff:manage")) return;
+    state.rbac = await api("/api/admin/rbac");
+  }
+
+  function bindRoleEditor() {
+    const select = document.getElementById("roleUserSelect");
+    const form = document.getElementById("roleEditorForm");
+    if (select) {
+      select.addEventListener("change", () => {
+        state.roleEditorUserId = select.value;
+        renderView();
+      });
+    }
+    if (form) {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const userId = form.elements.userId.value;
+        const roleIds = [...form.querySelectorAll("input[name='roleIds']:checked")].map((input) => input.value);
+        const status = document.getElementById("roleEditorStatus");
+        if (!roleIds.length) {
+          if (status) status.textContent = "Select at least one role.";
+          return;
+        }
+        if (status) status.textContent = "Saving...";
+        try {
+          const data = await api(`/api/admin/users/${encodeURIComponent(userId)}/roles`, {
+            method: "PUT",
+            body: { roleIds }
+          });
+          state.dashboard.users = (state.dashboard.users || []).map((user) => user.id === data.user.id ? data.user : user);
+          state.dashboard.latestUsers = (state.dashboard.latestUsers || []).map((user) => user.id === data.user.id ? data.user : user);
+          state.roleEditorUserId = data.user.id;
+          toast(`Roles updated for ${data.user.email}`);
+          renderView();
+        } catch (error) {
+          if (status) status.textContent = error.message;
+        }
+      });
+    }
   }
 
   function setRoute() {
@@ -513,6 +604,7 @@
       const initials = (state.user.name || state.user.email || "AD").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
       document.getElementById("avatarInitials").textContent = initials;
       state.dashboard = await api("/api/admin/dashboard");
+      await ensureRbacLoaded();
       state.loading = false;
       setRoute();
     } catch (err) {

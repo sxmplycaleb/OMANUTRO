@@ -3,6 +3,9 @@ node_modules
 backend/.env
 backend/firebase-service-account.json
 backend/services/firebase-service-account.json
+data/*.log
+data/*.err.log
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
+data/cutout-diagnostics/

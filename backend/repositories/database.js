@@ -165,6 +165,23 @@ function createSchema() {
       ON wishlist_items(user_id, product_id);
     CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_items(user_id);
 
+    CREATE TABLE IF NOT EXISTS saved_jobs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      department TEXT,
+      job_type TEXT,
+      location TEXT,
+      level TEXT,
+      description TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_saved_jobs_user_title
+      ON saved_jobs(user_id, title);
+    CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);
+
     CREATE TABLE IF NOT EXISTS roles (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
@@ -368,6 +385,27 @@ function migrateAccountDashboardTables() {
   `);
 }
 
+function migrateSavedJobsTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS saved_jobs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      department TEXT,
+      job_type TEXT,
+      location TEXT,
+      level TEXT,
+      description TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_saved_jobs_user_title
+      ON saved_jobs(user_id, title);
+    CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);
+  `);
+}
+
 const ROLE_PERMISSION_MAP = {
   customer: [
     "profile:manage_own", "addresses:manage_own", "wishlist:manage_own", "orders:view_own", "checkout:create"
@@ -517,6 +555,11 @@ const MIGRATIONS = [
     version: 7,
     name: "add_rbac_tables",
     up: migrateRbacTables
+  },
+  {
+    version: 8,
+    name: "add_saved_jobs_table",
+    up: migrateSavedJobsTable
   }
 ];
 

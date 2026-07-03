@@ -114,8 +114,8 @@ router.get("/dashboard", (req, res) => {
       label: `Order ${order.id} is ${order.status}`,
       at: order.createdAt
     })) : [],
-    users: canCustomers ? users.map(publicUser) : [],
-    latestUsers: canCustomers ? users.slice(0, 8).map(publicUser) : []
+    users: canCustomers ? users.map((user) => publicUser({ ...user, ...rbac.accessForUser(user) })) : [],
+    latestUsers: canCustomers ? users.slice(0, 8).map((user) => publicUser({ ...user, ...rbac.accessForUser(user) })) : []
   });
 });
 
@@ -130,7 +130,8 @@ router.put("/users/:userId/roles", requirePermission("staff:manage"), (req, res)
   const user = usersRepository.findById(req.params.userId);
   if (!user) return res.status(404).json({ error: "User not found." });
   rbac.replaceRoles(user.id, req.body.roleIds || [], req.user.id);
-  res.json({ user: publicUser({ ...user, ...rbac.accessForUser(user) }) });
+  const nextUser = usersRepository.findById(req.params.userId);
+  res.json({ user: publicUser({ ...nextUser, ...rbac.accessForUser(nextUser) }) });
 });
 
 module.exports = router;

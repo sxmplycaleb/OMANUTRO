@@ -3,6 +3,7 @@ const orders = require("../repositories/orders");
 const carts = require("../repositories/carts");
 const addresses = require("../repositories/addresses");
 const wishlist = require("../repositories/wishlist");
+const savedJobs = require("../repositories/saved-jobs");
 const { publicUser } = require("../services/store");
 const { normalizePhone } = require("../services/whatsapp");
 
@@ -18,6 +19,7 @@ function dashboard(user) {
   const userOrders = orders.forUser(user.id);
   const cart = carts.allForUser(user.id);
   const userWishlist = wishlist.allForUser(user.id);
+  const userSavedJobs = savedJobs.allForUser(user.id);
 
   return {
     user: publicUser(user),
@@ -29,6 +31,7 @@ function dashboard(user) {
     orders: userOrders,
     cart,
     wishlist: userWishlist,
+    savedJobs: userSavedJobs,
     addresses: addresses.allForUser(user.id)
   };
 }
