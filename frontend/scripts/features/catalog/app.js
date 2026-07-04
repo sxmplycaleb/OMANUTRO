@@ -1162,7 +1162,7 @@ function setLabelText(label, text) {
   if (wrappedText) {
     const marker = wrappedText.querySelector(".required-marker");
     wrappedText.textContent = text;
-    if (marker) wrappedText.prepend(marker);
+    if (marker) wrappedText.append(marker);
     return;
   }
   const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
@@ -1281,10 +1281,8 @@ function openAuth(mode = "login") {
   $("#authModal").classList.remove("hidden");
   const isRegister = mode === "register";
   $("#authTitle").textContent = isRegister ? "Create account" : "Sign in";
-  $("#authSubtitle").textContent = isRegister ? "Choose email or phone to create your account." : "Choose email or phone to access your account, cart, wishlist, and latest drops.";
   setButtonLabel($("#authSubmit"), isRegister ? "Create account" : "Sign in");
-  $("#authSwitchPrompt").textContent = isRegister ? "Already have an account?" : "Don't have an account?";
-  $("#toggleAuthMode").textContent = isRegister ? "Sign In" : "Sign Up";
+  $("#toggleAuthMode").textContent = "Create account";
   $$(".register-only").forEach((node) => node.classList.toggle("hidden", !isRegister));
   $$(".login-only").forEach((node) => node.classList.toggle("hidden", isRegister));
   $$(".signup-code-field").forEach((node) => node.classList.add("hidden"));
@@ -1409,7 +1407,6 @@ async function submitAuth(event) {
       state.signupStep = "code";
       state.signupVerificationId = data.verificationId;
       $("#authTitle").textContent = "Verify phone";
-      $("#authSubtitle").textContent = "Enter the six-digit code we sent to finish creating your account.";
       $$(".signup-code-field").forEach((node) => node.classList.remove("hidden"));
       $("#authSignupCode")?.toggleAttribute("required", true);
       setButtonLabel($("#authSubmit"), "Verify and create account");

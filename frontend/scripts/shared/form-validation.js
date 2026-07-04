@@ -14,6 +14,7 @@
       .map((node) => node.textContent)
       .join(" ")
       .replace(/^\s*\*\s*/, "")
+      .replace(/\s*\*\s*$/, "")
       .trim() || label.querySelector("span")?.textContent?.replace(/^\s*\*\s*/, "")?.trim() || "";
   };
 
@@ -57,9 +58,9 @@
   function removeRequiredMarker(label) {
     label.querySelectorAll(".required-marker").forEach((marker) => marker.remove());
     const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
-    if (textNode) textNode.textContent = textNode.textContent.replace(/^(\s*)\*\s*/, "$1");
+    if (textNode) textNode.textContent = textNode.textContent.replace(/^(\s*)\*\s*/, "$1").replace(/\s*\*\s*$/, "");
     label.querySelectorAll("span").forEach((span) => {
-      if (!span.classList.contains("field-feedback")) span.textContent = span.textContent.replace(/^\s*\*\s*/, "");
+      if (!span.classList.contains("field-feedback")) span.textContent = span.textContent.replace(/^\s*\*\s*/, "").replace(/\s*\*\s*$/, "");
     });
   }
 
@@ -68,22 +69,25 @@
     if (!label) return;
     removeRequiredMarker(label);
     if (!field.required) return;
+    const marker = document.createElement("span");
+    marker.className = "required-marker";
+    marker.textContent = "*";
     if (label.classList.contains("career-field") && label.querySelector("span")) {
       const labelSpan = label.querySelector("span");
-      labelSpan.prepend(document.createTextNode("*"));
+      labelSpan.append(marker);
       return;
     }
     const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
     if (textNode) {
-      textNode.textContent = textNode.textContent.replace(/^(\s*)/, "$1*");
+      label.insertBefore(marker, field);
       return;
     }
     const firstLabelSpan = [...label.children].find((node) => node.tagName === "SPAN" && !node.classList.contains("field-feedback"));
     if (firstLabelSpan) {
-      firstLabelSpan.prepend(document.createTextNode("*"));
+      firstLabelSpan.append(marker);
       return;
     }
-    label.insertBefore(document.createTextNode("*"), label.firstChild);
+    label.insertBefore(marker, field);
   }
 
   function prepareField(field) {

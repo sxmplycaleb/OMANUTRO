@@ -462,6 +462,28 @@
   justify-content: flex-end;
 }
 
+.auth-forgot-link {
+  justify-self: end;
+  width: fit-content;
+  min-height: auto;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.auth-forgot-link:hover,
+.auth-forgot-link:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .remember-control {
   display: inline-flex;
   align-items: center;
