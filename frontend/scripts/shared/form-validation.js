@@ -79,7 +79,8 @@
     }
     const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
     if (textNode) {
-      label.insertBefore(marker, field);
+      const directChild = field.parentElement === label ? field : field.closest("label > *");
+      label.insertBefore(marker, directChild || null);
       return;
     }
     const firstLabelSpan = [...label.children].find((node) => node.tagName === "SPAN" && !node.classList.contains("field-feedback"));
@@ -87,7 +88,8 @@
       firstLabelSpan.append(marker);
       return;
     }
-    label.insertBefore(marker, field);
+    const directChild = field.parentElement === label ? field : field.closest("label > *");
+    label.insertBefore(marker, directChild || null);
   }
 
   function prepareField(field) {

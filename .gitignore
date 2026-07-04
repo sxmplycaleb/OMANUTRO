@@ -9,3 +9,7 @@ data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
 data/cutout-diagnostics/
+
+.vercel
+.env*
+!.env.example
