@@ -87,7 +87,12 @@ async function authenticate(req, res, next) {
     req.user = attachAccess(session.user);
     req.firebaseUser = session.firebase;
     return next();
-  } catch {
+  } catch (error) {
+    console.warn("Authentication failed.", {
+      path: req.originalUrl,
+      requestId: req.requestId,
+      message: error.message
+    });
     return res.status(401).json({ error: "Invalid or expired session." });
   }
 }

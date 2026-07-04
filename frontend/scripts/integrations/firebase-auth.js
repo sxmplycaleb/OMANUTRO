@@ -36,9 +36,13 @@ async function establishGoogleSession(user) {
     if (!user) return null;
     const token = await user.getIdToken();
     window.CommerceApi?.setToken(token);
-    const session = await window.CommerceApi?.request?.("/api/auth/me").catch(() => null);
+    const session = await window.CommerceApi?.request?.("/api/auth/me");
+    if (!session?.user) {
+        window.CommerceApi?.clearToken?.();
+        throw new Error("Google sign-in reached Google, but OMANUTRO could not create your site session.");
+    }
     window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
-    return session?.user || user;
+    return session.user;
 }
 
 function dispatchFeedback(type, message) {
@@ -55,12 +59,13 @@ async function signInGoogle() {
 
     } catch (err) {
         console.error(err);
+        window.CommerceApi?.clearToken?.();
         if (err?.code === "auth/popup-blocked" || err?.code === "auth/cancelled-popup-request") {
             dispatchFeedback("info", friendlyAuthErrors[err.code]);
             await signInWithRedirect(auth, provider);
             return;
         }
-        dispatchFeedback("error", authMessage(err));
+        dispatchFeedback("error", err?.code ? authMessage(err) : err.message || "Google sign-in could not be completed. Please try again.");
     } finally {
         setGoogleButtonLoading(false);
     }
@@ -83,7 +88,10 @@ getRedirectResult(auth)
         await establishGoogleSession(result.user);
         dispatchFeedback("success", "Signed in with Google.");
     })
-    .catch((error) => dispatchFeedback("error", authMessage(error)))
+    .catch((error) => {
+        window.CommerceApi?.clearToken?.();
+        dispatchFeedback("error", error?.code ? authMessage(error) : error.message || "Google sign-in could not be completed. Please try again.");
+    })
     .finally(() => setGoogleButtonLoading(false));
 
 // Check login on every page load
@@ -92,6 +100,7 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         await establishGoogleSession(user).catch((error) => {
             console.error(error);
+            window.CommerceApi?.clearToken?.();
             dispatchFeedback("error", "Your Google session could not be refreshed. Please sign in again.");
         });
 

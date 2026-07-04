@@ -48,13 +48,31 @@ Create a `.env` file or set environment variables in your host.
 PORT=3000
 JWT_SECRET=replace-with-a-long-random-secret
 APP_URL=http://localhost:3000
+CORS_ORIGIN=https://your-domain.example
 
 STRIPE_SECRET_KEY=sk_test_...
 
 CLOUDINARY_CLOUD_NAME=your-cloud
 CLOUDINARY_API_KEY=your-key
 CLOUDINARY_API_SECRET=your-secret
+
+FIREBASE_PROJECT_ID=omanutro
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@omanutro.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+# Or use one encoded secret instead:
+FIREBASE_SERVICE_ACCOUNT_JSON_BASE64=base64-encoded-service-account-json
 ```
 
 When payment provider credentials are missing, checkout remains guarded by the existing local payment flow. When Cloudinary variables are missing, uploaded images are stored under `data/uploads` and served by the local server.
+
+## Deploying On Vercel
+
+This app deploys through `api/index.js`, which mounts the Express application as a Vercel Node function. Set these Vercel environment variables for production:
+
+- `JWT_SECRET`: required, must be stable across deployments or normal email/phone sessions will expire.
+- `APP_URL`: your deployed site URL.
+- `CORS_ORIGIN`: your deployed site URL.
+- Firebase Admin credentials: use either `FIREBASE_SERVICE_ACCOUNT_JSON_BASE64` or the `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` trio so Google sign-in tokens can be verified by the backend.
+
+On Vercel, the bundled filesystem is not persistent. The default SQLite file is therefore created in `/tmp` so auth requests can run, but production data will reset on cold starts. Use a persistent database service for real customer accounts and orders.
 

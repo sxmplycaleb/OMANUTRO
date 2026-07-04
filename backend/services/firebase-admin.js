@@ -8,6 +8,10 @@ function serviceAccountFromEnv() {
     return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
   }
 
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64) {
+    return JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64, "base64").toString("utf8"));
+  }
+
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
     return {
       projectId: process.env.FIREBASE_PROJECT_ID,
@@ -25,11 +29,12 @@ function serviceAccountFromEnv() {
 }
 
 function initializeFirebaseAdmin() {
+  const serviceAccount = serviceAccountFromEnv();
   const app = getApps().length
     ? getApp()
     : initializeApp({
-      credential: serviceAccountFromEnv()
-        ? cert(serviceAccountFromEnv())
+      credential: serviceAccount
+        ? cert(serviceAccount)
         : applicationDefault()
     });
 

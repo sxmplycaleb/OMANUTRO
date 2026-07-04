@@ -1,3 +1,4 @@
+const os = require("os");
 const path = require("path");
 
 function numberFromEnv(name, fallback, { min, max } = {}) {
@@ -21,6 +22,7 @@ function jwtSecret() {
 }
 
 const rootDir = path.join(__dirname, "..");
+const isVercel = process.env.VERCEL === "1";
 
 module.exports = {
   rootDir,
@@ -28,7 +30,11 @@ module.exports = {
   appUrl: process.env.APP_URL || "http://localhost:3000",
   corsOrigin: process.env.CORS_ORIGIN || "*",
   jsonBodyLimit: process.env.JSON_BODY_LIMIT || "12mb",
-  sqliteFile: process.env.SQLITE_DB_FILE || path.join(rootDir, "data", "commerce.sqlite"),
+  sqliteFile: process.env.SQLITE_DB_FILE || (
+    isVercel
+      ? path.join(os.tmpdir(), "commerce.sqlite")
+      : path.join(rootDir, "data", "commerce.sqlite")
+  ),
   sqliteBusyTimeoutMs: numberFromEnv("SQLITE_BUSY_TIMEOUT_MS", 5000, { min: 0 }),
   productQueryLimit: numberFromEnv("PRODUCT_QUERY_LIMIT", 250, { min: 1, max: 1000 }),
   jwtSecret
