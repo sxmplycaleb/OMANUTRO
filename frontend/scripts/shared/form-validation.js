@@ -13,7 +13,8 @@
       .filter((node) => node.nodeType === Node.TEXT_NODE)
       .map((node) => node.textContent)
       .join(" ")
-      .trim() || label.querySelector("span")?.textContent?.trim() || "";
+      .replace(/^\s*\*\s*/, "")
+      .trim() || label.querySelector("span")?.textContent?.replace(/^\s*\*\s*/, "")?.trim() || "";
   };
 
   const fieldKey = (field) => `${field.id || ""} ${field.name || ""} ${labelText(field)} ${field.placeholder || ""}`.toLowerCase();
@@ -53,51 +54,46 @@
     return "Enter details";
   }
 
-  function setRequiredMarker(field) {
+  function removeRequiredMarker(label) {
+    label.querySelectorAll(".required-marker").forEach((marker) => marker.remove());
+    const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    if (textNode) textNode.textContent = textNode.textContent.replace(/^(\s*)\*\s*/, "$1");
+    label.querySelectorAll("span").forEach((span) => {
+      if (!span.classList.contains("field-feedback")) span.textContent = span.textContent.replace(/^\s*\*\s*/, "");
+    });
+  }
+
+  function syncRequiredMarker(field) {
     const label = field.closest("label");
     if (!label) return;
-    if (!field.required) {
-      label.querySelector(".required-marker")?.remove();
-      return;
-    }
-    const existing = label.querySelector(".required-marker");
-    if (existing) {
-      existing.textContent = "*";
-      return;
-    }
-    const marker = document.createElement("span");
-    marker.className = "required-marker";
-    marker.setAttribute("aria-hidden", "true");
-    marker.textContent = "*";
+    removeRequiredMarker(label);
+    if (!field.required) return;
     if (label.classList.contains("career-field") && label.querySelector("span")) {
-      label.querySelector("span").prepend(marker);
+      const labelSpan = label.querySelector("span");
+      labelSpan.prepend(document.createTextNode("*"));
       return;
     }
-    const leadingText = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
-    let textWrap = label.querySelector(":scope > .field-label-text");
-    if (!textWrap) {
-      textWrap = document.createElement("span");
-      textWrap.className = "field-label-text";
-      if (leadingText) {
-        textWrap.textContent = leadingText.textContent.trim();
-        leadingText.textContent = leadingText.textContent.replace(leadingText.textContent.trim(), "");
-      } else {
-        const fallback = label.querySelector(":scope > span:not(.field-feedback):not(.caps-warning):not(.otp-timer)");
-        if (fallback) textWrap.textContent = fallback.textContent.trim();
-      }
-      label.insertBefore(textWrap, label.firstChild);
+    const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    if (textNode) {
+      textNode.textContent = textNode.textContent.replace(/^(\s*)/, "$1*");
+      return;
     }
-    textWrap.prepend(marker);
+    const firstLabelSpan = [...label.children].find((node) => node.tagName === "SPAN" && !node.classList.contains("field-feedback"));
+    if (firstLabelSpan) {
+      firstLabelSpan.prepend(document.createTextNode("*"));
+      return;
+    }
+    label.insertBefore(document.createTextNode("*"), label.firstChild);
   }
 
   function prepareField(field) {
     if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement)) return;
     if (field.type === "hidden" || field.type === "checkbox" || field.type === "radio" || field.type === "range" || field.type === "file") {
-      setRequiredMarker(field);
+      syncRequiredMarker(field);
       return;
     }
     if (!field.placeholder || field.placeholder.trim() === "") field.placeholder = placeholderFor(field);
-    setRequiredMarker(field);
+    syncRequiredMarker(field);
     validateField(field);
   }
 
@@ -130,7 +126,7 @@
 
   function validateForm(form) {
     const fields = [...form.elements].filter((field) => field.willValidate);
-    fields.forEach(setRequiredMarker);
+    fields.forEach(syncRequiredMarker);
     fields.forEach(validateField);
     const invalid = fields.find((field) => !field.checkValidity());
     if (!invalid) return true;

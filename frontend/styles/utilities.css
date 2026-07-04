@@ -241,6 +241,47 @@
   stroke-width: 2;
 }
 
+:is(
+  .brand,
+  .nav-tab,
+  .nav-more-link,
+  .primary-button,
+  .secondary-button,
+  .danger-button,
+  .small-button,
+  .link-button,
+  .dropdown-menu button,
+  .section-heading span,
+  .section-heading strong,
+  label,
+  .auth-choice-button,
+  .badge,
+  .pill,
+  th,
+  .footer-heading,
+  .footer-link-list a
+) {
+  overflow-wrap: normal;
+  text-wrap: nowrap;
+  white-space: nowrap;
+}
+
+:is(.product-body h3, .account-card h3, .contact-info-card h3, .quick-help-card h3, .career-job-card h3) {
+  overflow-wrap: normal;
+  text-wrap: balance;
+}
+
+@media (max-width: 560px) {
+  :is(.section-heading, .auth-switch-copy, .footer-bottom) {
+    white-space: normal;
+  }
+
+  :is(.section-heading span, .section-heading strong) {
+    text-wrap: balance;
+    white-space: normal;
+  }
+}
+
 .contact-socials a,
 .footer-social-links a,
 .social-links a {
@@ -282,8 +323,6 @@
   color: #bd081c;
 }
 
-<<<<<<< HEAD
-=======
 /* App-wide layout consistency */
 html,
 body {
@@ -370,7 +409,6 @@ body > .site-footer {
   }
 }
 
->>>>>>> 70137f6 (Remove obsolete code and simplify project structure)
 @media (max-width: 900px) {
   .nav-more {
     width: 100%;
@@ -410,9 +448,3 @@ body > .site-footer {
     transition-duration: 0.01ms;
   }
 }
-
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 70137f6 (Remove obsolete code and simplify project structure)

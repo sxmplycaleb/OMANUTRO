@@ -13,11 +13,21 @@ body {
   flex-direction: column;
   margin: 0;
   min-height: 100vh;
+  min-height: 100svh;
   color: var(--page-text);
   background: var(--page-bg);
   font-family: var(--font-sans);
   transition: var(--transition-page);
   overflow-x: hidden;
+}
+
+body > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+body > .site-footer {
+  flex-shrink: 0;
 }
 
 .session-splash-pending body {
@@ -88,9 +98,3 @@ body.splash-lock main {
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease, opacity 0.6s ease;
   will-change: transform, filter, opacity;
 }
-
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 70137f6 (Remove obsolete code and simplify project structure)

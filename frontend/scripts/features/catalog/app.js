@@ -25,7 +25,7 @@ const state = {
     resetToken: null,
     signupStep: "details",
     signupVerificationId: null,
-    signupMethod: "email"
+    authMethod: "email"
 };
 
 function hasPermission(permission) {
@@ -1196,13 +1196,9 @@ function syncAuthValidation() {
 }
 
 function validateAuthForm(body) {
-  const usesPhone = state.signupMethod === "phone";
   if (state.authMode === "login") {
-    if (usesPhone) {
-      if (!isValidPhone(body.phone)) throw new Error("Enter a valid international phone number.");
-    } else if (!isValidEmail(body.email)) {
-      throw new Error("Enter a valid email address.");
-    }
+    if (state.authMethod === "email" && !isValidEmail(body.email)) throw new Error("Enter a valid email address.");
+    if (state.authMethod === "phone" && !isValidPhone(body.phone)) throw new Error("Enter a valid phone number.");
     if (!body.password) throw new Error("Enter your password.");
     return;
   }
@@ -1213,24 +1209,28 @@ function validateAuthForm(body) {
   }
 
   if (!body.name?.trim()) throw new Error("Enter your full name.");
-  if (!usesPhone && !isValidEmail(body.email)) throw new Error("Enter a valid email address.");
-  if (usesPhone && !isValidPhone(body.phone)) throw new Error("Enter a valid international phone number.");
+  if (state.authMethod === "email" && !isValidEmail(body.email)) throw new Error("Enter a valid email address.");
+  if (state.authMethod === "phone" && !isValidPhone(body.phone)) throw new Error("Enter a valid phone number.");
   validatePasswordPolicy(body.password, true);
   if ($("#authPasswordConfirm")?.value !== body.password) throw new Error("Passwords do not match.");
 }
 
-function setSignupMethod(method) {
-  state.signupMethod = method === "phone" ? "phone" : "email";
-  $$("[data-signup-method]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.signupMethod === state.signupMethod);
+function setAuthMethod(method) {
+  state.authMethod = method === "phone" ? "phone" : "email";
+  $$("[data-auth-method]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.authMethod === state.authMethod);
   });
   const emailLabel = $(".auth-email-field");
   const phoneLabel = $(".auth-phone-field");
-  const usePhone = state.signupMethod === "phone";
-  emailLabel?.classList.toggle("hidden", usePhone);
-  phoneLabel?.classList.toggle("hidden", !usePhone);
-  $("#authEmail")?.toggleAttribute("required", !usePhone);
-  $("#authPhone")?.toggleAttribute("required", usePhone);
+  const emailInput = $("#authEmail");
+  const phoneInput = $("#authPhone");
+  const isEmail = state.authMethod === "email";
+
+  emailLabel?.classList.toggle("hidden", !isEmail);
+  phoneLabel?.classList.toggle("hidden", isEmail);
+  emailInput?.toggleAttribute("required", isEmail);
+  phoneInput?.toggleAttribute("required", !isEmail);
+  emailInput?.setAttribute("autocomplete", state.authMode === "register" ? "email" : "username");
   setLabelText(emailLabel, "Email");
   setLabelText(phoneLabel, "Phone Number");
   syncAuthValidation();
@@ -1275,28 +1275,24 @@ function openAuth(mode = "login") {
   state.authMode = mode;
   state.signupStep = "details";
   state.signupVerificationId = null;
-  state.signupMethod = "email";
+  state.authMethod = "email";
   closeMenus();
   $("#dcashPopup")?.classList.add("hidden");
   $("#authModal").classList.remove("hidden");
   const isRegister = mode === "register";
   $("#authTitle").textContent = isRegister ? "Create account" : "Sign in";
-  $("#authSubtitle").textContent = isRegister ? "Choose how you want to start, then create your password." : "Access your account, cart, wishlist, and latest drops.";
+  $("#authSubtitle").textContent = isRegister ? "Choose email or phone to create your account." : "Choose email or phone to access your account, cart, wishlist, and latest drops.";
   setButtonLabel($("#authSubmit"), isRegister ? "Create account" : "Sign in");
   $("#authSwitchPrompt").textContent = isRegister ? "Already have an account?" : "Don't have an account?";
   $("#toggleAuthMode").textContent = isRegister ? "Sign In" : "Sign Up";
   $$(".register-only").forEach((node) => node.classList.toggle("hidden", !isRegister));
   $$(".login-only").forEach((node) => node.classList.toggle("hidden", isRegister));
   $$(".signup-code-field").forEach((node) => node.classList.add("hidden"));
-  $("#authEmail")?.setAttribute("autocomplete", isRegister ? "email" : "username");
   $("#authPassword")?.setAttribute("autocomplete", isRegister ? "new-password" : "current-password");
-  $("#authEmail")?.toggleAttribute("required", true);
-  $("#authPhone")?.toggleAttribute("required", false);
   $("#authPasswordConfirm")?.toggleAttribute("required", isRegister);
   $("#authSignupCode")?.toggleAttribute("required", false);
   $("#authForm")?.classList.remove("is-invalid", "is-loading", "is-success");
-  setSignupMethod("email");
-  syncAuthValidation();
+  setAuthMethod("email");
   hydrateOtpInputs();
   $("#authEmail")?.focus();
 }
@@ -1391,22 +1387,24 @@ async function submitResetPassword(event) {
 async function submitAuth(event) {
   event.preventDefault();
   const form = $("#authForm");
-  const usePhone = state.signupMethod === "phone";
   const body = {
     name: $("#authName").value,
-    email: usePhone ? "" : $("#authEmail").value,
-    phone: normalizedPhoneValue(),
+    email: state.authMethod === "email" ? $("#authEmail").value : "",
+    phone: state.authMethod === "phone" ? normalizedPhoneValue() : "",
+    method: state.authMethod,
     password: $("#authPassword").value
   };
+  body.identifier = state.authMethod === "phone" ? body.phone : body.email;
   const loginBody = {
-    email: usePhone ? body.phone : body.email,
+    identifier: body.identifier,
+    email: body.identifier,
     password: body.password
   };
   setFormLoading(form, true);
 
   try {
     validateAuthForm(body);
-    if (state.authMode === "register" && state.signupStep === "details" && usePhone) {
+    if (state.authMode === "register" && state.authMethod === "phone" && state.signupStep === "details") {
       const data = await api("/api/auth/request-signup-code", { method: "POST", body });
       state.signupStep = "code";
       state.signupVerificationId = data.verificationId;
@@ -1420,7 +1418,7 @@ async function submitAuth(event) {
       $(".signup-code-field .otp-input")?.focus();
       return;
     }
-    if (state.authMode === "register") {
+    if (state.authMode === "register" && state.authMethod === "phone") {
       body.verificationId = state.signupVerificationId;
       body.code = $("#authSignupCode")?.value;
     }
@@ -1917,8 +1915,8 @@ function bindEvents() {
   $("#productDetailModal")?.addEventListener("click", (event) => { if (event.target.id === "productDetailModal") closeProductDetail(); });
   $("#toggleAuthMode")?.addEventListener("click", () => openAuth(state.authMode === "login" ? "register" : "login"));
   $("#authForm")?.addEventListener("submit", (event) => submitAuth(event).catch((error) => toast(error.message)));
-  $$("[data-signup-method]").forEach((button) => {
-    button.addEventListener("click", () => setSignupMethod(button.dataset.signupMethod));
+  $$("[data-auth-method]").forEach((button) => {
+    button.addEventListener("click", () => setAuthMethod(button.dataset.authMethod));
   });
   $$("[data-toggle-password]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -2008,5 +2006,3 @@ window.addEventListener("commerce-auth-feedback", (event) => {
 });
 
 init().catch((error) => toast(error.message));
-
-

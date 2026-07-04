@@ -1,6 +1,12 @@
 const crypto = require("crypto");
 const { db, json } = require("./database");
 
+const BUSINESS_ADMIN_EMAILS = new Set(["business.omanutro@gmail.com"]);
+
+function isBusinessAdmin(user) {
+  return BUSINESS_ADMIN_EMAILS.has(String(user?.email || "").trim().toLowerCase());
+}
+
 function rolesForUser(userId) {
   return db.prepare(`
     SELECT roles.id, roles.name, roles.description
@@ -60,6 +66,10 @@ function accessForUser(user) {
     const fallbackRoleId = user.role === "admin" ? "super_admin" : user.role;
     const fallbackRole = db.prepare("SELECT id, name, description FROM roles WHERE id = ?").get(fallbackRoleId);
     if (fallbackRole) roles = [fallbackRole];
+  }
+  if (isBusinessAdmin(user) && !roles.some((role) => role.id === "super_admin")) {
+    const superAdminRole = db.prepare("SELECT id, name, description FROM roles WHERE id = ?").get("super_admin");
+    if (superAdminRole) roles = [...roles, superAdminRole];
   }
   const roleIds = roles.map((role) => role.id);
   const permissions = roles.length ? permissionsForRoles(roleIds) : permissionsForUser(user.id);
