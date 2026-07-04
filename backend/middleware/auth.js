@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const users = require("../repositories/users");
 const rbac = require("../repositories/rbac");
+const { verifyFirebaseIdToken } = require("../services/firebase-token");
 const { hashPassword, verifyAuthToken } = require("../services/store");
 
 function authTokenFromHeader(req) {
@@ -27,8 +28,7 @@ function createFirebaseUser({ uid, email, name }) {
 }
 
 async function userForFirebaseToken(idToken) {
-  const admin = require("../services/firebase-admin");
-  const decodedToken = await admin.auth().verifyIdToken(idToken);
+  const decodedToken = await verifyFirebaseIdToken(idToken);
   const { uid, email, name, picture } = decodedToken;
 
   if (!uid || !email) {

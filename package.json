@@ -33,6 +33,7 @@
     "express": "^5.2.1",
     "firebase": "^12.15.0",
     "firebase-admin": "^14.1.0",
+    "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
     "uploadthing": "^6.12.0"
   },
