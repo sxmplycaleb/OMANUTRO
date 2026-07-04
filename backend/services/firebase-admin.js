@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const { applicationDefault, cert, getApp, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 
@@ -12,6 +14,11 @@ function serviceAccountFromEnv() {
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
     };
+  }
+
+  const localServiceAccount = path.join(__dirname, "firebase-service-account.json");
+  if (fs.existsSync(localServiceAccount)) {
+    return JSON.parse(fs.readFileSync(localServiceAccount, "utf8"));
   }
 
   return null;

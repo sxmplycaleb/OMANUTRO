@@ -76,12 +76,15 @@ async function requestSignupCode(body) {
   const email = String(body.email || "").trim().toLowerCase();
   const phone = normalizePhone(body.phone);
 
-  if (!email || !phone) {
-    throw badRequest("Email and WhatsApp phone number are required.");
+  if (!phone) {
+    throw badRequest("WhatsApp phone number is required.");
   }
 
-  if (users.findByEmail(email)) {
+  if (email && users.findByEmail(email)) {
     throw badRequest("Email already in use.");
+  }
+  if (users.byIdentifier(phone, normalizePhone)) {
+    throw badRequest("Phone number already in use.");
   }
 
   const code = String(crypto.randomInt(100000, 999999));
@@ -107,37 +110,48 @@ async function requestSignupCode(body) {
 function register(body) {
   const email = String(body.email || "").trim().toLowerCase();
   const phone = normalizePhone(body.phone);
-  const verification = verifications.findById(body.verificationId);
+  const verification = body.verificationId ? verifications.findById(body.verificationId) : null;
+  const isPhoneSignup = Boolean(phone);
 
-  if (!verification || verification.type !== "signup" || !isValidTimedSecret(verification)) {
+  if (isPhoneSignup && (!verification || verification.type !== "signup" || !isValidTimedSecret(verification))) {
     throw badRequest("Request a fresh WhatsApp signup code first.");
   }
 
-  if (verification.email !== email || verification.phone !== phone || verification.codeHash !== hashSecret(body.code)) {
+  if (isPhoneSignup && (verification.email !== email || verification.phone !== phone || verification.codeHash !== hashSecret(body.code))) {
     throw badRequest("Invalid signup verification code.");
+  }
+
+  if (!email && !phone) {
+    throw badRequest("Email or phone number is required.");
   }
 
   if (!body.password || String(body.password).length < 6) {
     throw badRequest("Password must be at least 6 characters.");
   }
 
-  if (users.findByEmail(email)) {
+  if (email && users.findByEmail(email)) {
     throw badRequest("Email already in use.");
   }
+  if (phone && users.byIdentifier(phone, normalizePhone)) {
+    throw badRequest("Phone number already in use.");
+  }
+
+  const accountEmail = email || `${phone.replace(/\D/g, "")}@phone.omanutro.local`;
 
   const user = users.create({
     id: `user_${crypto.randomBytes(8).toString("hex")}`,
     name: body.name || "Customer",
-    email,
+    email: accountEmail,
     phone,
     phoneNormalized: phone,
-    phoneVerifiedAt: new Date().toISOString(),
+    phoneVerifiedAt: phone ? new Date().toISOString() : null,
+    emailVerifiedAt: email ? null : undefined,
     passwordHash: hashPassword(body.password),
     role: "customer",
     createdAt: new Date().toISOString()
   });
 
-  verifications.remove(verification.id);
+  if (verification) verifications.remove(verification.id);
   return sessionFor(user);
 }
 

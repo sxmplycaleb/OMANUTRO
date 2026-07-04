@@ -54,9 +54,12 @@
   }
 
   function setRequiredMarker(field) {
-    if (!field.required) return;
     const label = field.closest("label");
     if (!label) return;
+    if (!field.required) {
+      label.querySelector(".required-marker")?.remove();
+      return;
+    }
     const existing = label.querySelector(".required-marker");
     if (existing) {
       existing.textContent = "*";
@@ -70,7 +73,21 @@
       label.querySelector("span").prepend(marker);
       return;
     }
-    label.insertBefore(marker, label.firstChild);
+    const leadingText = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    let textWrap = label.querySelector(":scope > .field-label-text");
+    if (!textWrap) {
+      textWrap = document.createElement("span");
+      textWrap.className = "field-label-text";
+      if (leadingText) {
+        textWrap.textContent = leadingText.textContent.trim();
+        leadingText.textContent = leadingText.textContent.replace(leadingText.textContent.trim(), "");
+      } else {
+        const fallback = label.querySelector(":scope > span:not(.field-feedback):not(.caps-warning):not(.otp-timer)");
+        if (fallback) textWrap.textContent = fallback.textContent.trim();
+      }
+      label.insertBefore(textWrap, label.firstChild);
+    }
+    textWrap.prepend(marker);
   }
 
   function prepareField(field) {

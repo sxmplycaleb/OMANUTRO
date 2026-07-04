@@ -384,7 +384,11 @@
   top: clamp(148px, 29svh, 310px);
   right: 0;
   left: 0;
+<<<<<<< HEAD
   z-index: 2;
+=======
+  z-index: 5;
+>>>>>>> 70137f6 (Remove obsolete code and simplify project structure)
   color: var(--om-hero-word-fill);
   font-family: "Trebuchet MS", "Segoe UI", Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: min(clamp(78px, 15.2vw, 228px), calc(100vw / var(--hero-word-fit)));
@@ -1093,3 +1097,7 @@
 }
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 70137f6 (Remove obsolete code and simplify project structure)

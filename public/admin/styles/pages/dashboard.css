@@ -334,3 +334,7 @@ td strong { display: block; }
   animation: loading 1.3s infinite linear;
 }
 @keyframes loading { to { background-position: -240% 0; } }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 70137f6 (Remove obsolete code and simplify project structure)

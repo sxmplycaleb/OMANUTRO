@@ -282,6 +282,95 @@
   color: #bd081c;
 }
 
+<<<<<<< HEAD
+=======
+/* App-wide layout consistency */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+body > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+body > .site-footer {
+  flex-shrink: 0;
+  width: 100vw;
+  max-width: 100vw;
+  margin: auto calc(50% - 50vw) 0;
+}
+
+.site-footer {
+  padding-bottom: max(clamp(24px, 5vw, 56px), env(safe-area-inset-bottom));
+}
+
+.field-label-text,
+.required-marker {
+  display: inline;
+  white-space: nowrap;
+}
+
+.required-marker {
+  margin-right: 0;
+  vertical-align: baseline;
+}
+
+:is(label, .auth-field, .career-upload-field, .contact-form label, .account-form label) > .field-label-text {
+  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1.25;
+}
+
+:is(
+  button,
+  .primary-button,
+  .secondary-button,
+  .small-button,
+  .link-button,
+  .nav-tab,
+  .nav-link,
+  .nav-more-link,
+  .dropdown-menu button,
+  .footer-link-list a,
+  .footer-legal-links a,
+  .pill,
+  .status,
+  .stock-badge,
+  .price
+) {
+  white-space: nowrap;
+}
+
+:is(.product-card h3, .career-job-card h3, .about-feature-card h3, .quick-help-card h3, .contact-info-card h3, .account-panel h2, .panel-heading h2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.product-actions, .hero-actions, .quick-actions, .account-topline, .panel-heading, .footer-bottom, .auth-choice, .auth-switch-copy) {
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  :is(.product-card h3, .career-job-card h3, .about-feature-card h3, .quick-help-card h3, .contact-info-card h3, .account-panel h2, .panel-heading h2) {
+    white-space: normal;
+  }
+
+  :is(.auth-choice-button, .primary-button, .secondary-button, .small-button) {
+    min-width: 0;
+  }
+}
+
+>>>>>>> 70137f6 (Remove obsolete code and simplify project structure)
 @media (max-width: 900px) {
   .nav-more {
     width: 100%;
@@ -323,3 +412,7 @@
 }
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 70137f6 (Remove obsolete code and simplify project structure)

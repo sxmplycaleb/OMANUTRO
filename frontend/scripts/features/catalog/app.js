@@ -1158,6 +1158,13 @@ function setFieldFeedback(id, message, ok = false) {
 
 function setLabelText(label, text) {
   if (!label) return;
+  const wrappedText = label.querySelector(":scope > .field-label-text");
+  if (wrappedText) {
+    const marker = wrappedText.querySelector(".required-marker");
+    wrappedText.textContent = text;
+    if (marker) wrappedText.prepend(marker);
+    return;
+  }
   const textNode = [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
   if (textNode) {
     textNode.textContent = text;
@@ -1173,7 +1180,7 @@ function syncAuthValidation() {
   const phone = normalizedPhoneValue();
   const resetIdentifier = $("#resetIdentifier")?.value.trim() || "";
 
-  if (authEmail) setFieldFeedback("authEmail", isValidEmail(authEmail) || isValidPhone(authEmail) ? "Valid sign-in identifier" : "Enter a valid email or international phone.", isValidEmail(authEmail) || isValidPhone(authEmail));
+  if (authEmail) setFieldFeedback("authEmail", isValidEmail(authEmail) ? "Valid email address" : "Enter a valid email address.", isValidEmail(authEmail));
   if (phone) setFieldFeedback("authPhone", isValidPhone(phone) ? "Valid phone number" : "Use international format, for example +254712345678.", isValidPhone(phone));
   if (password) {
     const score = validatePasswordPolicy(password);
@@ -1189,8 +1196,13 @@ function syncAuthValidation() {
 }
 
 function validateAuthForm(body) {
+  const usesPhone = state.signupMethod === "phone";
   if (state.authMode === "login") {
-    if (!body.email?.trim()) throw new Error("Enter your email or phone number.");
+    if (usesPhone) {
+      if (!isValidPhone(body.phone)) throw new Error("Enter a valid international phone number.");
+    } else if (!isValidEmail(body.email)) {
+      throw new Error("Enter a valid email address.");
+    }
     if (!body.password) throw new Error("Enter your password.");
     return;
   }
@@ -1201,24 +1213,27 @@ function validateAuthForm(body) {
   }
 
   if (!body.name?.trim()) throw new Error("Enter your full name.");
-  if (!isValidEmail(body.email)) throw new Error("Enter a valid email address.");
-  if (!isValidPhone(body.phone)) throw new Error("Enter a valid international phone number.");
+  if (!usesPhone && !isValidEmail(body.email)) throw new Error("Enter a valid email address.");
+  if (usesPhone && !isValidPhone(body.phone)) throw new Error("Enter a valid international phone number.");
   validatePasswordPolicy(body.password, true);
   if ($("#authPasswordConfirm")?.value !== body.password) throw new Error("Passwords do not match.");
 }
 
 function setSignupMethod(method) {
-  state.signupMethod = method;
+  state.signupMethod = method === "phone" ? "phone" : "email";
   $$("[data-signup-method]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.signupMethod === method);
+    button.classList.toggle("is-active", button.dataset.signupMethod === state.signupMethod);
   });
   const emailLabel = $(".auth-email-field");
   const phoneLabel = $(".auth-phone-field");
-  if (state.authMode === "register") {
-    emailLabel?.classList.remove("hidden");
-    phoneLabel?.classList.remove("hidden");
-    setLabelText(emailLabel, "Email");
-  }
+  const usePhone = state.signupMethod === "phone";
+  emailLabel?.classList.toggle("hidden", usePhone);
+  phoneLabel?.classList.toggle("hidden", !usePhone);
+  $("#authEmail")?.toggleAttribute("required", !usePhone);
+  $("#authPhone")?.toggleAttribute("required", usePhone);
+  setLabelText(emailLabel, "Email");
+  setLabelText(phoneLabel, "Phone Number");
+  syncAuthValidation();
 }
 
 function hydrateOtpInputs() {
@@ -1266,7 +1281,7 @@ function openAuth(mode = "login") {
   $("#authModal").classList.remove("hidden");
   const isRegister = mode === "register";
   $("#authTitle").textContent = isRegister ? "Create account" : "Sign in";
-  $("#authSubtitle").textContent = isRegister ? "Choose how you want to start, then verify your phone with a one-time code." : "Access your account, cart, wishlist, and latest drops.";
+  $("#authSubtitle").textContent = isRegister ? "Choose how you want to start, then create your password." : "Access your account, cart, wishlist, and latest drops.";
   setButtonLabel($("#authSubmit"), isRegister ? "Create account" : "Sign in");
   $("#authSwitchPrompt").textContent = isRegister ? "Already have an account?" : "Don't have an account?";
   $("#toggleAuthMode").textContent = isRegister ? "Sign In" : "Sign Up";
@@ -1275,7 +1290,8 @@ function openAuth(mode = "login") {
   $$(".signup-code-field").forEach((node) => node.classList.add("hidden"));
   $("#authEmail")?.setAttribute("autocomplete", isRegister ? "email" : "username");
   $("#authPassword")?.setAttribute("autocomplete", isRegister ? "new-password" : "current-password");
-  $("#authPhone")?.toggleAttribute("required", isRegister);
+  $("#authEmail")?.toggleAttribute("required", true);
+  $("#authPhone")?.toggleAttribute("required", false);
   $("#authPasswordConfirm")?.toggleAttribute("required", isRegister);
   $("#authSignupCode")?.toggleAttribute("required", false);
   $("#authForm")?.classList.remove("is-invalid", "is-loading", "is-success");
@@ -1375,17 +1391,22 @@ async function submitResetPassword(event) {
 async function submitAuth(event) {
   event.preventDefault();
   const form = $("#authForm");
+  const usePhone = state.signupMethod === "phone";
   const body = {
     name: $("#authName").value,
-    email: $("#authEmail").value,
+    email: usePhone ? "" : $("#authEmail").value,
     phone: normalizedPhoneValue(),
     password: $("#authPassword").value
+  };
+  const loginBody = {
+    email: usePhone ? body.phone : body.email,
+    password: body.password
   };
   setFormLoading(form, true);
 
   try {
     validateAuthForm(body);
-    if (state.authMode === "register" && state.signupStep === "details") {
+    if (state.authMode === "register" && state.signupStep === "details" && usePhone) {
       const data = await api("/api/auth/request-signup-code", { method: "POST", body });
       state.signupStep = "code";
       state.signupVerificationId = data.verificationId;
@@ -1404,7 +1425,7 @@ async function submitAuth(event) {
       body.code = $("#authSignupCode")?.value;
     }
     const path = state.authMode === "register" ? "/api/auth/register" : "/api/auth/login";
-    const data = await api(path, { method: "POST", body });
+    const data = await api(path, { method: "POST", body: state.authMode === "login" ? loginBody : body });
     form?.classList.add("is-success");
     state.user = data.user;
     rememberAuthenticatedUser(state.user);
