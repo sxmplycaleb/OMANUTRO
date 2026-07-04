@@ -1,0 +1,138 @@
+/* ========================================
+   ADMIN FORMS AND UPLOADS
+======================================== */
+
+.form-stack, label {
+  display: grid;
+  gap: 8px;
+}
+
+label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+input, select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--panel) 84%, var(--paper));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.ut-upload {
+  display: grid;
+  gap: 10px;
+}
+
+.ut-upload-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 86px;
+  padding: 14px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ut-upload.is-dragging .ut-upload-drop,
+.ut-upload-drop:focus-visible {
+  outline: 0;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.ut-upload-icon {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--on-accent);
+  background: var(--accent);
+  border-radius: 50%;
+  font-weight: 900;
+}
+
+.ut-upload-drop small,
+.ut-upload-file small,
+.ut-upload-status {
+  color: var(--muted);
+}
+
+.ut-upload-preview {
+  display: grid;
+  gap: 8px;
+}
+
+.ut-upload-file {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--panel) 76%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.ut-upload-file img,
+.ut-file-icon {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  border-radius: 8px;
+}
+
+.ut-file-icon {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.ut-upload-progress {
+  height: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--muted) 16%, transparent);
+  border-radius: 999px;
+}
+
+.ut-upload-progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: inherit;
+}
+
+.ut-upload-status {
+  min-height: 20px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.ut-upload[data-status="error"] .ut-upload-status { color: #ef4444; }
+.ut-upload[data-status="success"] .ut-upload-status { color: #16a34a; }
+.ut-upload-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.required-marker {
+  color: #dc2626;
+  font-weight: 950;
+  margin-right: 0;
+}
+
+input:invalid:not(:placeholder-shown),
+select:invalid {
+  border-color: #dc2626;
+}
+

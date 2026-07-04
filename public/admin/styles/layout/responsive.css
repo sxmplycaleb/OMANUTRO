@@ -1,0 +1,43 @@
+/* ========================================
+   ADMIN RESPONSIVE RULES
+======================================== */
+
+@media (max-width: 1180px) {
+  .stats-grid, .stats-grid.compact, .grid.three, .skeleton-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .app-shell, .app-shell.sidebar-collapsed { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    z-index: 45;
+    width: min(300px, 86vw);
+    transform: translateX(-102%);
+    transition: transform 0.18s ease;
+  }
+  .sidebar-open .sidebar { transform: translateX(0); }
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    background: rgba(0, 0, 0, 0.46);
+  }
+  .sidebar-open .sidebar-backdrop { display: block; }
+  .sidebar-close { display: inline-flex; }
+  .sidebar-collapsed .nav-label { display: inline; }
+  .sidebar-collapsed .brand { justify-content: flex-start; }
+  .topbar { grid-template-columns: 1fr auto; }
+  .search-box { display: none; }
+  .page-intro { align-items: flex-start; flex-direction: column; }
+  .grid.two, .settings-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  h1 { font-size: 23px; }
+  .stats-grid, .stats-grid.compact, .grid.three, .skeleton-grid, .form-grid { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 72px minmax(0, 1fr) 58px; }
+  .intro-actions { width: 100%; }
+  .intro-actions > * { flex: 1 1 140px; }
+}
+

@@ -1,0 +1,77 @@
+/* ========================================
+   NAVIGATION AND GRID REFINEMENTS
+======================================== */
+
+/* Requested navigation, carousel, and icon refinements */
+.topbar-actions .topbar-search {
+  order: 1;
+}
+
+.topbar-actions .wishlist-button {
+  order: 2;
+}
+
+.topbar-actions #cartButton {
+  order: 3;
+}
+
+.topbar-actions .theme-toggle {
+  order: 4;
+}
+
+.topbar-actions #signedOutMenu,
+.topbar-actions #signedInMenu {
+  order: 5;
+}
+
+.search-button svg,
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.75;
+}
+
+.search-button svg {
+  stroke-width: 1.8;
+}
+
+.theme-toggle .toggle-icon {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: currentColor;
+  line-height: 0;
+}
+
+.carousel-indicators,
+.carousel-dots,
+.carousel-pagination,
+.carousel-nav,
+.carousel-controls [data-carousel-indicator],
+.carousel-controls [aria-label*="slide" i] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.carousel:hover .carousel-indicators,
+.carousel:focus-within .carousel-indicators,
+.carousel:hover .carousel-dots,
+.carousel:focus-within .carousel-dots,
+.carousel:hover .carousel-pagination,
+.carousel:focus-within .carousel-pagination,
+.carousel:hover .carousel-nav,
+.carousel:focus-within .carousel-nav,
+.carousel:hover .carousel-controls [data-carousel-indicator],
+.carousel:focus-within .carousel-controls [data-carousel-indicator],
+.carousel:hover .carousel-controls [aria-label*="slide" i],
+.carousel:focus-within .carousel-controls [aria-label*="slide" i] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.topbar-actions .currency-selector {
+  order: 6;
+}
+

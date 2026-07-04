@@ -1,0 +1,61 @@
+/* ========================================
+   CARDS AND TARGETED UI REFINEMENTS
+======================================== */
+
+/* Final targeted UI refinements */
+.wishlist-button {
+  display: inline-grid;
+  order: 1;
+}
+
+.topbar-search {
+  order: 2;
+}
+
+#signedOutMenu,
+#signedInMenu {
+  order: 3;
+}
+
+#cartButton {
+  order: 4;
+}
+
+.theme-toggle {
+  order: 5;
+}
+
+.search-button svg,
+.theme-toggle svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 1.85;
+}
+
+.search-button svg {
+  stroke-width: 1.9;
+}
+
+.theme-toggle .toggle-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.auth-signup-link {
+  width: 100%;
+  min-height: 46px;
+  color: #fff;
+  background: var(--ios-button-primary);
+  border-color: var(--ios-button-border-strong);
+  font-weight: 950;
+}
+
+.auth-signup-link:hover {
+  color: #fff;
+  background: var(--ios-button-primary-hover);
+}
+
+.ad-popup-card .primary-button {
+  text-decoration: none;
+}
+

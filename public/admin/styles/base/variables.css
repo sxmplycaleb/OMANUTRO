@@ -1,0 +1,37 @@
+/* ========================================
+   ADMIN THEME VARIABLES
+======================================== */
+
+:root {
+  --ink: #fff3fa;
+  --muted: #d8adc7;
+  --paper: #120712;
+  --panel: #211020;
+  --panel-strong: #190b18;
+  --line: rgba(255, 20, 147, 0.26);
+  --accent: #ff1493;
+  --accent-strong: #d60074;
+  --accent-soft: rgba(255, 20, 147, 0.16);
+  --on-accent: #ffffff;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #16a34a;
+  --shadow: 0 18px 48px rgba(255, 20, 147, 0.12);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --ink: #311523;
+  --muted: #7c5268;
+  --paper: #fff7fb;
+  --panel: #ffffff;
+  --panel-strong: #fff0f6;
+  --line: rgba(255, 182, 193, 0.78);
+  --accent: #ffb6c1;
+  --accent-strong: #d94d7d;
+  --accent-soft: rgba(255, 182, 193, 0.34);
+  --on-accent: #361524;
+  --shadow: 0 18px 48px rgba(217, 77, 125, 0.12);
+  color-scheme: light;
+}
+

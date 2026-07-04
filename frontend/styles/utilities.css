@@ -1,0 +1,325 @@
+/* ========================================
+   UTILITIES AND CROSS-SITE POLISH
+======================================== */
+
+/* ========================================
+   UTILITY CLASSES
+======================================== */
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid {
+  display: grid;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.rounded {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-full {
+  border-radius: var(--radius-pill);
+}
+
+.shadow-sm {
+  box-shadow: var(--soft-shadow);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow);
+}
+
+.w-full {
+  width: 100%;
+}
+
+.mt-0 {
+  margin-top: 0;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.gap-2 {
+  gap: var(--space-2);
+}
+
+.gap-3 {
+  gap: var(--space-3);
+}
+
+.gap-4 {
+  gap: var(--space-4);
+}
+
+/* Cross-site UX polish: navigation, light-mode depth, icons, and accordions */
+.nav-more {
+  position: relative;
+  display: inline-flex;
+}
+
+.nav-more-trigger {
+  gap: 6px;
+}
+
+.nav-more-trigger svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 240ms ease;
+}
+
+.nav-more.is-open .nav-more-trigger svg {
+  transform: rotate(180deg);
+}
+
+.nav-more-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 80;
+  display: grid;
+  min-width: min(320px, calc(100vw - 32px));
+  gap: 12px;
+  padding: 14px;
+  color: var(--ink);
+  background:
+    linear-gradient(145deg, var(--glass-highlight), transparent 38%),
+    var(--glass-strong);
+  border: 1px solid var(--glass-line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity 220ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-backdrop-filter: blur(20px) saturate(132%);
+  backdrop-filter: blur(20px) saturate(132%);
+}
+
+.nav-more.is-open .nav-more-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.nav-more-group {
+  display: grid;
+  gap: 4px;
+}
+
+.nav-more-heading {
+  padding: 0 10px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.nav-more-link {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  font-weight: 850;
+  text-decoration: none;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.nav-more-link:hover,
+.nav-more-link:focus-visible,
+.nav-more-link.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
+  transform: translateX(2px);
+  outline: none;
+}
+
+.career-accordion-panel,
+.career-faq-panel {
+  transition: grid-template-rows 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+}
+
+.career-accordion-card:not(.is-open) .career-accordion-panel,
+.career-faq-card:not(.is-open) .career-faq-panel {
+  opacity: 0;
+}
+
+.career-accordion-card.is-open .career-accordion-panel,
+.career-faq-card.is-open .career-faq-panel {
+  opacity: 1;
+}
+
+:root[data-theme="light"] {
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-soft: rgba(255, 250, 247, 0.9);
+  --panel-alt: rgba(255, 245, 239, 0.92);
+  --line: rgba(132, 81, 58, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-strong: rgba(255, 255, 255, 0.94);
+  --glass-line: rgba(132, 81, 58, 0.2);
+  --shadow: 0 26px 70px rgba(95, 62, 48, 0.18), 0 2px 10px rgba(95, 62, 48, 0.08);
+  --soft-shadow: 0 18px 46px rgba(95, 62, 48, 0.13), 0 1px 5px rgba(95, 62, 48, 0.08);
+  --hover-shadow: 0 28px 70px rgba(95, 62, 48, 0.2), 0 4px 16px rgba(95, 62, 48, 0.1);
+  --product-card-bg: rgba(255, 255, 255, 0.94);
+  --product-card-line: rgba(132, 81, 58, 0.22);
+  --product-card-shadow: 0 18px 42px rgba(95, 62, 48, 0.14), 0 1px 6px rgba(95, 62, 48, 0.08);
+  --filter-panel-bg: rgba(255, 255, 255, 0.92);
+  --filter-panel-line: rgba(132, 81, 58, 0.22);
+}
+
+:root[data-theme="light"] :is(
+  .product-card,
+  .filter-panel,
+  .about-glass-card,
+  .about-feature-card,
+  .contact-info-card,
+  .quick-help-card,
+  .business-card,
+  .location-card,
+  .legal-card,
+  .info-accordion,
+  .size-guide-panel,
+  .size-table-wrap,
+  .career-accordion-card,
+  .career-job-card,
+  .career-feature-section,
+  .career-general-card,
+  .career-benefit-card,
+  .career-faq-card,
+  .career-application-form,
+  .career-saved-job,
+  .career-empty-state,
+  .account-panel,
+  .account-card,
+  .auth-card,
+  .premium-auth-card
+) {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 249, 245, 0.74)),
+    var(--glass-bg);
+  border-color: var(--glass-line);
+  box-shadow: var(--soft-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="light"] :is(
+  .product-card,
+  .about-glass-card,
+  .about-feature-card,
+  .contact-info-card,
+  .quick-help-card,
+  .career-job-card,
+  .career-benefit-card,
+  .info-accordion,
+  .size-guide-panel,
+  .size-table-wrap
+):hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--glass-line));
+  box-shadow: var(--hover-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+:is(.icon-button, .small-button, .primary-button, .secondary-button, .link-button, .nav-tab, .dropdown-menu button, .career-job-actions a, .career-job-actions button) svg {
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.contact-socials a,
+.footer-social-links a,
+.social-links a {
+  color: var(--ink);
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="Instagram" i] {
+  color: #e4405f;
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="Facebook" i] {
+  color: #1877f2;
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label="X"],
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="Twitter" i] {
+  color: var(--ink);
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="TikTok" i] {
+  color: var(--ink);
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="WhatsApp" i] {
+  color: #fff;
+  background: linear-gradient(135deg, #25d366, #128c7e 56%, #075e54);
+  border-color: rgba(37, 211, 102, 0.5);
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="LinkedIn" i] {
+  color: #0a66c2;
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="YouTube" i] {
+  color: #ff0000;
+}
+
+:is(.contact-socials, .footer-social-links, .social-links) a[aria-label*="Pinterest" i] {
+  color: #bd081c;
+}
+
+@media (max-width: 900px) {
+  .nav-more {
+    width: 100%;
+  }
+
+  .nav-more-trigger {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .nav-more-menu {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin-top: 6px;
+    max-height: 0;
+    overflow: hidden;
+    padding-block: 0;
+    opacity: 1;
+    pointer-events: none;
+    transform: none;
+    transition: max-height 260ms ease, padding 240ms ease, border-color 240ms ease;
+  }
+
+  .nav-more.is-open .nav-more-menu {
+    max-height: 520px;
+    padding-block: 14px;
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-more-menu,
+  .nav-more-trigger svg,
+  .career-accordion-panel,
+  .career-faq-panel {
+    transition-duration: 0.01ms;
+  }
+}
+
+

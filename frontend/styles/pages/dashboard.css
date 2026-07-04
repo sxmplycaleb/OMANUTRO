@@ -1,0 +1,405 @@
+/* ========================================
+   ACCOUNT DASHBOARD
+======================================== */
+
+/* Account dashboard */
+.account-dashboard-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(176, 18, 87, 0.18), transparent 34rem),
+    linear-gradient(135deg, var(--page-bg), var(--surface));
+  color: var(--text);
+}
+
+.account-shell {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.account-sidebar,
+.account-main,
+.account-panel,
+.account-item,
+.security-card,
+.account-empty,
+.overview-hero,
+.metric-grid > div,
+.quick-actions a,
+.quick-actions button {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(22px);
+}
+
+.account-sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  min-height: calc(100vh - 48px);
+  border-radius: 24px;
+  padding: 20px;
+}
+
+.account-sidebar .brand {
+  display: inline-flex;
+  margin-bottom: 22px;
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.account-cardlet {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.account-cardlet span,
+.account-topline span,
+.overview-hero span,
+.metric-grid span,
+.account-item span,
+.security-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.account-photo {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 800;
+}
+
+.account-photo.large {
+  width: 92px;
+  height: 92px;
+  font-size: 1.7rem;
+}
+
+.account-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.account-avatar img,
+.account-avatar span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  font-weight: 800;
+}
+
+.account-trigger,
+.account-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.account-trigger svg,
+.account-avatar svg,
+.account-avatar img,
+.account-avatar .avatar-initials {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+}
+
+.account-avatar .avatar-initials {
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-size: 0.78rem;
+}
+
+.account-avatar #profileMenuName,
+.account-trigger span {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.menu-caret {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  stroke-width: 2.4;
+}
+
+.account-avatar .menu-caret {
+  border-radius: 0;
+  background: none;
+  color: currentColor;
+}
+
+.topbar-actions .account-trigger:hover,
+.topbar-actions .account-trigger:focus-visible,
+.topbar-actions .account-avatar:hover,
+.topbar-actions .account-avatar:focus-visible {
+  transform: translateY(-1px);
+}
+
+.dropdown-menu {
+  transform-origin: top right;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.dropdown-menu.hidden {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+}
+
+.dropdown-menu:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.dropdown-greeting {
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.account-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.account-nav button,
+.quick-actions button,
+.quick-actions a {
+  min-height: 44px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-nav button {
+  padding: 0 14px;
+  background: transparent;
+}
+
+.account-nav button.active,
+.account-nav button:hover,
+.quick-actions button:hover,
+.quick-actions a:hover {
+  background: var(--nav-active-bg);
+}
+
+.account-main {
+  min-height: calc(100vh - 48px);
+  border-radius: 28px;
+  padding: 24px;
+}
+
+.account-topline,
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.account-topline h1,
+.panel-heading h2,
+.overview-hero h2,
+.account-item h3 {
+  margin: 0;
+}
+
+.account-panel {
+  display: none;
+  border-radius: 22px;
+  padding: 20px;
+}
+
+.account-panel.active {
+  display: block;
+  animation: accountFade 180ms ease-out;
+}
+
+@keyframes accountFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.overview-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.metric-grid > div {
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.metric-grid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.6rem;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.quick-actions a,
+.quick-actions button {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+}
+
+.account-list {
+  display: grid;
+  gap: 12px;
+}
+
+.account-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.account-item details {
+  grid-column: 1 / -1;
+}
+
+.product-row {
+  grid-template-columns: 72px 1fr auto auto;
+}
+
+.product-row img {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: var(--surface-strong);
+}
+
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.detail-list,
+.timeline-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.account-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.account-form.compact {
+  max-width: 720px;
+}
+
+.account-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.account-form textarea,
+.account-form input {
+  width: 100%;
+}
+
+.account-form label:has(textarea),
+.account-form .checkbox-row,
+.account-form button {
+  grid-column: 1 / -1;
+}
+
+.security-card,
+.account-empty {
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .account-shell {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .account-sidebar {
+    position: static;
+    min-height: auto;
+  }
+
+  .account-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-grid,
+  .quick-actions,
+  .account-form,
+  .order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-item,
+  .product-row {
+    grid-template-columns: 1fr;
+  }
+
+  .account-topline,
+  .overview-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
