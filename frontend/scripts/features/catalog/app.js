@@ -304,6 +304,11 @@ async function handleAuthChanged() {
     sessionStorage.removeItem("omanutro-post-login");
     state.postLoginRedirect = "";
     location.href = destination;
+    return;
+  }
+
+  if (state.user && isAdminUser()) {
+    location.href = "/admin/index.html#overview";
   }
 }
 
