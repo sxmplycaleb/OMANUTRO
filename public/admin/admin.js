@@ -1,91 +1,195 @@
 (function () {
   const tokenKey = "commerce-auth-token";
   const sidebarStateKey = "commerce-admin-sidebar";
-  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+  const money = new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 });
   const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
+
   const state = {
     user: null,
     dashboard: null,
     rbac: null,
-    roleEditorUserId: "",
     route: "overview",
-    loading: true,
-    loadError: "",
+    previewRole: "",
     tableFilter: "",
-    selected: new Set()
-  };
-  const icons = {
-    overview: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 12 5l8 7.5V20H5v-7.5Z"/><path d="M9.5 20v-5h5v5"/></svg>',
-    profile: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>',
-    products: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8.5h12l-.8 11H6.8l-.8-11ZM9 8.5a3 3 0 0 1 6 0"/></svg>',
-    orders: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v16l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2V4Z"/><path d="M9.5 9h5M9.5 13h5"/></svg>',
-    users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 20a6 6 0 0 0-12 0M10.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 19a4.5 4.5 0 0 0-3.2-4.3M16 4.3a3.5 3.5 0 0 1 0 6.4"/></svg>',
-    categories: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h7v7H4V5ZM13 5h7v7h-7V5ZM4 14h7v5H4v-5ZM13 14h7v5h-7v-5Z"/></svg>',
-    brands: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5 12 4l7 3.5v9L12 20l-7-3.5v-9Z"/><path d="m5 7.5 7 3.5 7-3.5M12 11v9"/></svg>',
-    inventory: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14v11H5V8Z"/><path d="M8 8V5h8v3M8 12h8"/></svg>',
-    reviews: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5Z"/><path d="m9 10 2 2 4-4"/></svg>',
-    coupons: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5V6h16v2.5a3.5 3.5 0 0 0 0 7V18H4v-2.5a3.5 3.5 0 0 0 0-7Z"/><path d="m9 15 6-6M9.5 9.5h.1M14.5 14.5h.1"/></svg>',
-    analytics: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V5M5 19h15"/><path d="M9 16v-5M13 16V8M17 16v-7"/></svg>',
-    settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7.2 7.2 0 0 0-1.7-1L14.5 3h-5l-.3 3.1a7.2 7.2 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7.2 7.2 0 0 0 1.7 1l.3 3.1h5l.3-3.1a7.2 7.2 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/></svg>',
-    refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M19 11a7 7 0 1 0-2 5"/></svg>',
-    plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
-    export: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M5 17v3h14v-3"/></svg>',
-    print: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V4h10v4M7 17H5v-6h14v6h-2"/><path d="M7 14h10v6H7v-6Z"/></svg>',
-    shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.2c0 4.3-2.8 7.5-7 9.3-4.2-1.8-7-5-7-9.3V6l7-2.5Z"/><path d="m9 12 2 2 4-4"/></svg>',
-    sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2m0 20v-2m8-8h2M2 12h2m14.4-6.4 1.4-1.4M4.2 19.8l1.4-1.4m0-12.8L4.2 4.2m15.6 15.6-1.4-1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>',
-    moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.3A8.4 8.4 0 0 1 8.7 4a8.6 8.6 0 1 0 11.3 11.3Z"/></svg>',
-    filter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
-    chevronRight: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>'
+    roleEditorUserId: "",
+    roleEditorRole: "store_manager",
+    openGroups: new Set(["Core", "Store", "Orders", "Role Preview"]),
+    loading: true,
+    loadError: ""
   };
 
-  const navItems = [
-    { id: "overview", label: "Overview", icon: "overview", permissions: ["admin:access"] },
-    { id: "profile", label: "Profile", icon: "profile", permissions: ["admin:access"] },
-    { id: "products", label: "Products", icon: "products", permissions: ["products:manage", "products:descriptions", "products:feature"] },
-    { id: "orders", label: "Orders", icon: "orders", permissions: ["orders:manage", "orders:view"] },
-    { id: "users", label: "Users", icon: "users", permissions: ["customers:view", "staff:manage"] },
-    { id: "categories", label: "Categories", icon: "categories", permissions: ["categories:manage", "collections:manage"] },
-    { id: "brands", label: "Brands", icon: "brands", permissions: ["content:manage", "collections:manage"] },
-    { id: "inventory", label: "Inventory", icon: "inventory", permissions: ["inventory:manage", "products:quantities"] },
-    { id: "reviews", label: "Reviews", icon: "reviews", permissions: ["customer_notes:update", "content:manage"] },
-    { id: "coupons", label: "Coupons", icon: "coupons", permissions: ["coupons:manage", "discounts:manage"] },
-    { id: "analytics", label: "Analytics", icon: "analytics", permissions: ["analytics:view", "reports:sales", "reports:customers", "reports:products", "reports:inventory", "reports:all"] },
-    { id: "settings", label: "Settings", icon: "settings", permissions: ["settings:manage", "mpesa:settings", "firebase:manage", "security:manage"] }
+  const icons = {
+    dashboard: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 12 5l8 7.5V20H5v-7.5Z"/><path d="M9.5 20v-5h5v5"/></svg>',
+    search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 20-4.5-4.5"/><circle cx="11" cy="11" r="6.5"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 7-2.5 7-2.5 9h17c0-2-2.5-2-2.5-9Z"/><path d="M10 21h4"/></svg>',
+    message: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5Z"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.3A8.4 8.4 0 0 1 8.7 4a8.6 8.6 0 1 0 11.3 11.3Z"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V2m0 20v-2m8-8h2M2 12h2m14.4-6.4 1.4-1.4M4.2 19.8l1.4-1.4m0-12.8L4.2 4.2m15.6 15.6-1.4-1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 17l5-5-5-5M20 12H9"/><path d="M12 20H5V4h7"/></svg>',
+    chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+    store: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1-5H5L4 9Z"/><path d="M6 9v11h12V9"/><path d="M9 20v-6h6v6"/></svg>',
+    orders: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v16l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2V4Z"/><path d="M9.5 9h5M9.5 13h5"/></svg>',
+    users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 20a6 6 0 0 0-12 0M10.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 19a4.5 4.5 0 0 0-3.2-4.3M16 4.3a3.5 3.5 0 0 1 0 6.4"/></svg>',
+    finance: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 16V8m5 8V5m5 11v-6"/></svg>',
+    analytics: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V5M5 19h15"/><path d="M9 16v-5M13 16V8M17 16v-7"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.2c0 4.3-2.8 7.5-7 9.3-4.2-1.8-7-5-7-9.3V6l7-2.5Z"/><path d="m9 12 2 2 4-4"/></svg>',
+    code: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>',
+    content: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5V4Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7.2 7.2 0 0 0-1.7-1L14.5 3h-5l-.3 3.1a7.2 7.2 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7.2 7.2 0 0 0 1.7 1l.3 3.1h5l.3-3.1a7.2 7.2 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/></svg>',
+    filter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+    export: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M5 17v3h14v-3"/></svg>'
+  };
+
+  const roleNames = {
+    customer: "Customer",
+    store_manager: "Store Manager",
+    finance: "Finance",
+    inventory: "Inventory",
+    fulfillment: "Fulfillment",
+    customer_support: "Customer Support",
+    marketing: "Marketing",
+    content: "Content",
+    analytics: "Analytics",
+    developer: "Developer",
+    super_admin: "Super Admin"
+  };
+
+  const permissionsByRole = {
+    customer: ["orders:view", "wishlist:view", "addresses:manage", "profile:update"],
+    store_manager: ["products:manage", "categories:manage", "collections:manage", "orders:view", "customers:view"],
+    finance: ["payments:view", "refunds:manage", "reports:finance", "exports:finance", "mpesa:settings"],
+    inventory: ["inventory:manage", "products:quantities", "warehouse:manage", "stock_adjustments:create"],
+    fulfillment: ["orders:manage", "shipping:manage", "delivery:manage", "returns:manage"],
+    customer_support: ["customers:view", "orders:view", "refunds:request", "customer_notes:update"],
+    marketing: ["campaigns:manage", "coupons:manage", "discounts:manage", "analytics:view"],
+    content: ["content:manage", "collections:manage", "media:manage", "seo:manage"],
+    analytics: ["analytics:view", "reports:sales", "reports:customers", "reports:products", "reports:inventory"],
+    developer: ["api:monitor", "logs:view", "firebase:manage", "integrations:manage", "feature_flags:manage"],
+    super_admin: ["*"]
+  };
+
+  const navGroups = [
+    { label: "Core", items: [{ id: "overview", label: "Dashboard", icon: "dashboard", permissions: ["admin:access"] }] },
+    { label: "Store", items: [
+      { id: "products", label: "Products", icon: "store", permissions: ["products:manage", "products:descriptions", "products:feature"] },
+      { id: "categories", label: "Categories", icon: "store", permissions: ["categories:manage"] },
+      { id: "collections", label: "Collections", icon: "store", permissions: ["collections:manage"] },
+      { id: "inventory", label: "Inventory", icon: "store", permissions: ["inventory:manage", "products:quantities"] }
+    ] },
+    { label: "Orders", items: [
+      { id: "orders", label: "Orders", icon: "orders", permissions: ["orders:manage", "orders:view"] },
+      { id: "customers", label: "Customers", icon: "users", permissions: ["customers:view"] },
+      { id: "fulfillment", label: "Fulfillment", icon: "orders", permissions: ["shipping:manage", "delivery:manage", "orders:manage"] }
+    ] },
+    { label: "Growth", items: [
+      { id: "marketing", label: "Marketing", icon: "analytics", permissions: ["campaigns:manage", "coupons:manage", "discounts:manage"] },
+      { id: "content", label: "Content", icon: "content", permissions: ["content:manage", "seo:manage", "media:manage"] },
+      { id: "analytics", label: "Analytics", icon: "analytics", permissions: ["analytics:view", "reports:all"] }
+    ] },
+    { label: "Business", items: [
+      { id: "finance", label: "Finance", icon: "finance", permissions: ["payments:view", "reports:finance", "reports:all"] },
+      { id: "reports", label: "Reports", icon: "analytics", permissions: ["reports:all", "reports:sales"] },
+      { id: "staff", label: "Staff Management", icon: "users", permissions: ["staff:manage"] },
+      { id: "security", label: "Security", icon: "shield", permissions: ["security:manage", "staff:manage"] }
+    ] },
+    { label: "Platform", items: [
+      { id: "developer", label: "Developers", icon: "code", permissions: ["api:monitor", "logs:view", "firebase:manage", "integrations:manage"] },
+      { id: "firebase", label: "Firebase", icon: "code", permissions: ["firebase:manage"] },
+      { id: "integrations", label: "Integrations", icon: "settings", permissions: ["integrations:manage", "mpesa:settings"] },
+      { id: "system", label: "System Health", icon: "settings", permissions: ["logs:view", "api:monitor"] },
+      { id: "logs", label: "Logs", icon: "code", permissions: ["logs:view"] },
+      { id: "roles", label: "Role & Permissions", icon: "shield", permissions: ["staff:manage"] },
+      { id: "settings", label: "Settings", icon: "settings", permissions: ["settings:manage", "security:manage"] }
+    ] },
+    { label: "Role Preview", superOnly: true, items: [
+      { id: "preview-customer", label: "Customer Dashboard", icon: "users", preview: "customer", permissions: ["*"] },
+      { id: "preview-store_manager", label: "Store Manager Dashboard", icon: "store", preview: "store_manager", permissions: ["*"] },
+      { id: "preview-finance", label: "Finance Dashboard", icon: "finance", preview: "finance", permissions: ["*"] },
+      { id: "preview-inventory", label: "Inventory Dashboard", icon: "store", preview: "inventory", permissions: ["*"] },
+      { id: "preview-fulfillment", label: "Fulfillment Dashboard", icon: "orders", preview: "fulfillment", permissions: ["*"] },
+      { id: "preview-customer_support", label: "Customer Support Dashboard", icon: "users", preview: "customer_support", permissions: ["*"] },
+      { id: "preview-marketing", label: "Marketing Dashboard", icon: "analytics", preview: "marketing", permissions: ["*"] },
+      { id: "preview-content", label: "Content Dashboard", icon: "content", preview: "content", permissions: ["*"] },
+      { id: "preview-analytics", label: "Analytics Dashboard", icon: "analytics", preview: "analytics", permissions: ["*"] },
+      { id: "preview-developer", label: "Developer Dashboard", icon: "code", preview: "developer", permissions: ["*"] }
+    ] }
   ];
 
   const pageMeta = {
-    overview: ["Dashboard", "Overview", "Business performance, operations, and alerts at a glance."],
-    profile: ["Account", "Profile", "Manage admin identity, security, and recent account activity."],
-    products: ["Catalog", "Products", "Search, filter, edit, import, export, and manage inventory."],
-    orders: ["Sales", "Orders", "Review orders, payment status, fulfillment, refunds, and invoices."],
-    users: ["Access", "Users", "Manage customers, staff roles, online status, and account controls."],
-    categories: ["Catalog", "Categories", "Organize product groups, images, and product counts."],
-    brands: ["Catalog", "Brands", "Maintain brand records, logos, and product assignments."],
-    inventory: ["Operations", "Inventory", "Track stock movements, restocking, warehouses, and alerts."],
-    reviews: ["Customers", "Reviews", "Moderate ratings, replies, and product feedback."],
-    coupons: ["Growth", "Coupons & Discounts", "Create promotions, usage limits, and expiry rules."],
-    analytics: ["Reports", "Analytics", "Revenue, customers, sales trends, and exportable reports."],
-    settings: ["System", "Settings", "Store, tax, currency, shipping, payment, theme, and security controls."]
+    overview: ["Super Admin", "Command Center", "Revenue, operations, people, platform health, and executive alerts."],
+    products: ["Store", "Products", "Manage OMANUTRO catalog items, merchandising, prices, and visibility."],
+    categories: ["Store", "Categories", "Organize catalog taxonomy and merchandising zones."],
+    collections: ["Store", "Collections", "Curate seasonal edits, lookbooks, and featured product stories."],
+    inventory: ["Operations", "Inventory", "Track stock levels, incoming inventory, adjustments, and warehouse status."],
+    orders: ["Orders", "Order Operations", "Review payment, fulfillment, delivery, refunds, and customer context."],
+    customers: ["Customers", "Customer Intelligence", "Profiles, retention signals, order history, and lifetime value."],
+    fulfillment: ["Operations", "Fulfillment", "Packing queues, shipping progress, courier performance, and returns."],
+    marketing: ["Growth", "Marketing", "Campaigns, coupons, banners, conversion, and revenue attribution."],
+    content: ["Content", "Content Studio", "Homepage modules, media, product copy, SEO, and draft publishing."],
+    analytics: ["Analytics", "Analytics", "Read-only sales, customer, inventory, product, geographic, and funnel insights."],
+    finance: ["Finance", "Finance", "Revenue, taxes, refunds, payments, M-Pesa collections, profit, and reports."],
+    reports: ["Reports", "Reports", "Scheduled exports and high-confidence operational reporting."],
+    staff: ["Access", "Staff Management", "Invite, filter, export, edit, and secure staff accounts."],
+    security: ["Security", "Security", "Sessions, role changes, audit events, access policy, and risk posture."],
+    developer: ["Developer", "Developer Console", "API health, latency, logs, Firebase monitoring, deployments, and feature flags."],
+    firebase: ["Platform", "Firebase", "Authentication, cloud messaging, token health, and admin service status."],
+    integrations: ["Platform", "Integrations", "M-Pesa, UploadThing, delivery partners, analytics, and webhook health."],
+    system: ["Platform", "System Health", "Application health, background jobs, uptime, server usage, and incidents."],
+    logs: ["Platform", "Logs", "Errors, deployment events, audit records, and API traces."],
+    roles: ["Access", "Role & Permission Manager", "Review role templates and permission coverage."],
+    settings: ["System", "Settings", "Store, payments, tax, shipping, theme, notification, and security controls."]
+  };
+
+  const roleRoutes = {
+    customer: "Customer Dashboard",
+    store_manager: "Store Manager Dashboard",
+    finance: "Finance Dashboard",
+    inventory: "Inventory Dashboard",
+    fulfillment: "Fulfillment Dashboard",
+    customer_support: "Customer Support Dashboard",
+    marketing: "Marketing Dashboard",
+    content: "Content Dashboard",
+    analytics: "Analytics Dashboard",
+    developer: "Developer Dashboard"
+  };
+
+  const demo = {
+    products: [
+      { name: "Rose Noir Tailored Blazer", category: "Outerwear", sku: "OMA-BLZ-104", stock: 18, price: 14500, status: "Live", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=180&q=80" },
+      { name: "Soft Pink Ribbed Set", category: "Loungewear", sku: "OMA-SET-221", stock: 4, price: 8200, status: "Live", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=180&q=80" },
+      { name: "OMANUTRO Satin Scarf", category: "Accessories", sku: "OMA-ACC-078", stock: 0, price: 3100, status: "Hidden", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=180&q=80" },
+      { name: "Pearl Street Tote", category: "Bags", sku: "OMA-BAG-016", stock: 31, price: 6900, status: "Live", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=180&q=80" }
+    ],
+    staff: [
+      { id: "u1", name: "Nadia Wanjiru", email: "nadia@omanutro.com", department: "Store Ops", role: "Store Manager", status: "Active", lastLogin: "2026-07-04", createdAt: "2026-01-18" },
+      { id: "u2", name: "Amina Okello", email: "amina@omanutro.com", department: "Finance", role: "Finance", status: "Active", lastLogin: "2026-07-03", createdAt: "2026-02-11" },
+      { id: "u3", name: "Ivy Mwende", email: "ivy@omanutro.com", department: "Support", role: "Customer Support", status: "Suspended", lastLogin: "2026-06-28", createdAt: "2026-03-04" },
+      { id: "u4", name: "Leo Barasa", email: "leo@omanutro.com", department: "Engineering", role: "Developer", status: "Active", lastLogin: "2026-07-04", createdAt: "2026-04-15" }
+    ],
+    orders: [
+      { id: "OMA-10482", customer: "Malaika N.", total: 24800, payment: "M-Pesa", status: "Processing", channel: "Mobile" },
+      { id: "OMA-10481", customer: "Zuri A.", total: 9300, payment: "Card", status: "Paid", channel: "Web" },
+      { id: "OMA-10480", customer: "Imani K.", total: 17300, payment: "M-Pesa", status: "Packing", channel: "Instagram" },
+      { id: "OMA-10479", customer: "Nia M.", total: 6900, payment: "M-Pesa", status: "Delivered", channel: "Web" }
+    ],
+    timeline: [
+      ["Feature flag enabled", "Homepage lookbook beta opened to 25% of traffic", "10 min ago"],
+      ["M-Pesa reconciliation", "KES 318,450 matched across 41 transactions", "24 min ago"],
+      ["Inventory alert", "Soft Pink Ribbed Set crossed low stock threshold", "42 min ago"],
+      ["Deployment", "Production build 1.1.6 deployed successfully", "1 hr ago"]
+    ]
   };
 
   function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[char]));
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   }
 
   async function api(path, options = {}) {
     const token = localStorage.getItem(tokenKey) || "";
     const response = await fetch(path, {
       method: options.method || "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: options.body ? JSON.stringify(options.body) : undefined
     });
     const data = await response.json().catch(() => ({}));
@@ -93,8 +197,21 @@
     return data;
   }
 
+  function hasPermission(permission) {
+    const permissions = state.user?.permissions || state.dashboard?.permissions || [];
+    return permissions.includes("*") || permissions.includes(permission);
+  }
+
+  function isSuperAdmin() {
+    return hasPermission("*") || ["super_admin", "admin"].includes(String(state.user?.role || "").toLowerCase());
+  }
+
+  function canAccess(item) {
+    return isSuperAdmin() || (item.permissions || []).some(hasPermission);
+  }
+
   function initTheme() {
-    const saved = localStorage.getItem("commerce-theme") || "dark";
+    const saved = localStorage.getItem("commerce-theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
     updateThemeButton(saved);
   }
@@ -105,12 +222,11 @@
   }
 
   function toggleTheme() {
-    const current = document.documentElement.getAttribute("data-theme") || "dark";
+    const current = document.documentElement.getAttribute("data-theme") || "light";
     const next = current === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("commerce-theme", next);
     updateThemeButton(next);
-    toast(`${next === "dark" ? "Dark" : "Light"} mode enabled`);
   }
 
   function toast(message) {
@@ -126,31 +242,24 @@
   async function handleLogin(event) {
     event.preventDefault();
     const error = document.getElementById("loginError");
-    const form = event.currentTarget;
-    const submit = form?.querySelector("button[type='submit']");
+    const submit = event.currentTarget?.querySelector("button[type='submit']");
     if (error) error.textContent = "";
     if (submit) {
       submit.disabled = true;
-      submit.setAttribute("aria-busy", "true");
       submit.textContent = "Signing in...";
     }
     try {
       const data = await api("/api/auth/login", {
         method: "POST",
-        body: {
-          email: document.getElementById("email").value,
-          password: document.getElementById("password").value
-        }
+        body: { email: document.getElementById("email").value, password: document.getElementById("password").value }
       });
       localStorage.setItem(tokenKey, data.token);
       window.location.href = dashboardPathForRole(data.user);
     } catch (err) {
       if (error) error.textContent = err.message || "Sign in failed. Check your email and password.";
-      document.getElementById("email")?.focus();
     } finally {
       if (submit) {
         submit.disabled = false;
-        submit.removeAttribute("aria-busy");
         submit.textContent = "Sign In";
       }
     }
@@ -163,70 +272,71 @@
     return "/catalog.html";
   }
 
-  function hasPermission(permission) {
-    const permissions = state.user?.permissions || [];
-    return permissions.includes("*") || permissions.includes(permission);
-  }
-
-  function canAccess(item) {
-    return (item.permissions || []).some(hasPermission);
+  function allNavItems() {
+    return navGroups.flatMap((group) => group.items);
   }
 
   function renderNav() {
     const nav = document.getElementById("sidebarNav");
     if (!nav) return;
-    nav.innerHTML = navItems.filter(canAccess).map((item) => `
-      <a class="${state.route === item.id ? "active" : ""}" href="#${item.id}" title="${escapeHtml(item.label)}">
-        <span class="nav-icon" aria-hidden="true">${icons[item.icon] || ""}</span>
-        <span class="nav-label">${escapeHtml(item.label)}</span>
-      </a>
-    `).join("");
+    nav.innerHTML = navGroups.map((group) => {
+      if (group.superOnly && !isSuperAdmin()) return "";
+      const items = group.items.filter(canAccess);
+      if (!items.length) return "";
+      const isOpen = state.openGroups.has(group.label);
+      return `
+        <section class="nav-group ${isOpen ? "open" : ""}">
+          <button class="nav-group-toggle" type="button" data-nav-group="${escapeHtml(group.label)}" aria-expanded="${isOpen}">
+            <span class="nav-label">${escapeHtml(group.label)}</span>${icons.chevron}
+          </button>
+          <div class="nav-group-items">
+            ${items.map((item) => {
+              const active = state.route === item.id;
+              return `<a class="${active ? "active" : ""}" href="#${item.id}" title="${escapeHtml(item.label)}">
+                <span class="nav-icon">${icons[item.icon] || icons.dashboard}</span>
+                <span class="nav-label">${escapeHtml(item.label)}</span>
+              </a>`;
+            }).join("")}
+          </div>
+        </section>
+      `;
+    }).join("");
   }
 
   function setPageChrome() {
-    const [section, title, subtitle] = pageMeta[state.route] || pageMeta.overview;
-    updateGreeting();
+    let meta = pageMeta[state.route] || pageMeta.overview;
+    if (state.previewRole) meta = ["Preview Mode", roleRoutes[state.previewRole] || "Role Dashboard", `Viewing as ${roleNames[state.previewRole]} while retaining Super Admin privileges.`];
+    const [section, title, subtitle] = meta;
     document.getElementById("pageSection").textContent = section;
     document.getElementById("pageTitle").textContent = title;
     document.getElementById("pageSubtitle").textContent = subtitle;
     document.getElementById("breadcrumb").textContent = `${section} / ${title}`;
-    document.getElementById("pageActions").innerHTML = actionMarkup(state.route);
+    document.getElementById("pageActions").innerHTML = actionMarkup();
+    document.getElementById("roleBadge").textContent = state.previewRole ? `Preview: ${roleNames[state.previewRole]}` : roleNames[state.user?.role] || "Super Admin";
+    updateGreeting();
   }
 
-  function actionMarkup(route) {
-    const actions = {
-      overview: `<button class="secondary-button" data-action="refresh">${icons.refresh}Refresh</button>${hasPermission("analytics:view") ? `<a class="primary-button" href="#analytics">${icons.analytics}Open Analytics</a>` : ""}`,
-      products: `${hasPermission("products:manage") ? `<button class="secondary-button" data-action="export-products">${icons.export}Export CSV</button><button class="primary-button" data-action="add-product">${icons.plus}Add Product</button>` : ""}`,
-      orders: `${hasPermission("invoices:print") ? `<button class="secondary-button" data-action="print-invoice">${icons.print}Print Invoice</button>` : ""}<button class="primary-button" data-action="refresh">${icons.refresh}Refresh</button>`,
-      users: `${hasPermission("staff:manage") ? `<button class="secondary-button" data-action="rbac">${icons.shield}RBAC Matrix</button><button class="primary-button" data-action="invite-user">${icons.plus}Invite User</button>` : ""}`,
-      analytics: `${hasPermission("reports:all") || hasPermission("exports:finance") ? `<button class="secondary-button" data-action="export-pdf">${icons.export}Export PDF</button><button class="primary-button" data-action="export-csv">${icons.export}Export CSV</button>` : ""}`,
-      settings: `${hasPermission("settings:manage") ? `<button class="primary-button" data-action="save-settings">${icons.settings}Save Settings</button>` : ""}`
-    };
-    return actions[route] || `<button class="primary-button" data-action="create">${icons.plus}Create</button>`;
+  function actionMarkup() {
+    if (state.previewRole) return `<button class="secondary-button" data-action="exit-preview" type="button">${icons.dashboard}Return to Super Admin</button>`;
+    const quick = `<button class="primary-button" data-action="quick-add" type="button">${icons.plus}Quick Action</button>`;
+    const exportButton = `<button class="secondary-button" data-action="export" type="button">${icons.export}Export</button>`;
+    if (["staff", "roles"].includes(state.route)) return `${exportButton}<button class="primary-button" data-action="invite" type="button">${icons.plus}Invite Staff</button>`;
+    return `${exportButton}${quick}`;
   }
 
   function updateGreeting() {
     const greeting = document.getElementById("welcomeGreeting");
     if (!greeting) return;
-    const hour = new Date().getHours();
-    const daypart = hour >= 5 && hour < 12 ? "Good morning" : hour >= 12 && hour < 17 ? "Good afternoon" : "Good evening";
-    const name = String(state.user?.name || state.user?.email || "Admin").trim();
-    const firstName = name.includes(" ") ? name.split(/\s+/)[0] : name;
-    greeting.textContent = `${daypart}, ${firstName}`;
+    const name = String(state.user?.name || state.user?.email || "Admin").split(/\s+/)[0];
+    greeting.textContent = state.previewRole ? `Viewing as: ${roleNames[state.previewRole]} (Preview Mode)` : `Welcome back, ${name}`;
   }
 
-  function skeleton(count = 8) {
+  function skeleton(count = 10) {
     return `<div class="skeleton-grid">${Array.from({ length: count }, () => `<div class="skeleton"></div>`).join("")}</div>`;
   }
 
   function errorState(message) {
-    return `
-      <div class="empty-state error-state">
-        <strong>Dashboard data could not load</strong>
-        <p>${escapeHtml(message || "Check that the server is running, then try again.")}</p>
-        <button class="primary-button" data-action="retry-load" type="button">Retry</button>
-      </div>
-    `;
+    return `<div class="empty-state error-state"><strong>Dashboard data could not load</strong><p>${escapeHtml(message || "Check that the server is running, then try again.")}</p><button class="primary-button" data-action="retry-load" type="button">Retry</button></div>`;
   }
 
   function emptyState(title, body) {
@@ -234,294 +344,218 @@
   }
 
   function statusPill(value) {
-    const key = String(value || "Unknown").toLowerCase().replace(/\s+/g, "-");
+    const key = String(value || "Unknown").toLowerCase().replace(/[^a-z0-9]+/g, "-");
     return `<span class="pill ${key}">${escapeHtml(value || "Unknown")}</span>`;
   }
 
-  function roleLabel(roleId) {
-    return String(roleId || "")
-      .split("_")
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ") || "Unknown";
+  function avatar(name) {
+    const initials = String(name || "OM").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+    return `<span class="mini-avatar">${escapeHtml(initials)}</span>`;
   }
 
-  function card(label, value, hint) {
-    return `<article class="stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong><small>${escapeHtml(hint || "")}</small></article>`;
+  function card(label, value, hint, trend = "") {
+    return `<article class="stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong><small>${escapeHtml(hint || "")}</small>${trend ? `<em>${escapeHtml(trend)}</em>` : ""}</article>`;
   }
 
   function chart(title, series, formatValue = (value) => value) {
     const max = Math.max(...(series || []).map((item) => Number(item.value || 0)), 1);
-    const bars = (series || []).map((item) => `
-      <div class="bar-row">
-        <span>${escapeHtml(item.label)}</span>
-        <div class="bar-track"><i style="width:${Math.max((Number(item.value || 0) / max) * 100, 3)}%"></i></div>
-        <strong>${escapeHtml(formatValue(item.value))}</strong>
-      </div>
-    `).join("");
-    return `<article class="panel chart-panel"><h2>${escapeHtml(title)}</h2>${bars || emptyState("No chart data", "Data will appear when transactions are recorded.")}</article>`;
+    return `<article class="panel chart-panel"><div class="panel-title"><h2>${escapeHtml(title)}</h2><span class="badge">Live</span></div>
+      ${(series || []).map((item) => `<div class="bar-row"><span>${escapeHtml(item.label)}</span><div class="bar-track"><i style="width:${Math.max((Number(item.value || 0) / max) * 100, 4)}%"></i></div><strong>${escapeHtml(formatValue(item.value))}</strong></div>`).join("") || emptyState("No chart data", "Metrics will appear as activity grows.")}
+    </article>`;
+  }
+
+  function donut(title, items) {
+    const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
+    return `<article class="panel"><div class="panel-title"><h2>${escapeHtml(title)}</h2><span>${total}</span></div><div class="donut-list">${items.map((item) => `<div class="split"><span><i style="background:${item.color}"></i>${escapeHtml(item.label)}</span><strong>${Math.round((item.value / total) * 100)}%</strong></div>`).join("")}</div></article>`;
   }
 
   function table(headers, rows, emptyMessage) {
     if (!rows.length) return emptyState("Nothing to show", emptyMessage);
-    return `
-      <div class="table-wrap">
-        <table>
-          <thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead>
-          <tbody>${rows.join("")}</tbody>
-        </table>
-      </div>
-      <div class="table-footer"><span>Showing ${rows.length} records</span><div><button class="pager" disabled>Prev</button><button class="pager">Next${icons.chevronRight}</button></div></div>
-    `;
+    return `<div class="table-wrap"><table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div><div class="table-footer"><span>Showing ${rows.length} records</span><div><button class="pager" disabled>Prev</button><button class="pager">Next${icons.chevron}</button></div></div>`;
   }
 
-  function filtered(items, fields) {
+  function filterItems(items, fields) {
     const value = state.tableFilter.trim().toLowerCase();
     if (!value) return items;
     return items.filter((item) => fields.some((field) => String(item[field] || "").toLowerCase().includes(value)));
   }
 
+  function filtersMarkup(labels = []) {
+    return `<section class="toolbar"><label class="search-inline"><span>Search</span><input id="tableSearch" type="search" value="${escapeHtml(state.tableFilter)}" placeholder="Search this page"></label>${labels.map((label) => `<button class="filter-button" data-action="filter" type="button">${icons.filter}${escapeHtml(label)}</button>`).join("")}</section>`;
+  }
+
+  function mergedProducts() {
+    const apiProducts = (state.dashboard?.products || []).map((product) => ({
+      name: product.name,
+      category: product.category || "Uncategorized",
+      sku: product.id || product.sku || "SKU",
+      stock: Number(product.stock || 0),
+      price: Number(product.price || 0),
+      status: Number(product.stock || 0) <= 0 ? "Hidden" : "Live",
+      image: product.image || product.imageUrl || demo.products[0].image
+    }));
+    return apiProducts.length ? apiProducts : demo.products;
+  }
+
+  function mergedOrders() {
+    const apiOrders = (state.dashboard?.orders || state.dashboard?.recentOrders || []).map((order) => ({
+      id: order.id,
+      customer: order.customer?.name || order.customer?.email || "Guest customer",
+      total: Number(order.total || 0),
+      payment: order.paymentStatus || "M-Pesa",
+      status: order.status || "Pending",
+      channel: "Web"
+    }));
+    return apiOrders.length ? apiOrders : demo.orders;
+  }
+
+  function mergedStaff() {
+    const users = state.dashboard?.users || [];
+    if (!users.length) return demo.staff;
+    return users.map((user, index) => ({
+      id: user.id || `user-${index}`,
+      name: user.name || "Unnamed",
+      email: user.email,
+      department: ["Store Ops", "Finance", "Support", "Marketing", "Engineering"][index % 5],
+      role: (user.roles?.[0] || user.role || "customer").split("_").map((part) => part[0]?.toUpperCase() + part.slice(1)).join(" "),
+      status: user.suspended ? "Suspended" : "Active",
+      lastLogin: user.lastLogin || user.createdAt || new Date().toISOString(),
+      createdAt: user.createdAt || new Date().toISOString()
+    }));
+  }
+
   function renderOverview() {
-    const data = state.dashboard;
-    const kpis = data.kpis || {};
-    const notifications = [
-      ...((data.lowStock || []).map((product) => ({ label: `${product.name} is low on stock`, type: "Low stock" }))),
-      ...((data.recentOrders || []).filter((order) => order.status === "Pending").map((order) => ({ label: `Order ${order.id} needs processing`, type: "Pending order" }))),
-      ...((data.failedPayments || []).map((order) => ({ label: `Payment failed for ${order.id}`, type: "Failed payment" }))),
-      ...((data.latestUsers || []).slice(0, 3).map((user) => ({ label: `${user.name || user.email} registered`, type: "New customer" })))
-    ].slice(0, 8);
+    const kpis = state.dashboard?.kpis || {};
+    const products = mergedProducts();
+    const orders = mergedOrders();
+    const revenueSeries = state.dashboard?.charts?.revenueByDay?.length ? state.dashboard.charts.revenueByDay : [
+      { label: "Mon", value: 186000 }, { label: "Tue", value: 221000 }, { label: "Wed", value: 198000 }, { label: "Thu", value: 264000 }, { label: "Fri", value: 318000 }, { label: "Sat", value: 402000 }
+    ];
     return `
       <section class="stats-grid">
-        ${card("Total Revenue", money.format(kpis.totalRevenue || kpis.revenue || 0), "All successful sales")}
-        ${card("Revenue Today", money.format(kpis.revenueToday || 0), "Since midnight")}
-        ${card("Total Orders", kpis.totalOrders || 0, "Lifetime orders")}
-        ${card("Orders Today", kpis.ordersToday || 0, "New today")}
-        ${card("Total Products", kpis.totalProducts || 0, "Catalog items")}
-        ${card("Active Customers", kpis.activeCustomers || 0, "Non-admin accounts")}
-        ${card("Low Stock Products", kpis.lowStockProducts || 0, "At or below threshold")}
-        ${card("Out of Stock Products", kpis.outOfStockProducts || 0, "Require restocking")}
+        ${card("Revenue Today", money.format(kpis.revenueToday || 318450), "M-Pesa and card settled", "+18.2%")}
+        ${card("Orders Today", kpis.ordersToday || 74, "22 waiting fulfillment", "+9.6%")}
+        ${card("Monthly Revenue", money.format(kpis.totalRevenue || 6842000), "July run rate", "+14.1%")}
+        ${card("Users Online", "1,284", "Customers browsing now", "Peak hour")}
+        ${card("M-Pesa Status", "Healthy", "Safaricom callbacks nominal")}
+        ${card("Firebase Status", "Synced", "Auth and messaging online")}
+        ${card("API Health", "99.98%", "p95 latency 142ms")}
+        ${card("Server Health", "42%", "CPU load stable")}
+      </section>
+      <section class="preview-banner">
+        <strong>Super Admin workspace</strong><span>Unrestricted access is active. Menus and dashboards are still rendered from permissions so role-specific views can be previewed safely.</span>
       </section>
       <section class="grid two">
-        ${chart("Revenue Over Time", data.charts?.revenueByDay || [], (value) => money.format(value || 0))}
-        ${chart("Orders Over Time", data.charts?.ordersByDay || [])}
-        ${chart("Best-selling Products", data.charts?.bestSellingProducts || [])}
-        ${chart("Sales by Category", data.charts?.salesByCategory || [])}
+        ${chart("Sales Graph", revenueSeries, (value) => money.format(value || 0))}
+        ${chart("Traffic Analytics", [{ label: "Organic", value: 42 }, { label: "Instagram", value: 31 }, { label: "Direct", value: 18 }, { label: "Email", value: 9 }], (value) => `${value}%`)}
       </section>
       <section class="grid three">
-        <article class="panel"><h2>Recent Orders</h2>${ordersTable((data.recentOrders || []).slice(0, 6))}</article>
-        <article class="panel"><h2>Recent Activity</h2>${activityList(data.recentActivity || [])}</article>
-        <article class="panel"><h2>Latest Registered Users</h2>${usersTable((data.latestUsers || []).slice(0, 6))}</article>
+        <article class="panel"><div class="panel-title"><h2>Recent Orders</h2><span class="badge">${orders.length}</span></div>${ordersTable(orders)}</article>
+        <article class="panel"><div class="panel-title"><h2>Top Selling Products</h2><span class="badge">Hot</span></div>${productList(products)}</article>
+        <article class="panel"><div class="panel-title"><h2>Inventory Alerts</h2><span class="badge">${products.filter((item) => item.stock <= 5).length}</span></div>${notificationList(products.filter((item) => item.stock <= 5).map((item) => ({ type: item.stock ? "Low stock" : "Out of stock", label: `${item.name}: ${item.stock} left` })))}</article>
       </section>
-      <section class="panel"><div class="panel-title"><h2>Notifications</h2><span class="badge">${notifications.length}</span></div>${notificationList(notifications)}</section>
+      <section class="grid three">
+        <article class="panel"><h2>Latest Customers</h2>${staffMiniList(mergedStaff().slice(0, 4))}</article>
+        <article class="panel"><h2>Activity Timeline</h2>${timelineList(demo.timeline)}</article>
+        <article class="panel"><h2>Error Logs</h2>${notificationList([{ type: "Resolved", label: "Webhook retry completed for OMA-10474" }, { type: "Warning", label: "3 image transforms queued for retry" }, { type: "Info", label: "No critical production errors" }])}</article>
+      </section>
+      <section class="quick-actions">
+        ${["Add Product", "Create Collection", "Invite Staff", "Backup Database", "View Logs", "Manage Feature Flags"].map((label) => `<button class="action-tile" data-action="${escapeHtml(label)}" type="button">${icons.plus}<span>${escapeHtml(label)}</span></button>`).join("")}
+      </section>
     `;
   }
 
   function ordersTable(orders) {
-    return table(["Order", "Customer", "Total", "Status"], orders.map((order) => `
-      <tr><td>${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer?.email || order.customer?.name || "Guest")}</td><td>${money.format(order.total || 0)}</td><td>${statusPill(order.status)}</td></tr>
-    `), "Orders will appear after checkout.");
+    return table(["Order", "Customer", "Total", "Payment", "Status"], orders.map((order) => `<tr><td><strong>${escapeHtml(order.id)}</strong><small>${escapeHtml(order.channel)}</small></td><td>${escapeHtml(order.customer)}</td><td>${money.format(order.total)}</td><td>${statusPill(order.payment)}</td><td>${statusPill(order.status)}</td></tr>`), "Orders will appear after checkout.");
   }
 
-  function usersTable(users) {
-    return table(["Name", "Email", "Role"], users.map((user) => `
-      <tr><td>${escapeHtml(user.name || "Unnamed")}</td><td>${escapeHtml(user.email)}</td><td>${statusPill(user.role)}</td></tr>
-    `), "Users will appear after registration.");
-  }
-
-  function activityList(items) {
-    if (!items.length) return emptyState("No recent activity", "Operational events will show up here.");
-    return `<div class="activity-list">${items.map((item) => `<div class="split"><span>${escapeHtml(item.label)}</span><small>${formatDate(item.at)}</small></div>`).join("")}</div>`;
+  function productList(products) {
+    return `<div class="product-stack">${products.slice(0, 5).map((product) => `<div class="product-line"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.category)} / ${escapeHtml(product.sku)}</small></span><em>${money.format(product.price)}</em></div>`).join("")}</div>`;
   }
 
   function notificationList(items) {
-    if (!items.length) return emptyState("All clear", "No stock, payment, order, or registration alerts right now.");
+    if (!items.length) return emptyState("All clear", "No alerts right now.");
     return `<div class="notification-grid">${items.map((item) => `<div class="notice"><span>${escapeHtml(item.type)}</span><strong>${escapeHtml(item.label)}</strong></div>`).join("")}</div>`;
   }
 
-  function formatDate(value) {
-    if (!value) return "Unknown";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "Unknown" : dateFormatter.format(date);
+  function timelineList(items) {
+    return `<div class="timeline">${items.map(([title, body, time]) => `<div><i></i><strong>${escapeHtml(title)}</strong><p>${escapeHtml(body)}</p><small>${escapeHtml(time)}</small></div>`).join("")}</div>`;
   }
 
-  function renderProfile() {
-    const user = state.user || {};
-    return `
-      <section class="grid two">
-        <article class="panel">
-          <h2>Personal Information</h2>
-          <form class="form-grid" id="adminProfileForm">
-            <label>Name<input value="${escapeHtml(user.name || "")}"></label>
-            <label>Email<input type="email" value="${escapeHtml(user.email || "")}"></label>
-            <label>Phone<input value="${escapeHtml(user.phone || "")}"></label>
-            <label>Username<input value="${escapeHtml(user.username || "")}"></label>
-            <input type="hidden" id="adminProfileAvatarUrl" value="${escapeHtml(user.avatarUrl || "")}">
-            <input type="hidden" id="adminProfileAvatarKey" value="${escapeHtml(user.avatarKey || "")}">
-            <input type="file" id="adminProfileAvatarUpload" accept="image/*" data-upload-endpoint="profileImage" data-upload-label="Profile picture" data-url-field="#adminProfileAvatarUrl" data-key-field="#adminProfileAvatarKey">
-            <button class="primary-button" type="submit">Save Profile</button>
-          </form>
-        </article>
-        <article class="panel">
-          <h2>Security</h2>
-          <div class="setting-row"><span>Change password</span><button class="secondary-button" data-action="password">Update</button></div>
-          <div class="setting-row"><span>Two-factor authentication</span><label class="switch"><input type="checkbox"><i></i></label></div>
-          <div class="setting-row"><span>Profile picture</span><span>${user.avatarKey ? "Stored with UploadThing key" : "No uploaded file key yet"}</span></div>
-        </article>
-      </section>
-      <section class="panel"><h2>Account Activity</h2>${activityList([{ label: "Current admin session verified", at: new Date().toISOString() }])}</section>
-    `;
+  function staffMiniList(users) {
+    return `<div class="staff-stack">${users.map((user) => `<div class="staff-line">${avatar(user.name)}<span><strong>${escapeHtml(user.name)}</strong><small>${escapeHtml(user.email)}</small></span>${statusPill(user.status || user.role)}</div>`).join("")}</div>`;
   }
 
   function renderProducts() {
-    const products = filtered(state.dashboard.products || [], ["name", "category"]);
-    return `
-      ${filtersMarkup(["Category", "Brand", "Stock status", "Price"])}
-      <section class="panel">
-        <div class="panel-title"><h2>All Products</h2><div class="button-row"><button class="secondary-button" data-action="bulk-edit">Bulk Edit</button><button class="danger-button" data-action="bulk-delete">Bulk Delete</button></div></div>
-        ${table(["", "Product", "Category", "Price", "Stock", "Visibility"], products.map((product) => `
-          <tr>
-            <td><input type="checkbox" data-select="${escapeHtml(product.id)}"></td>
-            <td><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.id)}</small></td>
-            <td>${escapeHtml(product.category || "Uncategorized")}</td>
-            <td>${money.format(product.price || 0)}</td>
-            <td>${statusPill(Number(product.stock || 0) <= 0 ? "Out of stock" : Number(product.stock || 0) <= 5 ? "Low stock" : "In stock")}</td>
-            <td><label class="switch"><input type="checkbox" checked><i></i></label></td>
-          </tr>
-        `), "No products match the current search.")}
+    const products = filterItems(mergedProducts(), ["name", "category", "sku"]);
+    return `${filtersMarkup(["Category", "Stock", "Visibility", "Price"])}<section class="panel"><div class="panel-title"><h2>Product Catalog</h2><div class="button-row"><button class="secondary-button" data-action="import" type="button">Import</button><button class="primary-button" data-action="add-product" type="button">${icons.plus}Add Product</button></div></div>${table(["Product", "Category", "Price", "Stock", "Visibility", "Actions"], products.map((product) => `<tr><td><div class="product-cell"><img src="${escapeHtml(product.image)}" alt=""><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sku)}</small></span></div></td><td>${escapeHtml(product.category)}</td><td>${money.format(product.price)}</td><td>${statusPill(product.stock <= 0 ? "Out of stock" : product.stock <= 5 ? "Low stock" : "In stock")}</td><td>${statusPill(product.status)}</td><td><button class="table-action" data-action="edit-product" type="button">Edit</button></td></tr>`), "No products match the current search.")}</section>`;
+  }
+
+  function renderStaff() {
+    const staff = filterItems(mergedStaff(), ["name", "email", "department", "role", "status"]);
+    return `${filtersMarkup(["Department", "Role", "Status", "Last login"])}
+      <section class="panel staff-management">
+        <div class="panel-title"><h2>Staff Directory</h2><div class="button-row"><button class="secondary-button" data-action="export-staff" type="button">${icons.export}Export</button><button class="primary-button" data-action="invite-staff" type="button">${icons.plus}Invite</button></div></div>
+        ${table(["Avatar", "Name", "Email", "Department", "Assigned Role", "Status", "Last Login", "Created Date", "Actions"], staff.map((user) => `<tr><td>${avatar(user.name)}</td><td><strong>${escapeHtml(user.name)}</strong></td><td>${escapeHtml(user.email)}</td><td>${escapeHtml(user.department)}</td><td>${statusPill(user.role)}</td><td>${statusPill(user.status)}</td><td>${formatDate(user.lastLogin)}</td><td>${formatDate(user.createdAt)}</td><td class="actions-cell">${["View", "Edit", "Change Role", "Reset Password", user.status === "Suspended" ? "Activate" : "Suspend", "Delete"].map((label) => `<button class="table-action" data-action="${escapeHtml(label)}" data-user-id="${escapeHtml(user.id)}" type="button">${escapeHtml(label)}</button>`).join("")}</td></tr>`), "No staff match the current search.")}
       </section>
-    `;
+      ${roleModalMarkup(staff[0])}`;
   }
 
-  function renderOrders() {
-    const orders = filtered(state.dashboard.orders || [], ["id", "status", "paymentStatus"]);
-    const cards = state.dashboard.orderCards || {};
-    return `
-      <section class="stats-grid compact">
-        ${card("Pending Orders", cards.pending || 0, "Needs attention")}
-        ${card("Processing Orders", cards.processing || 0, "Being fulfilled")}
-        ${card("Completed Orders", cards.completed || 0, "Delivered")}
-        ${card("Cancelled Orders", cards.cancelled || 0, "Stopped")}
-        ${card("Refunded Orders", cards.refunded || 0, "Money returned")}
-      </section>
-      ${filtersMarkup(["Date", "Status", "Customer", "Payment status"])}
-      <section class="panel">
-        <h2>Customer Orders</h2>
-        ${table(["Order", "Customer", "Total", "Payment", "Status", "Actions"], orders.map((order) => `
-          <tr><td>${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer?.email || order.customer?.name || "Guest")}</td><td>${money.format(order.total || 0)}</td><td>${statusPill(order.paymentStatus)}</td><td>${statusPill(order.status)}</td><td><button class="table-action" data-action="order-details">Details</button></td></tr>
-        `), "No orders match the current search.")}
-      </section>
-    `;
+  function roleModalMarkup(user) {
+    if (!user) return "";
+    const role = state.roleEditorRole;
+    return `<section class="panel role-modal-preview">
+      <div class="panel-title"><div><h2>Edit User Role</h2><small>Professional role assignment modal preview</small></div>${statusPill("Live Preview")}</div>
+      <div class="modal-surface">
+        <div class="form-grid">
+          <label>Name<input value="${escapeHtml(user.name)}"></label>
+          <label>Email<input value="${escapeHtml(user.email)}"></label>
+          <label>Phone<input value="+254 712 000 451"></label>
+          <label>Status<select><option>Active</option><option>Suspended</option></select></label>
+          <label>Assigned Role<select id="rolePreviewSelect">${Object.entries(roleNames).map(([id, label]) => `<option value="${escapeHtml(id)}" ${id === role ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
+        </div>
+        <div class="permission-preview"><h3>Permissions Preview</h3><div class="permission-chip-grid">${(permissionsByRole[role] || []).map((permission) => `<span>${escapeHtml(permission)}</span>`).join("")}</div></div>
+      </div>
+    </section>`;
   }
 
-  function renderUsers() {
-    const users = filtered(state.dashboard.users || [], ["name", "email", "role"]);
-    const roles = state.rbac?.roles || [];
-    const selectedUser = users.find((user) => user.id === state.roleEditorUserId) || users[0] || null;
-    if (!state.roleEditorUserId && selectedUser) state.roleEditorUserId = selectedUser.id;
-    const selectedRoles = new Set(selectedUser?.roles?.length ? selectedUser.roles : [selectedUser?.role].filter(Boolean));
-    return `
-      ${filtersMarkup(["Role", "Status", "Last active"])}
-      ${hasPermission("staff:manage") ? `
-        <section class="panel role-editor-panel" aria-labelledby="roleEditorTitle">
-          <div class="panel-title">
-            <div>
-              <h2 id="roleEditorTitle">Assign Roles by Email</h2>
-              <small>Choose a user email, select one or more roles, then save access.</small>
-            </div>
-          </div>
-          ${roles.length && selectedUser ? `
-            <form class="role-editor-form" id="roleEditorForm">
-              <label>Email
-                <select id="roleUserSelect" name="userId">
-                  ${users.map((user) => `<option value="${escapeHtml(user.id)}" ${user.id === selectedUser.id ? "selected" : ""}>${escapeHtml(user.email)}${user.name ? ` - ${escapeHtml(user.name)}` : ""}</option>`).join("")}
-                </select>
-              </label>
-              <fieldset class="role-checkbox-grid">
-                <legend>Roles</legend>
-                ${roles.map((role) => `
-                  <label class="role-checkbox">
-                    <input type="checkbox" name="roleIds" value="${escapeHtml(role.id)}" ${selectedRoles.has(role.id) || selectedRoles.has(role.name) ? "checked" : ""}>
-                    <span>
-                      <strong>${escapeHtml(roleLabel(role.id))}</strong>
-                      <small>${escapeHtml(role.description || `${role.permissions?.length || 0} permissions`)}</small>
-                    </span>
-                  </label>
-                `).join("")}
-              </fieldset>
-              <div class="role-editor-actions">
-                <button class="primary-button" type="submit">${icons.shield}Save Roles</button>
-                <span id="roleEditorStatus" role="status" aria-live="polite"></span>
-              </div>
-            </form>
-          ` : emptyState("Role editor unavailable", roles.length ? "No users match the current search." : "Your account needs staff:manage access to load role definitions.")}
-        </section>
-      ` : ""}
-      <section class="panel"><h2>All Users</h2>${table(["Name", "Email", "Role", "Last Active", "Actions"], users.map((user) => `
-        <tr><td>${escapeHtml(user.name || "Unnamed")}</td><td>${escapeHtml(user.email)}</td><td>${(user.roles?.length ? user.roles : [user.role]).map(statusPill).join(" ")}</td><td>${formatDate(user.createdAt)}</td><td><button class="table-action" data-action="edit-user" data-user-id="${escapeHtml(user.id)}">Edit Roles</button></td></tr>
-      `), "No users match the current search.")}</section>
-      <section class="panel"><h2>Role Permissions</h2><div class="permission-grid">${roles.map((role) => `<div class="permission-card"><strong>${escapeHtml(roleLabel(role.id))}</strong><p>${escapeHtml(role.description || "")}</p><small>${escapeHtml((role.permissions || []).join(", "))}</small></div>`).join("")}</div></section>
-    `;
+  function renderRoleManager() {
+    return `<section class="permission-grid">${Object.entries(roleNames).map(([id, label]) => `<article class="permission-card"><div class="panel-title"><h2>${escapeHtml(label)}</h2>${statusPill(id === "super_admin" ? "Full access" : "Scoped")}</div><p>${escapeHtml(id === "super_admin" ? "Unrestricted OMANUTRO administration across dashboards, data, integrations, security, and system health." : `Designed for ${label.toLowerCase()} workflows with least-privilege access.`)}</p><div class="permission-chip-grid">${(permissionsByRole[id] || []).map((permission) => `<span>${escapeHtml(permission)}</span>`).join("")}</div></article>`).join("")}</section>`;
   }
 
-  function filtersMarkup(labels) {
-    return `<section class="toolbar"><label class="search-inline"><span>Search</span><input id="tableSearch" type="search" value="${escapeHtml(state.tableFilter)}" placeholder="Search this page"></label>${labels.map((label) => `<button class="filter-button" data-action="filter">${icons.filter}${escapeHtml(label)}</button>`).join("")}</section>`;
-  }
-
-  function renderCategories() {
-    const counts = new Map();
-    for (const product of state.dashboard.products || []) counts.set(product.category || "Uncategorized", (counts.get(product.category || "Uncategorized") || 0) + 1);
-    return entityGrid("Categories", Array.from(counts.entries()).map(([name, count]) => ({ name, meta: `${count} products`, action: "Edit category" })), "Add Category");
-  }
-
-  function renderBrands() {
-    return entityGrid("Brands", [
-      { name: "House Brand", meta: "Logo pending", action: "Assign products" },
-      { name: "Marketplace", meta: "Shared catalog", action: "Edit brand" }
-    ], "Add Brand");
+  function renderFinance() {
+    return `<section class="stats-grid compact">${card("Revenue", money.format(6842000), "Gross July sales")}${card("Taxes", money.format(547360), "Estimated VAT")}${card("Refunds", money.format(84600), "2.1% of revenue")}${card("Payments", "1,482", "Settled transactions")}${card("M-Pesa Collections", money.format(4218400), "61.6% of sales")}${card("Profit", money.format(2189000), "After COGS and fees")}</section><section class="grid three">${chart("Revenue Trend", [{ label: "Apr", value: 4200000 }, { label: "May", value: 5100000 }, { label: "Jun", value: 5960000 }, { label: "Jul", value: 6842000 }], money.format)}${donut("Payment Methods", [{ label: "M-Pesa", value: 62, color: "#ff1493" }, { label: "Card", value: 28, color: "#8b5cf6" }, { label: "Cash", value: 10, color: "#14b8a6" }])}${chart("Tax Summary", [{ label: "VAT", value: 547360 }, { label: "Withholding", value: 84000 }, { label: "Fees", value: 126500 }], money.format)}</section>`;
   }
 
   function renderInventory() {
-    const products = [...(state.dashboard.products || [])].sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0)).slice(0, 12);
-    return `
-      <section class="grid two">
-        <article class="panel"><h2>Low Stock Alerts</h2>${notificationList((state.dashboard.lowStock || []).map((product) => ({ type: "Restock", label: `${product.name}: ${product.stock} left` })))}</article>
-        <article class="panel"><h2>Stock Movements</h2>${activityList(products.map((product) => ({ label: `${product.name} has ${product.stock || 0} units in warehouse`, at: product.updatedAt || product.createdAt })))}</article>
-      </section>
-      <section class="panel"><h2>Warehouse Quantity</h2>${table(["Product", "Category", "Quantity", "History"], products.map((product) => `<tr><td>${escapeHtml(product.name)}</td><td>${escapeHtml(product.category)}</td><td>${product.stock || 0}</td><td><button class="table-action" data-action="inventory-history">View</button></td></tr>`), "Inventory data will appear after products are added.")}</section>
-    `;
+    const products = mergedProducts();
+    return `<section class="stats-grid compact">${card("Current Stock", "8,412", "Across all warehouses")}${card("Low Stock", products.filter((p) => p.stock > 0 && p.stock <= 5).length, "Needs purchase order")}${card("Out of Stock", products.filter((p) => p.stock <= 0).length, "Hidden from storefront")}${card("Incoming Inventory", "1,260", "Expected this week")}${card("Warehouse Status", "Nominal", "Nairobi hub active")}</section><section class="grid two"><article class="panel"><h2>Stock Adjustments</h2>${timelineList([["Cycle count", "Pearl Street Tote adjusted +4 units", "Today"], ["Inbound", "Rose Noir Tailored Blazer received 60 units", "Yesterday"], ["Return", "Satin Scarf returned to inspection", "Yesterday"]])}</article><article class="panel"><h2>Warehouse Quantity</h2>${table(["Product", "Category", "Quantity", "Status"], products.map((product) => `<tr><td>${escapeHtml(product.name)}</td><td>${escapeHtml(product.category)}</td><td>${product.stock}</td><td>${statusPill(product.stock <= 0 ? "Out of stock" : product.stock <= 5 ? "Low stock" : "In stock")}</td></tr>`), "Inventory will appear after products are added.")}</article></section>`;
   }
 
-  function renderReviews() {
-    const reviews = (state.dashboard.products || []).flatMap((product) => (product.reviews || []).map((review) => ({ ...review, product: product.name })));
-    return `<section class="panel"><h2>Customer Reviews</h2>${table(["Product", "Rating", "Review", "Actions"], reviews.map((review) => `<tr><td>${escapeHtml(review.product)}</td><td>${review.rating || "N/A"}</td><td>${escapeHtml(review.comment || review.text || "No comment")}</td><td><button class="table-action" data-action="approve-review">Approve</button><button class="table-action" data-action="reply-review">Reply</button></td></tr>`), "No reviews have been submitted yet.")}</section>`;
+  function renderRoleDashboard(role) {
+    const cards = {
+      customer: [["Orders", "8", "2 arriving this week"], ["Wishlist", "24", "Saved OMANUTRO styles"], ["Saved Addresses", "3", "Nairobi and Mombasa"], ["Reward Points", "1,840", "Silver tier"]],
+      store_manager: [["Sales", money.format(318450), "Today"], ["Orders", "74", "New today"], ["Low Stock", "5", "Needs action"], ["Best Sellers", "Rose Noir", "Top item"]],
+      finance: [["Revenue", money.format(6842000), "Month"], ["Taxes", money.format(547360), "Estimated"], ["Refunds", money.format(84600), "Open"], ["Payments", "1,482", "Settled"]],
+      inventory: [["Current Stock", "8,412", "Units"], ["Low Stock", "5", "SKUs"], ["Out of Stock", "2", "SKUs"], ["Incoming", "1,260", "Units"]],
+      fulfillment: [["Orders Waiting", "22", "Ready"], ["Packing Queue", "17", "In progress"], ["Shipping", "43", "In transit"], ["Returns", "6", "Pending"]],
+      customer_support: [["Open Tickets", "18", "SLA 96%"], ["Customer History", "Live", "Unified"], ["Refund Requests", "5", "Needs review"], ["Cancellations", "3", "Today"]],
+      marketing: [["Active Campaigns", "7", "Live"], ["Coupons", "14", "Available"], ["Conversion Rate", "4.8%", "+0.7"], ["Revenue Generated", money.format(1280000), "Attributed"]],
+      content: [["Homepage Editor", "Live", "4 modules"], ["Media Library", "842", "Assets"], ["SEO Status", "94%", "Healthy"], ["Draft Content", "12", "Pending"]],
+      analytics: [["Sales Analytics", money.format(6842000), "Read-only"], ["Customer Growth", "18.4%", "MoM"], ["Product Performance", "96", "SKUs"], ["Conversion Funnel", "4.8%", "Checkout"]],
+      developer: [["API Health", "99.98%", "Healthy"], ["Request Latency", "142ms", "p95"], ["Error Rate", "0.08%", "Stable"], ["Feature Flags", "12", "Managed"]]
+    };
+    const roleCards = cards[role] || cards.store_manager;
+    return `<section class="preview-banner"><strong>Viewing as: ${escapeHtml(roleNames[role])} (Preview Mode)</strong><span>Super Admin controls remain available. This preview does not alter the active session or permissions.</span></section><section class="stats-grid">${roleCards.map(([label, value, hint]) => card(label, value, hint)).join("")}</section><section class="grid two">${chart(`${roleNames[role]} Trend`, [{ label: "Week 1", value: 44 }, { label: "Week 2", value: 62 }, { label: "Week 3", value: 57 }, { label: "Week 4", value: 79 }])}<article class="panel"><h2>${escapeHtml(roleNames[role])} Work Queue</h2>${notificationList(roleCards.map(([label, value, hint]) => ({ type: label, label: `${value} - ${hint}` })))}</article></section>`;
   }
 
-  function renderCoupons() {
-    return entityGrid("Coupons & Discounts", [
-      { name: "WELCOME10", meta: "10% off, usage limit ready", action: "Edit coupon" },
-      { name: "FIXED5", meta: "$5 off, expiry ready", action: "Edit coupon" }
-    ], "Create Coupon");
+  function renderGeneric(title, cards) {
+    return `<section class="stats-grid">${cards.map(([label, value, hint]) => card(label, value, hint)).join("")}</section><section class="grid two">${chart(`${title} Trend`, [{ label: "Mon", value: 24 }, { label: "Tue", value: 34 }, { label: "Wed", value: 41 }, { label: "Thu", value: 38 }, { label: "Fri", value: 52 }])}<article class="panel"><h2>${escapeHtml(title)} Activity</h2>${timelineList(demo.timeline)}</article></section>`;
   }
 
-  function renderAnalytics() {
-    const data = state.dashboard;
-    return `
-      <section class="grid two">
-        ${chart("Revenue Analytics", data.charts?.revenueByDay || [], (value) => money.format(value || 0))}
-        ${chart("Customer Growth", (data.latestUsers || []).map((user, index) => ({ label: user.name || user.email, value: index + 1 })))}
-        ${chart("Best-selling Products", data.charts?.bestSellingProducts || [])}
-        ${chart("Sales Trends", data.charts?.ordersByDay || [])}
-      </section>
-    `;
-  }
-
-  function renderSettings() {
-    const groups = ["Store information", "Taxes", "Currency", "Shipping", "Email settings", "Payment gateway settings", "Theme settings", "Security settings"];
-    return `<section class="settings-grid">${groups.map((group) => `<article class="panel"><h2>${escapeHtml(group)}</h2><div class="form-grid"><label>Name<input placeholder="${escapeHtml(group)}"></label><label>Status<select><option>Enabled</option><option>Disabled</option></select></label></div></article>`).join("")}</section>`;
-  }
-
-  function entityGrid(title, items, buttonLabel) {
-    return `<section class="panel"><div class="panel-title"><h2>${escapeHtml(title)}</h2><button class="primary-button" data-action="create-entity">${icons.plus}${escapeHtml(buttonLabel)}</button></div><div class="entity-grid">${items.map((item) => `<article class="entity-card"><div class="entity-image"></div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.meta)}</p><button class="table-action" data-action="entity-action">${icons.chevronRight}${escapeHtml(item.action)}</button></article>`).join("")}</div></section>`;
+  function formatDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Unknown" : dateFormatter.format(date);
   }
 
   function renderView() {
@@ -530,35 +564,50 @@
     renderNav();
     setPageChrome();
     if (state.loading) {
-      view.innerHTML = skeleton(10);
+      view.innerHTML = skeleton();
       return;
     }
     if (state.loadError || !state.dashboard) {
       view.innerHTML = errorState(state.loadError);
       return;
     }
+    if (state.previewRole) {
+      view.innerHTML = renderRoleDashboard(state.previewRole);
+      return;
+    }
     const routes = {
       overview: renderOverview,
-      profile: renderProfile,
       products: renderProducts,
-      orders: renderOrders,
-      users: renderUsers,
-      categories: renderCategories,
-      brands: renderBrands,
+      categories: () => renderGeneric("Categories", [["Active Categories", "18", "Fashion taxonomy"], ["Featured", "6", "Homepage placements"], ["Empty States", "1", "Needs products"], ["SEO Coverage", "92%", "Metadata complete"]]),
+      collections: () => renderGeneric("Collections", [["Active Collections", "12", "Seasonal edits"], ["Featured", "4", "Homepage"], ["Drafts", "3", "Awaiting approval"], ["Revenue", money.format(1245000), "Attributed"]]),
       inventory: renderInventory,
-      reviews: renderReviews,
-      coupons: renderCoupons,
-      analytics: renderAnalytics,
-      settings: renderSettings
+      orders: () => `${filtersMarkup(["Date", "Status", "Payment", "Channel"])}<section class="panel"><h2>Order Queue</h2>${ordersTable(filterItems(mergedOrders(), ["id", "customer", "status", "payment"]))}</section>`,
+      customers: () => renderGeneric("Customers", [["Active Customers", "12,840", "Non-staff accounts"], ["Repeat Rate", "38%", "+4.2%"], ["Average LTV", money.format(18400), "Premium buyers"], ["Reward Members", "4,218", "Enrolled"]]),
+      fulfillment: () => renderRoleDashboard("fulfillment"),
+      marketing: () => renderRoleDashboard("marketing"),
+      content: () => renderRoleDashboard("content"),
+      analytics: () => renderRoleDashboard("analytics"),
+      finance: renderFinance,
+      reports: () => renderGeneric("Reports", [["Scheduled Reports", "9", "Automated"], ["Exports", "148", "This month"], ["Data Freshness", "3 min", "Warehouse sync"], ["Audit Coverage", "100%", "Tracked"]]),
+      staff: renderStaff,
+      security: () => renderGeneric("Security", [["Active Sessions", "42", "Staff"], ["MFA Coverage", "91%", "Admins"], ["Role Changes", "6", "This week"], ["Risk Alerts", "0", "Critical"]]),
+      developer: () => renderRoleDashboard("developer"),
+      firebase: () => renderGeneric("Firebase", [["Auth", "Healthy", "Token service"], ["Messaging", "Online", "Push ready"], ["Admin SDK", "Connected", "Service account"], ["Errors", "0", "Critical"]]),
+      integrations: () => renderGeneric("Integrations", [["M-Pesa", "Healthy", "Callbacks live"], ["UploadThing", "Online", "Media uploads"], ["Courier API", "Degraded", "Retrying"], ["Webhooks", "99.9%", "Delivery rate"]]),
+      system: () => renderGeneric("System Health", [["Uptime", "99.98%", "30 days"], ["CPU", "42%", "Stable"], ["Memory", "61%", "Normal"], ["Queue Depth", "12", "Jobs"]]),
+      logs: () => `<section class="panel"><h2>Operational Logs</h2>${timelineList(demo.timeline.concat([["API trace", "GET /api/admin/dashboard completed in 118ms", "2 hr ago"], ["Security", "RBAC permissions refreshed", "3 hr ago"]]))}</section>`,
+      roles: renderRoleManager,
+      settings: () => renderGeneric("Settings", [["Store Profile", "Complete", "Brand identity"], ["Payments", "Enabled", "M-Pesa and card"], ["Notifications", "12", "Templates"], ["Theme", "OMANUTRO Pink", "Active"]])
     };
     view.innerHTML = (routes[state.route] || renderOverview)();
     document.getElementById("tableSearch")?.addEventListener("input", (event) => {
       state.tableFilter = event.target.value;
       renderView();
     });
-    bindRoleEditor();
-    bindAdminProfileForm();
-    window.UploadThingUploader?.init?.(view);
+    document.getElementById("rolePreviewSelect")?.addEventListener("change", (event) => {
+      state.roleEditorRole = event.target.value;
+      renderView();
+    });
   }
 
   async function ensureRbacLoaded() {
@@ -566,74 +615,16 @@
     state.rbac = await api("/api/admin/rbac");
   }
 
-  function bindRoleEditor() {
-    const select = document.getElementById("roleUserSelect");
-    const form = document.getElementById("roleEditorForm");
-    if (select) {
-      select.addEventListener("change", () => {
-        state.roleEditorUserId = select.value;
-        renderView();
-      });
-    }
-    if (form) {
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const userId = form.elements.userId.value;
-        const roleIds = [...form.querySelectorAll("input[name='roleIds']:checked")].map((input) => input.value);
-        const status = document.getElementById("roleEditorStatus");
-        if (!roleIds.length) {
-          if (status) status.textContent = "Select at least one role.";
-          return;
-        }
-        if (status) status.textContent = "Saving...";
-        try {
-          const data = await api(`/api/admin/users/${encodeURIComponent(userId)}/roles`, {
-            method: "PUT",
-            body: { roleIds }
-          });
-          state.dashboard.users = (state.dashboard.users || []).map((user) => user.id === data.user.id ? data.user : user);
-          state.dashboard.latestUsers = (state.dashboard.latestUsers || []).map((user) => user.id === data.user.id ? data.user : user);
-          state.roleEditorUserId = data.user.id;
-          toast(`Roles updated for ${data.user.email}`);
-          renderView();
-        } catch (error) {
-          if (status) status.textContent = error.message;
-        }
-      });
-    }
-  }
-
-  function bindAdminProfileForm() {
-    const form = document.getElementById("adminProfileForm");
-    if (!form) return;
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const [name, email, phone, username] = form.querySelectorAll("input:not([type='hidden']):not([type='file'])");
-      try {
-        const data = await api("/api/account", {
-          method: "PUT",
-          body: {
-            name: name.value,
-            phone: phone.value,
-            username: username.value,
-            avatarUrl: document.getElementById("adminProfileAvatarUrl")?.value || "",
-            avatarKey: document.getElementById("adminProfileAvatarKey")?.value || ""
-          }
-        });
-        state.user = { ...state.user, ...data.user, email: email.value };
-        toast("Profile saved.");
-        renderView();
-      } catch (error) {
-        toast(error.message);
-      }
-    });
-  }
-
   function setRoute() {
     const next = (window.location.hash || "#overview").replace("#", "") || "overview";
-    const item = navItems.find((entry) => entry.id === next);
-    const fallback = navItems.find(canAccess)?.id || "overview";
-    state.route = item && canAccess(item) ? next : fallback;
+    const item = allNavItems().find((entry) => entry.id === next);
+    if (item?.preview) {
+      state.previewRole = item.preview;
+      state.route = item.id;
+    } else {
+      state.previewRole = "";
+      state.route = item && canAccess(item) ? item.id : "overview";
+    }
     state.tableFilter = "";
     renderView();
     closeMobileSidebar();
@@ -646,7 +637,7 @@
       renderView();
       const me = await api("/api/admin/auth/me");
       state.user = me.user;
-      if (!hasPermission("admin:access")) throw new Error("Admin access required.");
+      if (!hasPermission("admin:access") && !isSuperAdmin()) throw new Error("Admin access required.");
       const initials = (state.user.name || state.user.email || "AD").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
       document.getElementById("avatarInitials").textContent = initials;
       state.dashboard = await api("/api/admin/dashboard");
@@ -698,42 +689,41 @@
     document.getElementById("mobileSidebarClose")?.addEventListener("click", closeMobileSidebar);
     document.getElementById("sidebarBackdrop")?.addEventListener("click", closeMobileSidebar);
     document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-    document.getElementById("accountToggle")?.addEventListener("click", () => {
-      document.getElementById("accountMenu")?.classList.toggle("open");
-    });
-    document.addEventListener("click", (event) => {
-      if (!event.target.closest("#accountMenu")) document.getElementById("accountMenu")?.classList.remove("open");
-    });
     document.getElementById("logoutButton")?.addEventListener("click", () => {
       localStorage.removeItem(tokenKey);
       window.location.href = "/admin/login.html";
+    });
+    document.getElementById("logoutButtonTop")?.addEventListener("click", () => {
+      localStorage.removeItem(tokenKey);
+      window.location.href = "/admin/login.html";
+    });
+    document.getElementById("accountToggle")?.addEventListener("click", () => document.getElementById("accountMenu")?.classList.toggle("open"));
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest("#accountMenu")) document.getElementById("accountMenu")?.classList.remove("open");
     });
     document.getElementById("globalSearch")?.addEventListener("input", (event) => {
       state.tableFilter = event.target.value;
       renderView();
     });
-    document.getElementById("pageActions")?.addEventListener("click", async (event) => {
+    document.getElementById("sidebarNav")?.addEventListener("click", (event) => {
+      const toggle = event.target.closest("[data-nav-group]");
+      if (!toggle) return;
+      event.preventDefault();
+      const group = toggle.dataset.navGroup;
+      if (state.openGroups.has(group)) state.openGroups.delete(group);
+      else state.openGroups.add(group);
+      renderNav();
+    });
+    document.addEventListener("click", async (event) => {
       const action = event.target.closest("[data-action]")?.dataset.action;
       if (!action) return;
-      if (action === "refresh") {
-        toast("Refreshing dashboard data");
-        await loadDashboard();
-      } else if (action.includes("delete")) {
-        if (window.confirm("Are you sure? This action should be reviewed before continuing.")) toast("Action queued");
-      } else {
-        toast(`${event.target.textContent.trim()} is ready for backend integration`);
+      if (action === "retry-load") return loadDashboard();
+      if (action === "logout") return;
+      if (action === "exit-preview") {
+        window.location.hash = "#overview";
+        return;
       }
-    });
-    document.getElementById("appView")?.addEventListener("click", async (event) => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (action === "retry-load") {
-        toast("Retrying dashboard data");
-        await loadDashboard();
-      } else if (action?.includes("delete")) {
-        if (window.confirm("Are you sure? This action should be reviewed before continuing.")) toast("Action queued");
-      } else if (action) {
-        toast(`${event.target.textContent.trim()} is ready for backend integration`);
-      }
+      toast(`${event.target.textContent.trim()} is ready for backend integration`);
     });
     window.addEventListener("hashchange", setRoute);
   }

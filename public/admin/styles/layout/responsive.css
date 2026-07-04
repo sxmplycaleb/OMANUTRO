@@ -4,6 +4,7 @@
 
 @media (max-width: 1180px) {
   .stats-grid, .stats-grid.compact, .grid.three, .skeleton-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {
@@ -31,6 +32,13 @@
   .search-box { display: none; }
   .page-intro { align-items: flex-start; flex-direction: column; }
   .grid.two, .settings-grid { grid-template-columns: 1fr; }
+  .role-badge,
+  .top-logout {
+    display: none;
+  }
+  .quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 620px) {
@@ -39,4 +47,19 @@
   .bar-row { grid-template-columns: 72px minmax(0, 1fr) 58px; }
   .intro-actions { width: 100%; }
   .intro-actions > * { flex: 1 1 140px; }
+  .quick-actions { grid-template-columns: 1fr; }
+  .topbar-right {
+    gap: 8px;
+  }
+  .topbar-right .icon-button:nth-of-type(2),
+  .topbar-right .icon-button:nth-of-type(3) {
+    display: none;
+  }
+  .preview-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .actions-cell {
+    min-width: 220px;
+  }
 }

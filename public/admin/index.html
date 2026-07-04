@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,9 +39,20 @@
           <input id="globalSearch" type="search" placeholder="Search products, orders, users">
         </label>
         <div class="topbar-right">
+          <button class="icon-button" type="button" aria-label="Notifications" data-action="notifications">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 7-2.5 7-2.5 9h17c0-2-2.5-2-2.5-9Z"/><path d="M10 21h4"/></svg>
+            <span class="dot"></span>
+          </button>
+          <button class="icon-button" type="button" aria-label="Messages" data-action="messages">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5Z"/></svg>
+          </button>
+          <button class="icon-button" type="button" aria-label="Quick actions" data-action="quick-actions">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
           <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle theme">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.3A8.4 8.4 0 0 1 8.7 4a8.6 8.6 0 1 0 11.3 11.3Z"/></svg>
           </button>
+          <span class="role-badge" id="roleBadge">Super Admin</span>
           <div class="account-menu" id="accountMenu">
             <button class="avatar-button" id="accountToggle" type="button" aria-label="Open account menu">
               <span id="avatarInitials">AD</span>
@@ -52,6 +63,7 @@
               <button id="logoutButton" type="button">Logout</button>
             </div>
           </div>
+          <button class="secondary-button top-logout" id="logoutButtonTop" type="button" data-action="logout">Logout</button>
         </div>
       </header>
 
