@@ -62,7 +62,13 @@ async function establishGoogleSession(user) {
         throw new Error("Google sign-in reached Google, but OMANUTRO could not create your site session.");
     }
     window.CommerceApi?.setToken(session.token);
-    window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
+    window.dispatchEvent(new CustomEvent("commerce-auth-changed", {
+        detail: {
+            provider: "google",
+            user: session.user,
+            token: session.token
+        }
+    }));
     return session.user;
 }
 

@@ -285,7 +285,16 @@ async function loadMe() {
   updateAuthUI();
 }
 
-async function handleAuthChanged() {
+async function handleAuthChanged(event) {
+  const authDetail = event?.detail || {};
+  if (authDetail.user) {
+    state.user = authDetail.user;
+    state.authToken = authDetail.token || window.CommerceApi?.getToken?.() || state.authToken;
+    rememberAuthenticatedUser(state.user);
+    $("#authModal")?.classList.add("hidden");
+    updateAuthUI();
+  }
+
   await loadMe();
   if (state.user && state.pendingCheckout) {
     state.pendingCheckout = false;
@@ -1890,8 +1899,8 @@ function bindEvents() {
       renderCart();
     }
   });
-  window.addEventListener("commerce-auth-changed", () => {
-    handleAuthChanged().catch((error) => toast(error.message));
+  window.addEventListener("commerce-auth-changed", (event) => {
+    handleAuthChanged(event).catch((error) => toast(error.message));
   });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && state.user) {
