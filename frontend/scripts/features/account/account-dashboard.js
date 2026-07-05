@@ -44,7 +44,7 @@
   }
 
   function savedJobsStorageKey() {
-    const user = state.account?.user || JSON.parse(localStorage.getItem("omanutro-auth-user") || "null");
+    const user = state.account?.user || window.CommerceAuth?.readUser?.();
     const accountId = user?.id || user?.email;
     return accountId ? `omanutro-saved-jobs:${accountId}` : "omanutro-saved-jobs:guest";
   }
@@ -247,6 +247,7 @@
       }
     });
     state.account.user = data.user;
+    window.CommerceAuth?.rememberUser?.(data.user);
     renderChrome();
     toast("Profile updated.");
   }
@@ -289,14 +290,8 @@
   }
 
   async function logout() {
-    await api("/api/auth/logout", { method: "POST" }).catch(() => {});
-    if (window.FirebaseAuth?.logoutGoogle) {
-      await window.FirebaseAuth.logoutGoogle({ silent: true }).catch(() => {});
-    }
-    window.CommerceAuth?.clearSession();
-    localStorage.removeItem("omanutro-auth-user");
     sessionStorage.setItem("omanutro-logout-success", "1");
-    location.href = "/";
+    await window.CommerceAuth?.logout?.({ redirectTo: "/" });
   }
 
   function bindEvents() {

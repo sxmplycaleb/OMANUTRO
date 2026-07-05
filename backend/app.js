@@ -69,6 +69,10 @@ function createApp() {
   app.use(express.urlencoded({ extended: false }));
 
   app.use("/admin", express.static(ADMIN_DIR));
+  app.get(/^\/dashboard(?:\/.*)?$/, (req, res) => {
+    res.type("text/html; charset=utf-8");
+    fs.createReadStream(path.join(PUBLIC_DIR, "dashboard.html")).pipe(res);
+  });
   app.use("/admin/messaging", adminMessagingRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/admin", adminRoutes);

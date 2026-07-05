@@ -252,6 +252,26 @@
   background: var(--panel-alt);
 }
 
+.dropdown-greeting {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
+.dropdown-greeting strong,
+.dropdown-greeting span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-greeting span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
 .dropdown-menu .primary-button {
   color: #fff;
   text-align: center;

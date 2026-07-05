@@ -268,8 +268,22 @@
   function dashboardPathForRole(user) {
     const role = String(user?.role || "").toLowerCase();
     const permissions = user?.permissions || [];
-    if (role === "admin" || role === "super_admin" || permissions.includes("*") || permissions.includes("admin:access")) return "/admin/index.html#overview";
-    return "/catalog.html";
+    if (role === "admin" || role === "super_admin" || permissions.includes("*")) return "/dashboard/super-admin";
+    const routeMap = {
+      customer: "/dashboard/customer",
+      store_manager: "/dashboard/vendor",
+      vendor: "/dashboard/vendor",
+      staff: "/dashboard/staff",
+      fulfillment: "/dashboard/rider",
+      delivery_rider: "/dashboard/rider",
+      rider: "/dashboard/rider",
+      inventory: "/dashboard/inventory",
+      customer_support: "/dashboard/support",
+      support_agent: "/dashboard/support",
+      finance: "/dashboard/finance",
+      marketing: "/dashboard/marketing"
+    };
+    return routeMap[role] || (permissions.includes("admin:access") ? "/dashboard/staff" : "/dashboard/customer");
   }
 
   function allNavItems() {

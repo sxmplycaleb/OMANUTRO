@@ -5,7 +5,7 @@ function getInitialsTheme() {
 }
 
 const state = {
-    user: JSON.parse(localStorage.getItem("omanutro-auth-user") || "null"),
+    user: window.CommerceAuth?.readUser?.() || JSON.parse(localStorage.getItem("omanutro-auth-user") || "null"),
     authToken: window.CommerceApi?.getToken() || "",
     products: [],
     categories: [],
@@ -201,9 +201,10 @@ function updateAuthUI() {
   const signedOutMenu = $("#signedOutMenu");
   const signedInMenu = $("#signedInMenu");
   const avatar = $("#profileMenuButton");
-  const profileName = $("#profileMenuName");
   const profileGreeting = $("#profileGreeting");
+  const profileMenu = $("#profileMenu");
   const firstName = String(state.user?.name || state.user?.email || "Account").split(/\s+/)[0];
+  const email = state.user?.email || "";
 
   if (signedOutMenu) signedOutMenu.classList.toggle("hidden", Boolean(state.user));
   if (signedInMenu) signedInMenu.classList.toggle("hidden", !state.user);
@@ -211,21 +212,26 @@ function updateAuthUI() {
     avatar.title = `${timeGreeting()}, ${firstName}`;
     avatar.setAttribute("aria-label", `Open account menu for ${firstName}`);
     avatar.innerHTML = state.user.avatarUrl
-      ? `<img src="${escapeHtml(state.user.avatarUrl)}" alt=""><span id="profileMenuName">${escapeHtml(firstName)}</span><span class="menu-caret" aria-hidden="true">⌄</span>`
-      : `<span class="avatar-initials">${escapeHtml(getUserInitials(state.user))}</span><span id="profileMenuName">${escapeHtml(firstName)}</span><span class="menu-caret" aria-hidden="true">⌄</span>`;
-  }
-  if (profileName && state.user) {
-    profileName.textContent = firstName;
+      ? `<img src="${escapeHtml(state.user.avatarUrl)}" alt=""><span id="profileMenuName">${escapeHtml(firstName)}</span><svg class="menu-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>`
+      : `<span class="avatar-initials">${escapeHtml(getUserInitials(state.user))}</span><span id="profileMenuName">${escapeHtml(firstName)}</span><svg class="menu-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>`;
   }
   if (profileGreeting && state.user) {
-    profileGreeting.textContent = `${timeGreeting()}, ${firstName}`;
+    profileGreeting.innerHTML = `<strong>${escapeHtml(state.user.name || firstName)}</strong><span>${escapeHtml(email)}</span>`;
+  }
+  if (profileMenu && state.user) {
+    profileMenu.innerHTML = `
+      <div class="dropdown-greeting" id="profileGreeting"><strong>${escapeHtml(state.user.name || firstName)}</strong><span>${escapeHtml(email)}</span></div>
+      <button type="button" data-profile-action="dashboard">Dashboard</button>
+      <button type="button" data-profile-action="profile">Profile</button>
+      <button type="button" data-profile-action="settings">Settings</button>
+      <button type="button" data-profile-action="signout">Logout</button>
+    `;
   }
 
   $$(".auth-only").forEach((node) => node.classList.toggle("hidden", !state.user));
   $$(".admin-only").forEach((node) => node.classList.toggle("hidden", !isAdminUser()));
   renderCart();
 }
-
 function timeGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good Morning";
@@ -234,8 +240,7 @@ function timeGreeting() {
 }
 
 function rememberAuthenticatedUser(user) {
-  if (user) localStorage.setItem("omanutro-auth-user", JSON.stringify(user));
-  else localStorage.removeItem("omanutro-auth-user");
+  window.CommerceAuth?.rememberUser?.(user);
 }
 
 function rememberPostLogin(destination = location.pathname + location.search + location.hash) {
@@ -316,8 +321,8 @@ async function handleAuthChanged(event) {
     return;
   }
 
-  if (state.user && isAdminUser()) {
-    location.href = "/admin/index.html#overview";
+  if (state.user) {
+    window.CommerceAuth?.redirectToDashboard?.(state.user);
   }
 }
 
@@ -1437,9 +1442,8 @@ async function submitAuth(event) {
     const data = await api(path, { method: "POST", body: state.authMode === "login" ? loginBody : body });
     form?.classList.add("is-success");
     state.user = data.user;
-    rememberAuthenticatedUser(state.user);
     state.authToken = data.token || "";
-    window.CommerceAuth?.rememberSession(state.authToken);
+    window.CommerceAuth?.setSession?.({ user: state.user, token: state.authToken });
     state.cart = await window.CommerceCart?.mergeGuestIntoRemote?.() || [];
     $("#authModal").classList.add("hidden");
     updateAuthUI();
@@ -1472,10 +1476,7 @@ async function submitAuth(event) {
   }
 
   state.pendingCatalogRedirect = false;
-  if (isAdminUser()) {
-    location.href = "/admin/index.html#overview";
-    return;
-  }
+  if (window.CommerceAuth?.redirectToDashboard?.(state.user)) return;
 
   if (!location.pathname.includes("catalog.html")) {
     location.href = "/catalog.html";
@@ -1574,7 +1575,7 @@ function handleAccountAction(action) {
   }
 
   if (action === "my-account") {
-    location.href = isAdminUser() ? "/admin/index.html#overview" : "/account.html";
+    location.href = window.CommerceAuth?.dashboardPathForUser?.(state.user) || "/account.html";
     return;
   }
 
@@ -1634,6 +1635,7 @@ async function saveProfile(event) {
   });
 
   state.user = data.user;
+  window.CommerceAuth?.rememberUser?.(state.user);
   updateAuthUI();
   renderProfileForm();
   toast("Profile saved.");
@@ -1647,6 +1649,10 @@ function handleProfileAction(action) {
   }
 
   if (["dashboard", "profile", "orders", "wishlist", "settings"].includes(action)) {
+    if (action === "dashboard") {
+      location.href = window.CommerceAuth?.dashboardPathForUser?.(state.user) || "/account.html";
+      return;
+    }
     const panel = action === "dashboard" ? "" : `#${action === "settings" ? "security" : action}`;
     location.href = `/account.html${panel}`;
     return;
@@ -1886,6 +1892,12 @@ function bindEvents() {
   });
 
   document.addEventListener("click", (event) => {
+    const profileAction = event.target.closest?.("[data-profile-action]");
+    if (profileAction) {
+      event.stopPropagation();
+      handleProfileAction(profileAction.dataset.profileAction);
+      return;
+    }
     closeMenus();
     if (!event.target.closest(".topbar-search")) collapseTopSearchIfEmpty();
   });
@@ -1901,6 +1913,11 @@ function bindEvents() {
   });
   window.addEventListener("commerce-auth-changed", (event) => {
     handleAuthChanged(event).catch((error) => toast(error.message));
+  });
+  window.addEventListener(window.CommerceAuth?.eventName || "omanutro:auth", (event) => {
+    state.user = event.detail?.user || window.CommerceAuth?.readUser?.() || null;
+    state.authToken = event.detail?.token || window.CommerceApi?.getToken?.() || "";
+    updateAuthUI();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && state.user) {
@@ -1969,6 +1986,10 @@ async function init() {
   await loadMe();
   await loadProducts();
   const params = new URLSearchParams(location.search);
+  if (params.get("signin") === "1" && state.user) {
+    window.CommerceAuth?.redirectToDashboard?.(state.user, { replace: true });
+    return;
+  }
   if (params.get("signin") === "1" && !state.user) {
     rememberPostLogin("/account.html");
     openAuth("login");
@@ -2017,3 +2038,4 @@ window.addEventListener("commerce-auth-feedback", (event) => {
 });
 
 init().catch((error) => toast(error.message));
+
