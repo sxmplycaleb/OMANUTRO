@@ -3,7 +3,7 @@ import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.g
 import {
     getAuth,
     GoogleAuthProvider,
-    browserLocalPersistence,
+    inMemoryPersistence,
     setPersistence
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
@@ -24,11 +24,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch((error) => {
+setPersistence(auth, inMemoryPersistence).catch((error) => {
     console.warn("Firebase persistence could not be initialized.", error);
 });
 
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+    prompt: "select_account"
+});
 const db = getFirestore(app);
 
 export {

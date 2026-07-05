@@ -65,6 +65,8 @@ FIREBASE_SERVICE_ACCOUNT_JSON_BASE64=base64-encoded-service-account-json
 
 When payment provider credentials are missing, checkout remains guarded by the existing local payment flow. When Cloudinary variables are missing, uploaded images are stored under `data/uploads` and served by the local server.
 
+Twilio SMS, WhatsApp, Verify OTP, delivery callbacks, and message logging are documented in [docs/TWILIO_MESSAGING.md](docs/TWILIO_MESSAGING.md). Use `.env.example` for the full environment variable list.
+
 ## Deploying On Vercel
 
 This app deploys through `api/index.js`, which mounts the Express application as a Vercel Node function. Set these Vercel environment variables for production:

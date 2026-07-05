@@ -22,10 +22,15 @@ function notFound(message) {
   return new HttpError(404, message);
 }
 
+function tooManyRequests(message) {
+  return new HttpError(429, message);
+}
+
 module.exports = {
   HttpError,
   badRequest,
   unauthorized,
   forbidden,
-  notFound
+  notFound,
+  tooManyRequests
 };

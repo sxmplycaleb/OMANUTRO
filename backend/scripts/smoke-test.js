@@ -2,6 +2,7 @@ const assert = require("assert");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const { toE164 } = require("../services/messaging/phone");
 
 const TEST_PORT = process.env.SMOKE_TEST_PORT || "3055";
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -79,6 +80,10 @@ async function mpesaPaidCallback(checkoutRequestId) {
 }
 
 async function main() {
+  for (const phone of ["0712345678", "712345678", "+254712345678", "254712345678"]) {
+    assert.equal(toE164(phone), "+254712345678", "Phone numbers should normalize to E.164");
+  }
+
   fs.rmSync(TEST_DB, { force: true });
   fs.rmSync(`${TEST_DB}-shm`, { force: true });
   fs.rmSync(`${TEST_DB}-wal`, { force: true });
@@ -91,6 +96,7 @@ async function main() {
       APP_URL: BASE_URL,
       SQLITE_DB_FILE: TEST_DB,
       MPESA_MOCK_SUCCESS: "1",
+      MESSAGING_DRY_RUN: "1",
       JWT_SECRET: "smoke-test-secret"
     },
     stdio: ["ignore", "pipe", "pipe"]
@@ -116,24 +122,13 @@ async function main() {
     await assertRejectsStatus(() => request("/api/orders"), 401);
 
     const admin = await login("admin@demo.com", "Admin123!");
-    const signup = await request("/api/auth/request-signup-code", {
-      method: "POST",
-      body: {
-        name: "Smoke Customer",
-        email: "smoke.customer@example.com",
-        phone: "254700000002",
-        password: "Customer123!"
-      }
-    });
     const customer = await request("/api/auth/register", {
       method: "POST",
       body: {
         name: "Smoke Customer",
         email: "smoke.customer@example.com",
         phone: "254700000002",
-        password: "Customer123!",
-        verificationId: signup.verificationId,
-        code: signup.signupCode
+        password: "Customer123!"
       }
     });
     assert.equal(admin.user.role, "admin", "Expected admin role");
@@ -146,6 +141,16 @@ async function main() {
     const customerMe = await request("/api/auth/me", { headers: bearer(customer.token) });
     assert.equal(adminMe.user.email, "admin@demo.com", "Admin token should resolve admin user");
     assert.equal(customerMe.user.email, "smoke.customer@example.com", "Customer token should resolve customer user");
+
+    const updatedAdminProfile = await request("/api/auth/profile", {
+      method: "PUT",
+      headers: bearer(admin.token),
+      body: { name: "Avery Admin", phone: "" }
+    });
+    assert(
+      updatedAdminProfile.user.permissions.includes("*"),
+      "Profile updates should preserve permissions for frontend session state"
+    );
 
     await assertRejectsStatus(
       () => request("/api/products", {

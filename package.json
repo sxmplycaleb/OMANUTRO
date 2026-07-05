@@ -28,13 +28,17 @@
   "dependencies": {
     "@uploadthing/react": "^6.6.0",
     "better-sqlite3": "^12.11.1",
+    "bullmq": "^5.79.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "firebase": "^12.15.0",
     "firebase-admin": "^14.1.0",
+    "ioredis": "^5.11.1",
     "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
+    "libphonenumber-js": "^1.13.8",
+    "twilio": "^6.0.2",
     "uploadthing": "^6.12.0"
   },
   "devDependencies": {

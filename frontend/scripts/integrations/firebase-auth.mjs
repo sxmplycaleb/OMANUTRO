@@ -2,6 +2,7 @@ import { auth, provider } from "./firebase.mjs";
 
 import {
     getRedirectResult,
+    GoogleAuthProvider,
     signInWithPopup,
     signInWithRedirect,
     signOut,
@@ -32,15 +33,34 @@ function setGoogleButtonLoading(isLoading, label = "Continue with Google") {
     if (text) text.textContent = isLoading ? label : "Continue with Google";
 }
 
+let googleFlowInProgress = false;
+let lastGoogleAccessToken = "";
+
+async function revokeGoogleAccessToken(accessToken) {
+    if (!accessToken) return;
+    await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(accessToken)}`, {
+        method: "POST",
+        mode: "no-cors",
+        credentials: "omit"
+    }).catch(() => {});
+}
+
+async function resetFirebaseProviderState() {
+    await signOut(auth).catch(() => {});
+}
+
 async function establishGoogleSession(user) {
     if (!user) return null;
-    const token = await user.getIdToken();
-    window.CommerceApi?.setToken(token);
-    const session = await window.CommerceApi?.request?.("/api/auth/me");
-    if (!session?.user) {
+    const idToken = await user.getIdToken(true);
+    const session = await window.CommerceApi?.request?.("/api/auth/google", {
+        method: "POST",
+        body: { idToken }
+    });
+    if (!session?.user || !session?.token) {
         window.CommerceApi?.clearToken?.();
         throw new Error("Google sign-in reached Google, but OMANUTRO could not create your site session.");
     }
+    window.CommerceApi?.setToken(session.token);
     window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
     return session.user;
 }
@@ -51,9 +71,16 @@ function dispatchFeedback(type, message) {
 
 async function signInGoogle() {
     try {
+        googleFlowInProgress = true;
         setGoogleButtonLoading(true, "Connecting...");
+        window.CommerceAuth?.clearSession?.();
+        await resetFirebaseProviderState();
         const result = await signInWithPopup(auth, provider);
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        lastGoogleAccessToken = credential?.accessToken || "";
         await establishGoogleSession(result.user);
+        await revokeGoogleAccessToken(lastGoogleAccessToken);
+        await resetFirebaseProviderState();
         dispatchFeedback("success", "Signed in with Google.");
 
     } catch (err) {
@@ -66,6 +93,7 @@ async function signInGoogle() {
         }
         dispatchFeedback("error", err?.code ? authMessage(err) : err.message || "Google sign-in could not be completed. Please try again.");
     } finally {
+        googleFlowInProgress = false;
         setGoogleButtonLoading(false);
     }
 
@@ -73,9 +101,11 @@ async function signInGoogle() {
 
 async function logoutGoogle(options = {}) {
 
-    await signOut(auth);
+    await revokeGoogleAccessToken(lastGoogleAccessToken);
+    lastGoogleAccessToken = "";
+    await resetFirebaseProviderState();
 
-    window.CommerceApi.clearToken();
+    window.CommerceAuth?.clearSession?.();
     if (!options.silent) window.dispatchEvent(new CustomEvent("commerce-auth-changed"));
 
 }
@@ -83,7 +113,11 @@ async function logoutGoogle(options = {}) {
 getRedirectResult(auth)
     .then(async (result) => {
         if (!result?.user) return;
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        lastGoogleAccessToken = credential?.accessToken || "";
         await establishGoogleSession(result.user);
+        await revokeGoogleAccessToken(lastGoogleAccessToken);
+        await resetFirebaseProviderState();
         dispatchFeedback("success", "Signed in with Google.");
     })
     .catch((error) => {
@@ -95,11 +129,9 @@ getRedirectResult(auth)
 onAuthStateChanged(auth, async (user) => {
 
     if (user) {
-        await establishGoogleSession(user).catch((error) => {
-            console.error(error);
-            window.CommerceApi?.clearToken?.();
-            dispatchFeedback("error", "Your Google session could not be refreshed. Please sign in again.");
-        });
+        if (!googleFlowInProgress) {
+            await resetFirebaseProviderState();
+        }
 
     } else {
         setGoogleButtonLoading(false);

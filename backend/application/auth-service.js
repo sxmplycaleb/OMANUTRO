@@ -1,6 +1,5 @@
 const crypto = require("crypto");
 const users = require("../repositories/users");
-const verifications = require("../repositories/verifications");
 const rbac = require("../repositories/rbac");
 const {
   hashPassword,
@@ -9,8 +8,10 @@ const {
   publicUser,
   createAuthToken
 } = require("../services/store");
-const { normalizePhone, sendSignupCode, sendResetCode } = require("../services/whatsapp");
-const { badRequest, notFound, unauthorized } = require("../http/errors");
+const MessagingService = require("../services/messaging");
+const { normalizePhone } = require("../services/whatsapp");
+const rateLimits = require("../repositories/rate-limits");
+const { badRequest, notFound, tooManyRequests, unauthorized } = require("../http/errors");
 const { deleteUploadThingFile, uploadChanged } = require("../lib/uploadthing/files");
 
 function isValidTimedSecret(record) {
@@ -51,10 +52,10 @@ async function updateProfile(user, body) {
     if (uploadChanged(user.avatarKey, body.avatarKey)) {
       await deleteUploadThingFile(user.avatarKey);
     }
-    return publicUser(users.updateAvatar(updated.id, body.avatarUrl, body.avatarKey));
+    return publicUser(withAccess(users.updateAvatar(updated.id, body.avatarUrl, body.avatarKey)));
   }
 
-  return publicUser(updated);
+  return publicUser(withAccess(updated));
 }
 
 function login(body) {
@@ -76,6 +77,13 @@ function phoneOnlyEmail(phone) {
   return `${normalizePhone(phone)}@phone.omanutro.local`;
 }
 
+function enforceRateLimit({ action, key, limit = 5, windowMs = 10 * 60 * 1000 }) {
+  const result = rateLimits.consume({ action, key, limit, windowMs, lockoutMs: windowMs });
+  if (!result.allowed) {
+    throw tooManyRequests(`Too many attempts. Please try again in ${result.retryAfterSeconds} seconds.`);
+  }
+}
+
 async function requestSignupCode(body) {
   const email = String(body.email || "").trim().toLowerCase();
   const phone = normalizePhone(body.phone);
@@ -91,27 +99,21 @@ async function requestSignupCode(body) {
     throw badRequest("Phone number already in use.");
   }
 
-  const code = String(crypto.randomInt(100000, 999999));
-  const verification = verifications.replaceRecentSignup({
-    id: `signup_${crypto.randomBytes(8).toString("hex")}`,
-    type: "signup",
-    email,
-    phone,
-    codeHash: hashSecret(code),
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-    createdAt: new Date().toISOString()
+  enforceRateLimit({ action: "signup_otp_send", key: phone });
+
+  await MessagingService.sendOTP({
+    to: phone,
+    channel: body.channel,
+    type: "signup_otp"
   });
 
-  await sendSignupCode(phone, code);
-
   return {
-    verificationId: verification.id,
-    message: "Signup code sent to WhatsApp.",
-    ...(process.env.NODE_ENV === "production" ? {} : { signupCode: code })
+    verificationId: null,
+    message: "Signup code sent."
   };
 }
 
-function register(body) {
+async function register(body) {
   const phone = normalizePhone(body.phone);
   const method = body.method === "phone" || (!body.email && phone) ? "phone" : "email";
   const email = method === "phone" ? phoneOnlyEmail(phone) : String(body.email || "").trim().toLowerCase();
@@ -122,15 +124,16 @@ function register(body) {
 
   if (method === "phone") {
     if (!phone) throw badRequest("Phone number is required.");
-    const verification = verifications.findById(body.verificationId);
-
-    if (!verification || verification.type !== "signup" || !isValidTimedSecret(verification)) {
-      throw badRequest("Request a fresh WhatsApp signup code first.");
-    }
-
-    if (verification.phone !== phone || verification.codeHash !== hashSecret(body.code)) {
+    enforceRateLimit({ action: "signup_otp_verify", key: phone });
+    const verification = await MessagingService.verifyOTP({
+      to: phone,
+      code: body.code,
+      type: "signup_otp_check"
+    });
+    if (!verification.approved) {
       throw badRequest("Invalid signup verification code.");
     }
+    rateLimits.reset({ action: "signup_otp_verify", key: phone });
   }
 
   if (phone && users.byIdentifier(phone, normalizePhone)) {
@@ -162,7 +165,6 @@ function register(body) {
     createdAt: new Date().toISOString()
   });
 
-  if (body.verificationId) verifications.remove(body.verificationId);
   return sessionFor(user);
 }
 
@@ -172,32 +174,43 @@ async function requestPasswordReset(body) {
   if (!user) throw notFound("No account found for that email or phone.");
   if (!user.phone) throw badRequest("This account has no verified WhatsApp phone number.");
 
-  const code = String(crypto.randomInt(100000, 999999));
-  users.setPasswordReset(user.id, {
-    codeHash: hashSecret(code),
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-    createdAt: new Date().toISOString()
+  enforceRateLimit({ action: "password_reset_otp_send", key: user.phone });
+
+  await MessagingService.sendOTP({
+    to: user.phone,
+    channel: body.channel,
+    type: "password_reset_otp"
   });
 
-  await sendResetCode(user, code);
-
   return {
-    message: "Reset code sent to WhatsApp.",
-    ...(process.env.NODE_ENV === "production" ? {} : { resetCode: code })
+    message: "Reset code sent."
   };
 }
 
-function verifyResetCode(body) {
+async function verifyResetCode(body) {
   const user = users.byIdentifier(body.identifier || body.email, normalizePhone);
 
-  if (!user || !isValidTimedSecret(user.passwordReset) || hashSecret(body.code) !== user.passwordReset.codeHash) {
+  if (!user?.phone) {
     throw badRequest("Invalid or expired reset code.");
   }
 
+  enforceRateLimit({ action: "password_reset_otp_verify", key: user.phone });
+
+  const verification = await MessagingService.verifyOTP({
+    to: user.phone,
+    code: body.code,
+    type: "password_reset_otp_check"
+  });
+
+  if (!verification.approved) {
+    throw badRequest("Invalid or expired reset code.");
+  }
+  rateLimits.reset({ action: "password_reset_otp_verify", key: user.phone });
+
   const resetToken = crypto.randomBytes(32).toString("hex");
   users.setPasswordReset(user.id, {
-    ...user.passwordReset,
     resetTokenHash: hashSecret(resetToken),
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     verifiedAt: new Date().toISOString()
   });
 

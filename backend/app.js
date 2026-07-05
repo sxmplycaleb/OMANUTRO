@@ -14,6 +14,9 @@ const savedJobRoutes = require("./routes/saved-jobs");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/cart");
+const messagingRoutes = require("./routes/messaging");
+const adminMessagingRoutes = require("./routes/admin-messaging");
+const { validateMessagingStartupConfig } = require("./services/messaging/startup");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
 const ADMIN_DIR = path.join(__dirname, "..", "public", "admin");
@@ -51,6 +54,8 @@ function serveStatic(req, res) {
 }
 
 function createApp() {
+  validateMessagingStartupConfig();
+
   const app = express();
 
   app.use((req, res, next) => {
@@ -61,8 +66,10 @@ function createApp() {
 
   app.use(cors({ origin: config.corsOrigin }));
   app.use(express.json({ limit: config.jsonBodyLimit }));
+  app.use(express.urlencoded({ extended: false }));
 
   app.use("/admin", express.static(ADMIN_DIR));
+  app.use("/admin/messaging", adminMessagingRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/account", accountRoutes);
@@ -72,6 +79,7 @@ function createApp() {
   app.use("/api/products", productRoutes);
   app.use("/api/cart", cartRoutes);
   app.use("/api/orders", orderRoutes);
+  app.use("/api/messaging", messagingRoutes);
   app.post("/api/mpesa/callback", orderRoutes.mpesaCallback);
   app.use(
     "/api/uploadthing",

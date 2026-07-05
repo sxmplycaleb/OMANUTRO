@@ -4,9 +4,15 @@ const carts = require("../repositories/carts");
 const addresses = require("../repositories/addresses");
 const wishlist = require("../repositories/wishlist");
 const savedJobs = require("../repositories/saved-jobs");
+const rbac = require("../repositories/rbac");
 const { publicUser } = require("../services/store");
 const { normalizePhone } = require("../services/whatsapp");
 const { deleteUploadThingFile, uploadChanged } = require("../lib/uploadthing/files");
+
+function withAccess(user) {
+  const access = rbac.accessForUser(user);
+  return { ...user, roles: access.roles, permissions: access.permissions };
+}
 
 function orderStats(userOrders) {
   return {
@@ -54,10 +60,10 @@ async function updateProfile(user, body) {
     if (uploadChanged(user.avatarKey, body.avatarKey)) {
       await deleteUploadThingFile(user.avatarKey);
     }
-    return publicUser(users.updateAvatar(updated.id, body.avatarUrl, body.avatarKey));
+    return publicUser(withAccess(users.updateAvatar(updated.id, body.avatarUrl, body.avatarKey)));
   }
 
-  return publicUser(updated);
+  return publicUser(withAccess(updated));
 }
 
 module.exports = {

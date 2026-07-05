@@ -3,6 +3,7 @@ const path = require("path");
 const Database = require("better-sqlite3");
 const config = require("../config");
 const { hashPassword } = require("../services/store");
+const { toE164 } = require("../services/messaging/phone");
 
 const SEED_FILE = path.join(config.rootDir, "db.json");
 const DB_FILE = config.sqliteFile;
@@ -56,6 +57,7 @@ function createSchema() {
       firebase_uid TEXT,
       avatar_url TEXT,
       avatar_key TEXT,
+      auth_token_version INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL
     );
 
@@ -230,17 +232,43 @@ function createSchema() {
     CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
     CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 
-    CREATE TABLE IF NOT EXISTS verification_records (
+    CREATE TABLE IF NOT EXISTS message_logs (
       id TEXT PRIMARY KEY,
+      recipient TEXT NOT NULL,
+      channel TEXT NOT NULL,
       type TEXT NOT NULL,
-      email TEXT,
-      phone TEXT,
-      code_hash TEXT NOT NULL,
-      expires_at TEXT NOT NULL,
-      created_at TEXT NOT NULL
+      provider TEXT NOT NULL,
+      provider_sid TEXT,
+      status TEXT NOT NULL,
+      delivery_status TEXT,
+      error TEXT,
+      failure_reason TEXT,
+      message_sid TEXT,
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      delivery_cost REAL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      sent_at TEXT,
+      delivered_at TEXT,
+      failed_at TEXT
     );
 
-    CREATE INDEX IF NOT EXISTS idx_verifications_type ON verification_records(type);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_message_sid ON message_logs(message_sid);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_recipient ON message_logs(recipient);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_status ON message_logs(status);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_created_at ON message_logs(created_at);
+
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      id TEXT PRIMARY KEY,
+      action TEXT NOT NULL,
+      key TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      window_start TEXT NOT NULL,
+      locked_until TEXT,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_rate_limits_action_key ON rate_limits(action, key);
   `);
 }
 
@@ -256,7 +284,7 @@ function addColumnIfMissing(table, definition) {
 }
 
 function normalizePhone(phone) {
-  return String(phone || "").replace(/[^\d]/g, "");
+  return toE164(phone) || String(phone || "").replace(/[^\d]/g, "");
 }
 
 function migrateUserLookupColumns() {
@@ -309,9 +337,92 @@ function migrateFirebaseUserColumns() {
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))");
 }
 
+function migrateAuthTokenVersion() {
+  addColumnIfMissing("users", "auth_token_version INTEGER NOT NULL DEFAULT 0");
+}
+
 function migrateUploadThingKeys() {
   addColumnIfMissing("users", "avatar_key TEXT");
   addColumnIfMissing("products", "image_key TEXT");
+}
+
+function migrateMessageLogsTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS message_logs (
+      id TEXT PRIMARY KEY,
+      recipient TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      type TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      provider_sid TEXT,
+      status TEXT NOT NULL,
+      delivery_status TEXT,
+      error TEXT,
+      failure_reason TEXT,
+      message_sid TEXT,
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      delivery_cost REAL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      sent_at TEXT,
+      delivered_at TEXT,
+      failed_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_message_logs_message_sid ON message_logs(message_sid);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_recipient ON message_logs(recipient);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_status ON message_logs(status);
+    CREATE INDEX IF NOT EXISTS idx_message_logs_created_at ON message_logs(created_at);
+  `);
+}
+
+function dropLegacyVerificationRecords() {
+  db.exec("DROP TABLE IF EXISTS verification_records");
+}
+
+function migrateMessageLogDeliveryColumns() {
+  addColumnIfMissing("message_logs", "provider_sid TEXT");
+  addColumnIfMissing("message_logs", "delivery_status TEXT");
+  addColumnIfMissing("message_logs", "failure_reason TEXT");
+  addColumnIfMissing("message_logs", "retry_count INTEGER NOT NULL DEFAULT 0");
+  addColumnIfMissing("message_logs", "delivery_cost REAL");
+  addColumnIfMissing("message_logs", "failed_at TEXT");
+}
+
+function migrateRateLimitsTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      id TEXT PRIMARY KEY,
+      action TEXT NOT NULL,
+      key TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      window_start TEXT NOT NULL,
+      locked_until TEXT,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_rate_limits_action_key ON rate_limits(action, key);
+  `);
+}
+
+function migratePhoneFieldsToE164() {
+  const updateUsers = db.prepare("UPDATE users SET phone = ?, phone_normalized = ? WHERE id = ?");
+  for (const user of db.prepare("SELECT id, phone FROM users WHERE phone IS NOT NULL AND phone != ''").all()) {
+    const phone = toE164(user.phone);
+    if (phone) updateUsers.run(phone, phone, user.id);
+  }
+
+  const updateAddresses = db.prepare("UPDATE addresses SET phone = ? WHERE id = ?");
+  for (const address of db.prepare("SELECT id, phone FROM addresses WHERE phone IS NOT NULL AND phone != ''").all()) {
+    const phone = toE164(address.phone);
+    if (phone) updateAddresses.run(phone, address.id);
+  }
+
+  const updateOrders = db.prepare("UPDATE orders SET mpesa_phone = ? WHERE id = ?");
+  for (const order of db.prepare("SELECT id, mpesa_phone FROM orders WHERE mpesa_phone IS NOT NULL AND mpesa_phone != ''").all()) {
+    const phone = toE164(order.mpesa_phone);
+    if (phone) updateOrders.run(phone, order.id);
+  }
 }
 
 function migrateCartItems() {
@@ -574,6 +685,36 @@ const MIGRATIONS = [
     version: 9,
     name: "add_uploadthing_file_keys",
     up: migrateUploadThingKeys
+  },
+  {
+    version: 10,
+    name: "add_message_logs",
+    up: migrateMessageLogsTable
+  },
+  {
+    version: 11,
+    name: "drop_legacy_custom_otp_storage",
+    up: dropLegacyVerificationRecords
+  },
+  {
+    version: 12,
+    name: "expand_message_logs_delivery_fields",
+    up: migrateMessageLogDeliveryColumns
+  },
+  {
+    version: 13,
+    name: "add_rate_limits",
+    up: migrateRateLimitsTable
+  },
+  {
+    version: 14,
+    name: "normalize_phone_fields_to_e164",
+    up: migratePhoneFieldsToE164
+  },
+  {
+    version: 15,
+    name: "add_auth_token_version",
+    up: migrateAuthTokenVersion
   }
 ];
 
@@ -605,11 +746,11 @@ function seedFromJson() {
     INSERT INTO users (
       id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
       phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
-      firebase_uid, avatar_url, avatar_key, created_at
+      firebase_uid, avatar_url, avatar_key, auth_token_version, created_at
     ) VALUES (
       @id, @email, @name, @phone, @phoneNormalized, @role, @passwordHash, @dob, @gender, @username, @bio,
       @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt,
-      @firebaseUid, @avatarUrl, @avatarKey, @createdAt
+      @firebaseUid, @avatarUrl, @avatarKey, @authTokenVersion, @createdAt
     )
   `);
   const insertProduct = db.prepare(`
@@ -636,14 +777,6 @@ function seedFromJson() {
       @mpesaResultJson, @timelineJson, @stockReducedAt, @createdAt
     )
   `);
-  const insertVerification = db.prepare(`
-    INSERT INTO verification_records (
-      id, type, email, phone, code_hash, expires_at, created_at
-    ) VALUES (
-      @id, @type, @email, @phone, @codeHash, @expiresAt, @createdAt
-    )
-  `);
-
   db.transaction(() => {
     for (const user of seed.users || []) {
       const passwordReset = user.passwordReset || null;
@@ -663,6 +796,7 @@ function seedFromJson() {
         firebaseUid: user.firebaseUid || null,
         avatarUrl: user.avatarUrl || null,
         avatarKey: user.avatarKey || null,
+        authTokenVersion: Number(user.authTokenVersion || 0),
         createdAt: user.createdAt || new Date().toISOString()
       });
     }
@@ -710,10 +844,6 @@ function seedFromJson() {
         createdAt: order.createdAt || new Date().toISOString()
       });
     }
-
-    for (const verification of seed.signupVerifications || []) {
-      insertVerification.run({ ...verification, type: "signup" });
-    }
   })();
 }
 
@@ -738,11 +868,11 @@ function ensureRequiredAdminUser() {
         INSERT INTO users (
           id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
           phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
-          firebase_uid, avatar_url, avatar_key, created_at
+          firebase_uid, avatar_url, avatar_key, auth_token_version, created_at
         ) VALUES (
           @id, @email, @name, NULL, NULL, @role, @passwordHash, NULL, NULL, NULL, NULL,
           NULL, @emailVerifiedAt, NULL, NULL, NULL,
-          NULL, NULL, NULL, @createdAt
+          NULL, NULL, NULL, 0, @createdAt
         )
       `).run({
         id: userId,

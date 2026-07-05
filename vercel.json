@@ -8,6 +8,10 @@
   ],
   "routes": [
     {
+      "src": "/f049e132a18bb88ed6dbbf978e650173\\.html",
+      "dest": "/f049e132a18bb88ed6dbbf978e650173.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/api/index.js"
     }

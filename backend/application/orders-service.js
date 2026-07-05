@@ -4,7 +4,8 @@ const products = require("../repositories/products");
 const carts = require("../repositories/carts");
 const { publicUser } = require("../services/store");
 const { initiateStkPush } = require("../services/mpesa");
-const { normalizePhone, sendOrderStatus } = require("../services/whatsapp");
+const MessagingService = require("../services/messaging");
+const { normalizePhone, normalizePhoneDigits } = require("../services/whatsapp");
 const { badRequest, notFound } = require("../http/errors");
 
 function buildOrderItems(requestedItems) {
@@ -117,13 +118,15 @@ async function createOrder(user, body) {
 
   try {
     const stk = await initiateStkPush({
-      phone: mpesaPhone,
+      phone: normalizePhoneDigits(mpesaPhone),
       amount: order.total,
       orderId: order.id,
       transactionReference: order.mpesaTransactionReference
     });
 
-    return orders.updateMpesaRequest(createdOrder.id, stk);
+    const updatedOrder = orders.updateMpesaRequest(createdOrder.id, stk);
+    MessagingService.sendOrderConfirmation(updatedOrder);
+    return updatedOrder;
   } catch (error) {
     orders.markPaymentInitiationFailed(createdOrder.id, error.message);
     throw badRequest(error.message || "M-Pesa payment could not be initiated.");
@@ -144,7 +147,11 @@ async function updateStatus(orderId, status) {
   }
 
   const updatedOrder = orders.updateStatus(order.id, status);
-  await sendOrderStatus(updatedOrder);
+  if (status === "Delivered") {
+    MessagingService.sendDeliveryUpdate(updatedOrder);
+  } else {
+    MessagingService.sendShippingUpdate(updatedOrder);
+  }
   return updatedOrder;
 }
 
@@ -160,7 +167,7 @@ async function applyMpesaCallback(body) {
 
   if (updatedOrder && updatedOrder.paymentStatus === "Paid" && previousOrder?.paymentStatus !== "Paid") {
     carts.clearForUser(updatedOrder.userId);
-    await sendOrderStatus(updatedOrder);
+    MessagingService.sendPaymentConfirmation(updatedOrder);
   }
 
   return { ResultCode: 0, ResultDesc: "Accepted" };
