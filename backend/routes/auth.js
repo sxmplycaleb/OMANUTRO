@@ -1,7 +1,8 @@
 const express = require("express");
 const authService = require("../application/auth-service");
-const { authenticate } = require("../middleware/auth");
+const { authenticate, userForFirebaseToken } = require("../middleware/auth");
 const asyncHandler = require("../http/async-handler");
+const { badRequest, unauthorized } = require("../http/errors");
 
 const router = express.Router();
 
@@ -17,6 +18,14 @@ router.post("/login", (req, res) => {
   res.json(authService.login(req.body));
 });
 
+router.post("/google", asyncHandler(async (req, res) => {
+  const idToken = String(req.body?.idToken || "");
+  if (!idToken) throw badRequest("Google token is required.");
+  const session = await userForFirebaseToken(idToken);
+  if (!session?.user) throw unauthorized("Google authentication failed.");
+  res.json(authService.googleSession(session.user));
+}));
+
 router.post("/request-signup-code", asyncHandler(async (req, res) => {
   res.json(await authService.requestSignupCode(req.body));
 }));
@@ -25,8 +34,8 @@ router.post("/register", asyncHandler(async (req, res) => {
   res.status(201).json(await authService.register(req.body));
 }));
 
-router.post("/logout", (req, res) => {
-  res.json({ message: "Logged out successfully." });
+router.post("/logout", authenticate, (req, res) => {
+  res.json(authService.logout(req.user));
 });
 
 router.post("/forgot-password", asyncHandler(async (req, res) => {

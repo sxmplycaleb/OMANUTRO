@@ -18,6 +18,7 @@ function toUser(row) {
     firebaseUid: row.firebase_uid,
     avatarUrl: row.avatar_url,
     avatarKey: row.avatar_key,
+    authTokenVersion: Number(row.auth_token_version || 0),
     passwordReset: parseJson(row.password_reset_json, null),
     createdAt: row.created_at
   };
@@ -68,11 +69,11 @@ function create(user) {
     INSERT INTO users (
       id, email, name, phone, phone_normalized, role, password_hash, dob, gender, username, bio,
       phone_verified_at, email_verified_at, password_reset_json, reset_token_hash, reset_expires_at,
-      firebase_uid, avatar_url, avatar_key, created_at
+      firebase_uid, avatar_url, avatar_key, auth_token_version, created_at
     ) VALUES (
       @id, @email, @name, @phone, @phoneNormalized, @role, @passwordHash, @dob, @gender, @username, @bio,
       @phoneVerifiedAt, @emailVerifiedAt, @passwordResetJson, @resetTokenHash, @resetExpiresAt,
-      @firebaseUid, @avatarUrl, @avatarKey, @createdAt
+      @firebaseUid, @avatarUrl, @avatarKey, @authTokenVersion, @createdAt
     )
   `).run({
     ...user,
@@ -91,6 +92,7 @@ function create(user) {
     firebaseUid: user.firebaseUid || null,
     avatarUrl: user.avatarUrl || null,
     avatarKey: user.avatarKey || null,
+    authTokenVersion: Number(user.authTokenVersion || 0),
     createdAt: user.createdAt || new Date().toISOString()
   });
   return findById(user.id);
@@ -194,6 +196,15 @@ function clearPasswordResetAndUpdatePassword(userId, passwordHash) {
   return findById(userId);
 }
 
+function invalidateSessions(userId) {
+  db.prepare(`
+    UPDATE users
+    SET auth_token_version = COALESCE(auth_token_version, 0) + 1
+    WHERE id = ?
+  `).run(userId);
+  return findById(userId);
+}
+
 function findByResetTokenHash(tokenHash, isValidTimedSecret) {
   const user = toUser(db.prepare(`
     SELECT * FROM users
@@ -218,5 +229,6 @@ module.exports = {
   updateProfile,
   setPasswordReset,
   clearPasswordResetAndUpdatePassword,
+  invalidateSessions,
   findByResetTokenHash
 };

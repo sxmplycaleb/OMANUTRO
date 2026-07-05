@@ -1477,10 +1477,10 @@ async function submitAuth(event) {
 }
 
 async function logout() {
+  await api("/api/auth/logout", { method: "POST" }).catch(() => {});
   if (window.FirebaseAuth?.logoutGoogle) {
     await window.FirebaseAuth.logoutGoogle({ silent: true }).catch(() => {});
   }
-  await api("/api/auth/logout", { method: "POST" }).catch(() => {});
   state.user = null;
   state.authToken = "";
   state.cart = window.CommerceCart?.loadGuest?.() || [];

@@ -289,10 +289,10 @@
   }
 
   async function logout() {
+    await api("/api/auth/logout", { method: "POST" }).catch(() => {});
     if (window.FirebaseAuth?.logoutGoogle) {
       await window.FirebaseAuth.logoutGoogle({ silent: true }).catch(() => {});
     }
-    await api("/api/auth/logout", { method: "POST" }).catch(() => {});
     window.CommerceAuth?.clearSession();
     localStorage.removeItem("omanutro-auth-user");
     sessionStorage.setItem("omanutro-logout-success", "1");

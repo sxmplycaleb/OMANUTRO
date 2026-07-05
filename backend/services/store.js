@@ -62,7 +62,7 @@ function publicUser(user) {
 
 function createAuthToken(user) {
   return jwt.sign(
-    { sub: user.id, role: user.role },
+    { sub: user.id, role: user.role, authVersion: Number(user.authTokenVersion || 0) },
     config.jwtSecret(),
     { expiresIn: TOKEN_TTL }
   );

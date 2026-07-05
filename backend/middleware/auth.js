@@ -57,6 +57,9 @@ async function userForFirebaseToken(idToken) {
 function userForLegacyToken(token) {
   const payload = verifyAuthToken(token);
   const user = users.findById(payload.sub);
+  if (user && Number(payload.authVersion || 0) !== Number(user.authTokenVersion || 0)) {
+    return null;
+  }
   return user ? { user, firebase: null } : null;
 }
 
@@ -77,12 +80,7 @@ async function authenticate(req, res, next) {
   }
 
   try {
-    let session = null;
-    try {
-      session = userForLegacyToken(token);
-    } catch {
-      session = await userForFirebaseToken(token);
-    }
+    const session = userForLegacyToken(token);
     if (!session?.user) return res.status(401).json({ error: "Sign in to continue." });
     req.user = attachAccess(session.user);
     req.firebaseUser = session.firebase;
@@ -99,12 +97,7 @@ async function authenticate(req, res, next) {
 
 async function userFromToken(token) {
   if (!token) return null;
-  let session = null;
-  try {
-    session = userForLegacyToken(token);
-  } catch {
-    session = await userForFirebaseToken(token);
-  }
+  const session = userForLegacyToken(token);
   return session?.user ? attachAccess(session.user) : null;
 }
 
@@ -161,5 +154,6 @@ module.exports = {
   requirePermission,
   requireAdmin,
   authenticateHeaders,
-  userFromToken
+  userFromToken,
+  userForFirebaseToken
 };

@@ -34,6 +34,7 @@ function setGoogleButtonLoading(isLoading, label = "Continue with Google") {
 }
 
 let googleFlowInProgress = false;
+let redirectResultInProgress = true;
 let lastGoogleAccessToken = "";
 
 async function revokeGoogleAccessToken(accessToken) {
@@ -113,6 +114,7 @@ async function logoutGoogle(options = {}) {
 getRedirectResult(auth)
     .then(async (result) => {
         if (!result?.user) return;
+        googleFlowInProgress = true;
         const credential = GoogleAuthProvider.credentialFromResult(result);
         lastGoogleAccessToken = credential?.accessToken || "";
         await establishGoogleSession(result.user);
@@ -124,12 +126,16 @@ getRedirectResult(auth)
         window.CommerceApi?.clearToken?.();
         dispatchFeedback("error", error?.code ? authMessage(error) : error.message || "Google sign-in could not be completed. Please try again.");
     })
-    .finally(() => setGoogleButtonLoading(false));
+    .finally(() => {
+        googleFlowInProgress = false;
+        redirectResultInProgress = false;
+        setGoogleButtonLoading(false);
+    });
 
 onAuthStateChanged(auth, async (user) => {
 
     if (user) {
-        if (!googleFlowInProgress) {
+        if (!googleFlowInProgress && !redirectResultInProgress) {
             await resetFirebaseProviderState();
         }
 

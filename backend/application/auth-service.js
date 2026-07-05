@@ -27,6 +27,17 @@ function sessionFor(user) {
   return { user: publicUser(withAccess(user)), token: createAuthToken(user) };
 }
 
+function googleSession(user) {
+  return sessionFor(user);
+}
+
+function logout(user) {
+  if (user?.id && users.invalidateSessions) {
+    users.invalidateSessions(user.id);
+  }
+  return { message: "Logged out successfully." };
+}
+
 function currentUser(user, firebaseUser) {
   if (firebaseUser?.picture && firebaseUser.picture !== user.avatarUrl && users.updateAvatar) {
     return publicUser(withAccess(users.updateAvatar(user.id, firebaseUser.picture, user.avatarKey)));
@@ -227,11 +238,14 @@ function resetPassword(body) {
   }
 
   users.clearPasswordResetAndUpdatePassword(user.id, hashPassword(body.password));
+  if (users.invalidateSessions) users.invalidateSessions(user.id);
   return { message: "Password updated." };
 }
 
 module.exports = {
   currentUser,
+  googleSession,
+  logout,
   updateProfile,
   login,
   requestSignupCode,
