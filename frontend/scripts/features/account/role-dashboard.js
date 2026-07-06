@@ -9,12 +9,15 @@
   };
 
   const roleMeta = {
+    admin: { label: "Admin", title: "Admin Dashboard", focus: "Operations, teams, orders, catalog health, and assigned business workflows." },
     customer: { label: "Customer", title: "Customer Dashboard", focus: "Orders, wishlist, addresses, and account activity." },
     vendor: { label: "Vendor", title: "Vendor Dashboard", focus: "Products, orders, storefront health, and customer demand." },
     staff: { label: "Staff", title: "Staff Dashboard", focus: "Operational queues, tasks, customers, and store updates." },
     rider: { label: "Delivery Rider", title: "Delivery Rider Dashboard", focus: "Delivery queue, route progress, payouts, and handoffs." },
     inventory: { label: "Inventory Manager", title: "Inventory Dashboard", focus: "Stock levels, replenishment, warehouse actions, and alerts." },
     support: { label: "Support Agent", title: "Support Dashboard", focus: "Tickets, customers, refunds, and service quality." },
+    hr: { label: "HR", title: "HR Dashboard", focus: "Applications, candidates, hiring stages, and staff coordination." },
+    operations: { label: "Operations", title: "Operations Dashboard", focus: "Applications, fulfillment, inventory, handoffs, and operational queues." },
     finance: { label: "Finance", title: "Finance Dashboard", focus: "Revenue, payouts, refunds, taxes, and reconciliation." },
     marketing: { label: "Marketing", title: "Marketing Dashboard", focus: "Campaigns, audiences, content, and conversion." },
     super_admin: { label: "Super Admin", title: "Super Admin Dashboard", focus: "People, permissions, systems, reports, and every role preview." }
@@ -34,12 +37,15 @@
   };
 
   const navByRole = {
+    admin: ["overview", "users", "orders", "products", "customers", "reports", "settings"],
     customer: ["overview", "orders", "wishlist", "profile", "settings"],
     vendor: ["overview", "products", "orders", "customers", "analytics", "settings"],
     staff: ["overview", "orders", "customers", "reports", "settings"],
     rider: ["overview", "deliveries", "routes", "earnings", "settings"],
     inventory: ["overview", "inventory", "products", "reports", "settings"],
     support: ["overview", "tickets", "customers", "orders", "reports"],
+    hr: ["overview", "applications", "users", "reports", "settings"],
+    operations: ["overview", "applications", "orders", "inventory", "reports", "settings"],
     finance: ["overview", "finance", "orders", "reports", "settings"],
     marketing: ["overview", "campaigns", "analytics", "customers", "settings"],
     super_admin: ["overview", "users", "roles", "orders", "products", "vendors", "customers", "reports", "analytics", "inventory", "marketing", "finance", "settings", "logs", "preview-customer", "preview-vendor", "preview-staff", "preview-rider", "preview-inventory", "preview-support", "preview-finance", "preview-marketing"]
@@ -63,6 +69,7 @@
     settings: "Settings",
     orders: "Orders",
     tickets: "Tickets",
+    applications: "Applications",
     campaigns: "Campaigns",
     deliveries: "Deliveries",
     routes: "Routes",
@@ -118,12 +125,15 @@
   function statsForRole(role) {
     const orders = state.account?.stats?.orders || { total: 0, pending: 0, completed: 0 };
     const base = {
+      admin: [["Orders", orders.total, "Operational view"], ["Customers", 128, "Active this week"], ["Applications", state.account?.applications?.length || 0, "Assigned queue"], ["Reports", 9, "Ready"]],
       customer: [["Orders", orders.total, "Lifetime purchases"], ["Pending", orders.pending, "Needs attention"], ["Wishlist", state.account?.stats?.wishlist || 0, "Saved pieces"], ["Cart Items", state.account?.stats?.cartItems || 0, "Ready for checkout"]],
       vendor: [["Live Products", 38, "Across storefront"], ["Open Orders", 16, "Fulfillment queue"], ["Conversion", "4.8%", "Seven day lift"], ["Low Stock", 5, "Restock soon"]],
       staff: [["Tasks", 24, "Assigned today"], ["Open Orders", 16, "Needs review"], ["Customers", 128, "Active this week"], ["SLA", "96%", "On time"]],
       rider: [["Deliveries", 12, "Today"], ["On Route", 4, "In progress"], ["Success Rate", "98%", "Last 30 days"], ["Payout", "KES 8.4K", "This week"]],
       inventory: [["SKUs", 184, "Tracked"], ["Low Stock", 9, "Below threshold"], ["Transfers", 6, "Open"], ["Accuracy", "99.1%", "Cycle count"]],
       support: [["Tickets", 42, "Open"], ["First Reply", "8m", "Median"], ["CSAT", "94%", "Last 30 days"], ["Refunds", 5, "Pending approval"]],
+      hr: [["Applications", state.account?.applications?.length || 0, "Assigned to HR"], ["Interviews", 6, "This week"], ["Open Roles", 12, "Hiring plan"], ["Offers", 2, "Awaiting response"]],
+      operations: [["Applications", state.account?.applications?.length || 0, "Assigned to Operations"], ["Orders", 32, "In queue"], ["Inventory Alerts", 9, "Needs review"], ["SLA", "97%", "On time"]],
       finance: [["Revenue", "KES 2.4M", "Month to date"], ["Refunds", "KES 48K", "Pending review"], ["Payouts", 12, "Scheduled"], ["Margin", "62%", "Blended"]],
       marketing: [["Campaigns", 7, "Active"], ["Audience", "18.2K", "Reach"], ["CTR", "6.3%", "This week"], ["Revenue", "KES 640K", "Attributed"]],
       super_admin: [["Users", 1240, "All accounts"], ["Revenue", "KES 2.4M", "Month to date"], ["Orders", 318, "Active cycle"], ["System Health", "99.98%", "Uptime"]]
@@ -172,6 +182,7 @@
     const previewRole = state.active.startsWith("preview-") ? state.active.replace("preview-", "") : "";
     const viewMeta = previewRole ? roleMeta[previewRole] : meta;
     const stats = statsForRole(previewRole || state.role);
+    const applications = state.active === "applications" ? applicationQueueMarkup() : "";
     $("#dashboardBody").innerHTML = `
       <section class="dashboard-hero">
         <div>
@@ -195,6 +206,7 @@
           </article>
         `).join("")}
       </section>
+      ${applications}
 
       <section class="dashboard-grid">
         <article class="dashboard-panel">
@@ -218,6 +230,26 @@
     `;
   }
 
+  function applicationQueueMarkup() {
+    const applications = state.account?.applications || [];
+    return `
+      <section class="dashboard-panel">
+        <div class="panel-title"><h2>Applications</h2><span>${escapeHtml(applications.length)} assigned</span></div>
+        <div class="activity-list">
+          ${applications.length ? applications.map((application) => `
+            <div class="activity-item">
+              <i></i>
+              <div>
+                <strong>${escapeHtml(application.applicantName)} - ${escapeHtml(application.position)}</strong>
+                <span>${escapeHtml(application.department)} - ${escapeHtml(application.status)} - ${escapeHtml(new Date(application.createdAt).toLocaleDateString())}</span>
+              </div>
+            </div>
+          `).join("") : '<div class="activity-item"><i></i><div><strong>No applications assigned yet.</strong><span>New submissions will appear here automatically.</span></div></div>'}
+        </div>
+      </section>
+    `;
+  }
+
   async function load() {
     if (!window.CommerceAuth?.protectDashboardRoute?.()) return;
     try {
@@ -230,7 +262,9 @@
         location.replace(window.CommerceAuth.dashboardPathForUser(state.user));
         return;
       }
-      state.account = await window.CommerceApi.request("/api/account").catch(() => null);
+      state.account = await window.CommerceApi.request("/api/account").catch(() => ({}));
+      const applicationData = await window.CommerceApi.request("/api/applications").catch(() => ({ applications: [] }));
+      state.account.applications = applicationData.applications || [];
       renderShell();
       renderDashboard();
     } catch (error) {

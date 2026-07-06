@@ -4,19 +4,22 @@
   const AUTH_EVENT = "omanutro:auth";
 
   const ROLE_PATHS = {
+    admin: "/dashboard/admin",
     customer: "/dashboard/customer",
     vendor: "/dashboard/vendor",
     staff: "/dashboard/staff",
     rider: "/dashboard/rider",
     inventory: "/dashboard/inventory",
     support: "/dashboard/support",
+    hr: "/dashboard/hr",
+    operations: "/dashboard/operations",
     finance: "/dashboard/finance",
     marketing: "/dashboard/marketing",
     super_admin: "/dashboard/super-admin"
   };
 
   const ROLE_ALIASES = {
-    admin: "super_admin",
+    admin: "admin",
     superadmin: "super_admin",
     "super-admin": "super_admin",
     super_admin: "super_admin",
@@ -37,11 +40,16 @@
     support_agent: "support",
     "support-agent": "support",
     support: "support",
+    hr: "hr",
+    human_resources: "hr",
+    "human-resources": "hr",
+    operations: "operations",
+    operation: "operations",
     finance: "finance",
     marketing: "marketing"
   };
 
-  const ROLE_PRIORITY = ["super_admin", "finance", "inventory", "support", "marketing", "rider", "vendor", "staff", "customer"];
+  const ROLE_PRIORITY = ["admin", "super_admin", "hr", "operations", "finance", "inventory", "support", "marketing", "rider", "vendor", "staff", "customer"];
 
   function initials(user) {
     const source = user?.name || user?.email || "A";

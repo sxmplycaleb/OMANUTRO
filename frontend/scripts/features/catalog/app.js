@@ -222,6 +222,7 @@ function updateAuthUI() {
     profileMenu.innerHTML = `
       <div class="dropdown-greeting" id="profileGreeting"><strong>${escapeHtml(state.user.name || firstName)}</strong><span>${escapeHtml(email)}</span></div>
       <button type="button" data-profile-action="dashboard">Dashboard</button>
+      <button type="button" data-profile-action="saved-jobs">Saved Positions</button>
       <button type="button" data-profile-action="profile">Profile</button>
       <button type="button" data-profile-action="settings">Settings</button>
       <button type="button" data-profile-action="signout">Logout</button>
@@ -1648,7 +1649,7 @@ function handleProfileAction(action) {
     return;
   }
 
-  if (["dashboard", "profile", "orders", "wishlist", "settings"].includes(action)) {
+  if (["dashboard", "profile", "orders", "wishlist", "settings", "saved-jobs"].includes(action)) {
     if (action === "dashboard") {
       location.href = window.CommerceAuth?.dashboardPathForUser?.(state.user) || "/account.html";
       return;

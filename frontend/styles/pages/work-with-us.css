@@ -621,6 +621,7 @@
 .career-field {
   position: relative;
   display: grid;
+  gap: 8px;
 }
 
 .career-field input,
@@ -638,32 +639,46 @@
 .career-field input,
 .career-field select {
   min-height: 58px;
-  padding: 28px 14px 8px;
+  padding: 14px;
 }
 
 .career-field textarea {
   min-height: 150px;
-  padding: 34px 14px 12px;
+  padding: 14px;
   resize: vertical;
 }
 
 .career-field span {
-  position: absolute;
-  top: 19px;
-  left: 14px;
   color: var(--muted);
-  pointer-events: none;
-  transition: transform 0.16s ease, font-size 0.16s ease, color 0.16s ease;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.2;
 }
 
-.career-field input:focus + span,
-.career-field textarea:focus + span,
-.career-field input + span,
-.career-field textarea + span,
-.career-select-field span {
+.career-field b,
+.career-upload-field b {
+  color: #dc2626;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.career-field em,
+.career-upload-field em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.career-field:focus-within > span {
   color: var(--accent);
+}
+
+.field-feedback {
+  min-height: 16px;
+  color: #dc2626;
   font-size: 12px;
-  transform: translateY(-13px);
+  font-weight: 800;
 }
 
 .career-field input:focus,
@@ -690,6 +705,10 @@
   padding: 12px 14px;
   color: var(--muted);
   font-weight: 850;
+}
+
+.career-upload-field {
+  justify-content: space-between;
 }
 
 .career-upload-field input {

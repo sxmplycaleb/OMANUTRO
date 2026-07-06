@@ -11,6 +11,7 @@ const accountRoutes = require("./routes/account");
 const addressRoutes = require("./routes/addresses");
 const wishlistRoutes = require("./routes/wishlist");
 const savedJobRoutes = require("./routes/saved-jobs");
+const applicationRoutes = require("./routes/applications");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/cart");
@@ -80,6 +81,7 @@ function createApp() {
   app.use("/api/addresses", addressRoutes);
   app.use("/api/wishlist", wishlistRoutes);
   app.use("/api/saved-jobs", savedJobRoutes);
+  app.use("/api/applications", applicationRoutes);
   app.use("/api/products", productRoutes);
   app.use("/api/cart", cartRoutes);
   app.use("/api/orders", orderRoutes);

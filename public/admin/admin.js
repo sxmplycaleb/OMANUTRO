@@ -268,9 +268,12 @@
   function dashboardPathForRole(user) {
     const role = String(user?.role || "").toLowerCase();
     const permissions = user?.permissions || [];
-    if (role === "admin" || role === "super_admin" || permissions.includes("*")) return "/dashboard/super-admin";
+    if (role === "admin") return "/dashboard/admin";
+    if (role === "super_admin" || permissions.includes("*")) return "/dashboard/super-admin";
     const routeMap = {
       customer: "/dashboard/customer",
+      hr: "/dashboard/hr",
+      operations: "/dashboard/operations",
       store_manager: "/dashboard/vendor",
       vendor: "/dashboard/vendor",
       staff: "/dashboard/staff",

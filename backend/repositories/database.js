@@ -187,6 +187,34 @@ function createSchema() {
       ON saved_jobs(user_id, title);
     CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);
 
+    CREATE TABLE IF NOT EXISTS applications (
+      id TEXT PRIMARY KEY,
+      applicant_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      country TEXT,
+      city TEXT,
+      position TEXT NOT NULL,
+      department TEXT NOT NULL,
+      assigned_role TEXT NOT NULL,
+      employment_type TEXT,
+      linkedin TEXT,
+      portfolio TEXT,
+      resume_url TEXT,
+      resume_key TEXT,
+      cover_letter_url TEXT,
+      cover_letter_key TEXT,
+      portfolio_file_url TEXT,
+      portfolio_file_key TEXT,
+      answers_json TEXT NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'Submitted',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_applications_department ON applications(department);
+    CREATE INDEX IF NOT EXISTS idx_applications_assigned_role ON applications(assigned_role);
+    CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at);
+
     CREATE TABLE IF NOT EXISTS roles (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
@@ -526,6 +554,39 @@ function migrateSavedJobsTable() {
   `);
 }
 
+function migrateApplicationsTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS applications (
+      id TEXT PRIMARY KEY,
+      applicant_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      country TEXT,
+      city TEXT,
+      position TEXT NOT NULL,
+      department TEXT NOT NULL,
+      assigned_role TEXT NOT NULL,
+      employment_type TEXT,
+      linkedin TEXT,
+      portfolio TEXT,
+      resume_url TEXT,
+      resume_key TEXT,
+      cover_letter_url TEXT,
+      cover_letter_key TEXT,
+      portfolio_file_url TEXT,
+      portfolio_file_key TEXT,
+      answers_json TEXT NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'Submitted',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_applications_department ON applications(department);
+    CREATE INDEX IF NOT EXISTS idx_applications_assigned_role ON applications(assigned_role);
+    CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at);
+  `);
+  migrateRbacTables();
+}
+
 const ROLE_PERMISSION_MAP = {
   customer: [
     "profile:manage_own", "addresses:manage_own", "wishlist:manage_own", "orders:view_own", "checkout:create"
@@ -545,6 +606,8 @@ const ROLE_PERMISSION_MAP = {
   inventory: ["admin:access", "inventory:manage", "inventory:adjust", "sku:manage", "products:quantities"],
   fulfillment: ["admin:access", "orders:manage", "shipping:manage", "packing:manage", "delivery:manage", "invoices:print", "packing_slips:print"],
   customer_support: ["admin:access", "customers:view", "orders:view", "customer_notes:update", "orders:cancel"],
+  hr: ["admin:access", "dashboard:view", "applications:view", "applications:review", "staff:manage"],
+  operations: ["admin:access", "dashboard:view", "applications:view", "orders:view", "inventory:manage", "shipping:manage"],
   marketing: ["admin:access", "marketing:banners", "products:feature", "coupons:manage", "discounts:manage", "campaigns:manage", "marketing:analytics"],
   content: ["admin:access", "content:manage", "about:manage", "homepage:manage", "products:descriptions", "images:manage", "collections:manage", "lookbooks:manage"],
   analytics: ["admin:access", "dashboard:view", "reports:sales", "reports:customers", "reports:products", "reports:inventory", "analytics:view"],
@@ -559,6 +622,8 @@ const ROLE_DESCRIPTIONS = {
   inventory: "Stock and inventory management",
   fulfillment: "Order fulfillment and shipping",
   customer_support: "Customer and order support",
+  hr: "Hiring and human resources",
+  operations: "Operations and fulfillment coordination",
   marketing: "Marketing campaigns and promotions",
   content: "Content and media management",
   analytics: "Read-only analytics and reports",
@@ -715,6 +780,11 @@ const MIGRATIONS = [
     version: 15,
     name: "add_auth_token_version",
     up: migrateAuthTokenVersion
+  },
+  {
+    version: 16,
+    name: "add_applications_table",
+    up: migrateApplicationsTable
   }
 ];
 
